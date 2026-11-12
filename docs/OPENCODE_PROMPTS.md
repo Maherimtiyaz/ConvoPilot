@@ -15,7 +15,7 @@ Running log of every prompt given to the coding agent (OpenCode), in order, with
 | --- | --- | --- | --- |
 | P0 | Scaffold: `npx create-next-app@latest convopilot --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"`, `git init` | Project bootstrap | ✅ Done |
 | P1 | Architecture & planning: create `docs/PRD.md`, `ARCHITECTURE.md`, `DATABASE.md`, `AGENT_DESIGN.md`, `SECURITY.md`, `EVALUATION.md`; recommend what to postpone; wait for approval before coding | Planning | ✅ Done (2025 session, awaiting owner review) |
-| P2 | Phase 1 — Foundation: Supabase integration, env config, auth, workspace schema + first migration, dashboard layout + navigation, provider abstraction, error handling, Vitest setup, base UI components | Foundation | ⬜ Not started |
+| P2 | Phase 1 — Foundation: Supabase integration, env config, auth, workspace schema + first migration, dashboard layout + navigation, provider abstraction, error handling, Vitest setup, base UI components | Foundation | ✅ Done by Mistral (Vibe) in parallel — see `docs/AGENT_WORK_SPLIT.md`. OpenCode: `git pull`, review, fill gaps only |
 | P3 | Phase 2 — Communication Studio: paste/import thread, structured intent analysis, reply generation with tone/length, draft persistence + revisions, copy-to-clipboard, save conversation + contact, tests for intent/factual grounding | Communication intelligence | ⬜ Not started |
 | P4 | Phase 3 — Contacts & relationship memory: contact CRUD, conversation association, timelines, source-linked memory extraction, pgvector semantic search, Q&A over history with citations, retrieval/memory tests | Relationship memory | ⬜ Not started |
 | P5 | Phase 4 — Tasks & commitments: task dashboard, follow-up queue, proposed-commitment approval flow, due dates, overdue indicators, daily summary, two-way commitment view | Follow-up intelligence | ⬜ Not started |
@@ -29,7 +29,9 @@ Keep the full text of each prompt in `docs/WORKLOG.md` (or paste it into OpenCod
 
 ### P2 — Build the foundation (use when P1 is approved)
 
-> Implement Phase 1 of ConvoPilot following the approved docs. Configure Supabase integration and environment variables (.env.example), implement authentication, create the initial database migration per docs/DATABASE.md (workspaces, users, contacts, conversations, messages, drafts, tasks, commitments, memories, embeddings, audit_logs — all workspace-scoped with RLS), build the dashboard layout with navigation for the five MVP screens, implement the AI provider abstraction per docs/ARCHITECTURE.md §3, configure typed error handling, and set up Vitest with base unit tests. Do not implement Gmail, calendar, or complex agent workflows yet. Finish by running lint, typecheck, and tests; report what works and what remains.
+> **Note:** the foundation was already implemented by Mistral (Vibe) — see `docs/AGENT_WORK_SPLIT.md`. Do not rebuild it. `git pull`, review the existing implementation against the docs, and report gaps or improvements instead of recreating files.
+>
+> (Original prompt kept for reference.) Implement Phase 1 of ConvoPilot following the approved docs. Configure Supabase integration and environment variables (.env.example), implement authentication, create the initial database migration per docs/DATABASE.md (workspaces, users, contacts, conversations, messages, drafts, tasks, commitments, memories, embeddings, audit_logs — all workspace-scoped with RLS), build the dashboard layout with navigation for the five MVP screens, implement the AI provider abstraction per docs/ARCHITECTURE.md §3, configure typed error handling, and set up Vitest with base unit tests. Do not implement Gmail, calendar, or complex agent workflows yet. Finish by running lint, typecheck, and tests; report what works and what remains.
 
 ### P3 — Communication Studio (use when P2 is verified)
 

@@ -1,6 +1,45 @@
 # ConvoPilot — Worklog
 
-Session-by-session report of what was worked on. Newest first.
+Session-by-session report of what was worked on. Newest first. See also `docs/AGENT_WORK_SPLIT.md` for which agent built which part.
+
+---
+
+## Session 2 — Phase P2 Foundation (Mistral/Vibe, in parallel with OpenCode's P1 run)
+
+**Scope:** Implement the P2 foundation while the owner runs OpenCode on Prompt 1. Per `docs/AGENT_WORK_SPLIT.md`, OpenCode should review this work and fill gaps rather than rebuild.
+
+### What was built
+
+1. **Dependencies added:** `@supabase/supabase-js`, `@supabase/ssr`, `zod`, `clsx`, `tailwind-merge`; dev: `vitest`, `@types/node` bumped to ^22 (vitest 5 peer requirement; runtime Node is v22).
+2. **Database migration** (`supabase/migrations/0001_initial_schema.sql`): all 15 v0.1 tables from `docs/DATABASE.md` — workspaces, users, companies, contacts, relationship_notes, conversations, messages, message_sources, drafts, classifications, commitments, tasks, memories, embeddings (pgvector + HNSW), audit_logs. Includes: `current_workspace_id()` security-definer helper, signup trigger auto-provisioning workspace + user row, `updated_at` triggers, indexes, and RLS enabled with workspace-scoped policies on every table.
+3. **Environment validation** (`src/lib/validation/env.ts`): Zod-parsed server env; returns null when unconfigured so pages render a setup notice; `requireServerEnv()` throws a typed error where config is mandatory.
+4. **Typed error handling** (`src/lib/errors.ts`): `AppError`, error codes → HTTP status mapping, Zod issue details, redaction of internals (unknown errors never leak their message to clients), `withErrorHandling()` wrapper for route handlers.
+5. **Supabase clients** (`src/lib/database/`): cookie-bound server client, browser client, and a service-role admin client (bypasses RLS, server-only).
+6. **Auth** (`src/lib/auth.ts`, `src/proxy.ts`, `src/app/(auth)/`): session helpers (`requireUser` for pages, `requireUserApi` for routes returning 401), Next 16 `proxy.ts` route guard (middleware was renamed to proxy in Next 16), login/signup pages with server actions + Zod validation, signout and OAuth-callback routes. Workspace auto-provisioned on signup via DB trigger.
+7. **AI provider abstraction** (`src/lib/ai/providers/`): `ChatProvider` interface (complete/stream/embed), `OpenAICompatibleProvider` (fetch-based, works with any compatible endpoint, streaming SSE, timeouts, retryable-error classification, no request bodies logged), deterministic `FakeProvider` for tests/local dev, env-driven `resolveProvider()`. Anthropic/Gemini/Ollama adapters deliberately deferred until a key exists — they currently fall back to FakeProvider so the app runs.
+8. **UI foundation** (`src/components/ui/`, `src/components/layout/`): Button, Card, Input/Label, Badge, EmptyState, `cn()` util, sidebar navigation, app shell layout with user footer + signout, SetupNotice for unconfigured Supabase.
+9. **Five MVP screens** under `src/app/(app)/`: Dashboard (summary cards + briefing placeholder), Communication Studio, Contacts, Conversations, Tasks, plus a Settings shell showing account and AI-provider status. All with empty states; data wiring comes in P3+.
+10. **Error boundaries:** `src/app/error.tsx`, `not-found.tsx`; root page redirects to `/dashboard`.
+11. **Vitest setup** (`vitest.config.ts`, `@` alias) + **16 unit tests** (`tests/unit/`): env parsing/failure modes, error envelope mapping incl. internal-redaction, provider resolution rules, FakeProvider scripted/streaming/embedding behavior.
+
+### Checks run
+
+- `npm test` — 16/16 pass.
+- `npx tsc --noEmit` — pass.
+- `npm run lint` — pass.
+- `npm run build` — pass (all routes compiled; proxy registered).
+
+### Known limitations (honest report)
+
+- Auth flow is implemented but **not exercised against a live Supabase project** — requires the owner's Supabase URL/keys in `.env.local` and running migration `0001`. Until then every protected page shows the setup notice.
+- Anthropic/Gemini/Ollama adapters are placeholders behind the abstraction (fall back to FakeProvider); implement when a key is available.
+- No integration tests against a real Postgres yet (needs a database in CI or local Supabase).
+
+### Next steps
+
+1. Owner: create Supabase project → run migration → fill `.env.local` → verify signup/login end to end.
+2. OpenCode: review P2 per the ledger note; report gaps.
+3. P3 (Communication Studio) is the next implementation milestone.
 
 ---
 
