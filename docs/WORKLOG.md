@@ -4,6 +4,39 @@ Session-by-session report of what was worked on. Newest first. See also `docs/AG
 
 ---
 
+## Session 3 — Phase P3 Communication Studio (Mistral/Vibe, parallel with OpenCode's P2 review)
+
+**Scope:** FR-1 Communication Studio per `docs/PRD.md` — import, analyze, draft, edit, save. No sending.
+
+### What was built
+
+1. **Thread parser** (`src/lib/email/parse-thread.ts`): heuristic split on `From:` boundaries, sender/email/date extraction, quote-marker stripping, direction detection via the signed-in user's email. Documented limitation: a body line starting with `From:` splits incorrectly (acceptable for MVP manual import).
+2. **Schemas** (`src/lib/schemas/communication.ts`): Zod schemas for email analysis (intent/urgency/summary/mainPoints/senderAsk/expectedResponse/confidence), import input, draft requests (tone/length), draft saves.
+3. **Versioned prompts** (`src/lib/ai/prompts/`): `analyze-email@1` and `draft-reply@1`, both with explicit untrusted-data delimiting (`<untrusted_message>`) and anti-injection system rules; draft prompt enforces grounding ("never invent facts") and bans corporate filler.
+4. **Orchestrator** (`src/lib/ai/orchestrator/communication.ts`): `analyzeEmail` — JSON-mode call, Zod-validated, one retry on invalid output, then typed `ai_provider_error`; `generateReply` — tone/length controls, contact context, style profile hook. Model metadata (provider/model/prompt version) returned for persistence.
+5. **Repositories** (`src/lib/database/repositories/index.ts`): the only Supabase table access layer — contacts, conversations, messages, classifications, drafts; every query workspace-scoped.
+6. **API routes** (all `requireUserApi` + Zod validation + error envelopes): `POST /api/conversations` (import thread, optional contact save with dedupe by email), `POST /api/conversations/[id]/analyze` (persist classification), `POST /api/conversations/[id]/drafts` (generate + persist draft with contact context), `PATCH /api/drafts/[id]` (edit/save).
+7. **Studio UI** (`src/components/email/studio-workspace.tsx`): full flow — paste thread → import & analyze → analysis panel (intent, urgency badge, main points, sender ask, confidence) → reply controls (intended outcome, tone, length) → editable draft with save + copy-to-clipboard → start over. Loading/error/success states throughout.
+8. **Tests**: 17 new unit tests (33 total) — thread parsing (splitting, direction, dates, quote stripping, fallbacks), orchestrator (validated happy path, non-JSON retry-then-fail, schema-invalid intent rejection, empty draft failure), and untrusted-input delimiting + grounding instructions in both prompts.
+
+### Checks run
+
+- `npm test` — 33/33 pass.
+- `npx tsc --noEmit` — pass. `npm run lint` — pass. `npm run build` — pass.
+
+### Known limitations
+
+- End-to-end flow needs a live Supabase + a real AI provider key; unit-tested with FakeProvider until then.
+- Thread parser is heuristic (see above).
+- Analysis is stored per first inbound message; per-message classifications deferred.
+
+### Next
+
+- OpenCode: P2 review + live auth verification (prompt in `docs/OPENCODE_PROMPTS.md`).
+- P4 (tasks & commitments + approval queue) is the next implementation milestone.
+
+---
+
 ## Session 2 — Phase P2 Foundation (Mistral/Vibe, in parallel with OpenCode's P1 run)
 
 **Scope:** Implement the P2 foundation while the owner runs OpenCode on Prompt 1. Per `docs/AGENT_WORK_SPLIT.md`, OpenCode should review this work and fill gaps rather than rebuild.
