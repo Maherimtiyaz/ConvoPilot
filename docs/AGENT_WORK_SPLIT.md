@@ -49,9 +49,27 @@ Completed as part of commit `fbadcfc` (see Milestone 0). If OpenCode was also gi
 
 ---
 
-## Milestone P3 — Communication Studio — ⬜ Not started
+## Milestone P3 — Communication Studio — ✅ Mistral (Vibe Code)
 
-Planned split: **OpenCode** implements per Prompt P3; **Mistral** reviews the PR, runs checks, and fills gaps. Assign explicitly before starting.
+Branch: `vibe/studio-p3-5bccb6` · PR: stacked on PR #1
+
+| Task | Owner | Files |
+| --- | --- | --- |
+| Thread parser (heuristic, direction detection) | Mistral | `src/lib/email/parse-thread.ts` |
+| Zod schemas (analysis, import, draft) | Mistral | `src/lib/schemas/communication.ts` |
+| Versioned prompts + untrusted-data delimiting | Mistral | `src/lib/ai/prompts/analyze-email.ts`, `draft-reply.ts` |
+| Orchestrator (analyzeEmail, generateReply) | Mistral | `src/lib/ai/orchestrator/communication.ts` |
+| Repositories (contacts, conversations, messages, classifications, drafts) | Mistral | `src/lib/database/repositories/index.ts`, `src/types/database.ts` |
+| API routes (import, analyze, drafts, draft edit) | Mistral | `src/app/api/conversations/**`, `src/app/api/drafts/[id]/route.ts` |
+| Studio UI full flow | Mistral | `src/components/email/studio-workspace.tsx`, `src/app/(app)/studio/page.tsx` |
+| 17 unit tests (parser, orchestrator, injection delimiting) | Mistral | `tests/unit/parse-thread.test.ts`, `communication-orchestrator.test.ts` |
+| Review P3 against docs, report gaps | OpenCode | ⬜ pending |
+
+---
+
+## Milestone P4 — Tasks & commitments — ⬜ Not started
+
+Planned split: **OpenCode** implements per Prompt P4 (task dashboard, approval queue for proposed commitments); **Mistral** reviews. Assign explicitly before starting.
 
 ---
 
