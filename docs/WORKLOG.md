@@ -4,6 +4,42 @@ Session-by-session report of what was worked on. Newest first. See also `docs/AG
 
 ---
 
+## Session 4 — Phase P4 Tasks & Commitments (Mistral/Vibe)
+
+**Scope:** FR-4 per `docs/PRD.md` — task management, commitment extraction with human approval queue, two-way commitment view.
+
+> Note: the sandbox was rolled back mid-session; the P3 branch was restored from the remote (`a7f7cbb`) and P4 was built on top. No work was lost.
+
+### What was built
+
+1. **Migration `0002`**: `commitments.source_excerpt` column — evidence text shown in the approval queue without loading full messages.
+2. **Schemas** (`src/lib/schemas/productivity.ts`): commitment proposals (owner me/them, description, dueDate, dueDateAmbiguous, confidence, sourceExcerpt) with a refinement **forcing dueDate to null when ambiguous** — an ambiguous timeframe can never become a hard deadline. Task create/update schemas, commitment action schema (approve/dismiss/complete only).
+3. **Versioned prompt** `extract-commitments@1` (`src/lib/ai/prompts/extract-commitments.ts`): strict extraction rules (only stated commitments, greetings/thanks excluded, ambiguous dates null + flagged, verbatim source excerpts), untrusted-data delimiting, and conversation-date context to resolve relative dates.
+4. **Orchestrator** (`src/lib/ai/orchestrator/productivity.ts`): `extractCommitments` — JSON mode, Zod-validated, one retry, typed failure. Proposals always start `proposed`; nothing is auto-confirmed.
+5. **Repositories extended**: commitments (create proposal, list by status, get, update status), tasks (list, create, update), conversation listing with contact name + message count, and `logAudit` (audit failures logged loudly, never silent).
+6. **API routes**: `GET/POST /api/tasks`, `PATCH /api/tasks/[id]`, `POST /api/conversations/[id]/commitments` (extraction → proposals), `PATCH /api/commitments/[id]` (approve → active + linked task for owner="me"; dismiss; complete — with 409 guards on invalid transitions), `GET /api/conversations/list`. Approval/dismissal/creation actions are recorded in `audit_logs`.
+7. **Tasks UI** (`tasks-workspace.tsx`): add-task form, approval queue with evidence quotes + confidence badges, open tasks with overdue highlighting, "Waiting on others" section (commitments made *to* you) with mark-received, completed list with reopen.
+8. **Conversations UI**: server-rendered list (subject, contact, message count, import date) with per-conversation "Extract commitments" action and result notice.
+9. **Architecture improvement**: Tasks and Conversations pages now fetch initial data in server components (Next 16 idiom); client components only refetch after mutations. This also removed mount-effect setState (React 19 lint rule).
+10. **Tests**: 10 new (43 total) — extraction validation (happy path, empty list, ambiguous-date contract, invalid owner, non-JSON failure), delimiting in extraction prompt, schema invariants (ISO dates, action whitelist, defaults).
+
+### Checks run
+
+- `npm test` — 43/43 pass. `npx tsc --noEmit` — pass. `npm run lint` — pass. `npm run build` — pass.
+
+### Known limitations
+
+- Extraction links evidence to the first inbound message of the thread (per-message source matching deferred to semantic search phase).
+- Approval flow untested against live DB (needs Supabase project); state-transition guards are unit-tested at schema level and enforced in the route.
+- Accepting a Next 16 change: `export const dynamic = "force-dynamic"` was removed in Next 16; pages using `cookies()` are dynamic automatically.
+
+### Next
+
+- P5 Daily briefing (dashboard counts + briefing generation from stored data).
+- P6 Gmail integration after that.
+
+---
+
 ## Session 3 — Phase P3 Communication Studio (Mistral/Vibe, parallel with OpenCode's P2 review)
 
 **Scope:** FR-1 Communication Studio per `docs/PRD.md` — import, analyze, draft, edit, save. No sending.

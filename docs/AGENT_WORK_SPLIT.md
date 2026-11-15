@@ -67,9 +67,28 @@ Branch: `vibe/studio-p3-5bccb6` · PR: stacked on PR #1
 
 ---
 
-## Milestone P4 — Tasks & commitments — ⬜ Not started
+## Milestone P4 — Tasks & commitments — ✅ Mistral (Vibe Code)
 
-Planned split: **OpenCode** implements per Prompt P4 (task dashboard, approval queue for proposed commitments); **Mistral** reviews. Assign explicitly before starting.
+Branch: `vibe/studio-p3-5bccb6` (same stacked PR as P3)
+
+| Task | Owner | Files |
+| --- | --- | --- |
+| Migration 0002 (commitments.source_excerpt) | Mistral | `supabase/migrations/0002_commitment_source_excerpt.sql` |
+| Productivity schemas (ambiguous-date refinement) | Mistral | `src/lib/schemas/productivity.ts` |
+| extract-commitments@1 prompt | Mistral | `src/lib/ai/prompts/extract-commitments.ts` |
+| extractCommitments orchestrator | Mistral | `src/lib/ai/orchestrator/productivity.ts` |
+| Commitment/task repositories + audit logging | Mistral | `src/lib/database/repositories/index.ts` |
+| API routes (tasks, commitments approval, extraction, conversations list) | Mistral | `src/app/api/tasks/**`, `src/app/api/commitments/[id]/route.ts`, `src/app/api/conversations/**` |
+| Tasks UI (approval queue, two-way view, overdue) | Mistral | `src/components/tasks/tasks-workspace.tsx`, `src/app/(app)/tasks/page.tsx` |
+| Conversations list UI + extract action | Mistral | `src/components/conversations/conversations-list.tsx`, `src/app/(app)/conversations/page.tsx` |
+| 10 unit tests (extraction, ambiguity contract, schemas) | Mistral | `tests/unit/productivity-orchestrator.test.ts` |
+| Review P3+P4 against docs, report gaps | OpenCode | ⬜ pending |
+
+---
+
+## Milestone P5 — Daily briefing — ⬜ Not started
+
+Planned: **Mistral** implements (dashboard counts + briefing generation); **OpenCode** reviews.
 
 ---
 

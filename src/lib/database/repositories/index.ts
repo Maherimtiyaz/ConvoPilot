@@ -202,3 +202,251 @@ export async function updateDraft(
   if (error) throw new Error(`Failed to update draft: ${error.message}`);
   return data;
 }
+
+// ---------------------------------------------------------------------------
+// Conversation listing
+// ---------------------------------------------------------------------------
+
+export interface ConversationListItem {
+  id: string;
+  subject: string | null;
+  source_type: string;
+  last_message_at: string | null;
+  created_at: string;
+  contact_name: string | null;
+  message_count: number;
+}
+
+export async function listConversations(
+  supabase: SupabaseClient,
+  workspaceId: string,
+): Promise<ConversationListItem[]> {
+  const { data, error } = await supabase
+    .from("conversations")
+    .select(
+      `id, subject, source_type, last_message_at, created_at,
+       contacts ( full_name ),
+       messages ( count )`,
+    )
+    .eq("workspace_id", workspaceId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(`Failed to list conversations: ${error.message}`);
+
+  return (data ?? []).map((row) => {
+    const r = row as unknown as {
+      id: string;
+      subject: string | null;
+      source_type: string;
+      last_message_at: string | null;
+      created_at: string;
+      contacts: { full_name: string }[] | null;
+      messages: { count: number }[];
+    };
+    return {
+      id: r.id,
+      subject: r.subject,
+      source_type: r.source_type,
+      last_message_at: r.last_message_at,
+      created_at: r.created_at,
+      contact_name: r.contacts?.[0]?.full_name ?? null,
+      message_count: r.messages?.[0]?.count ?? 0,
+    };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Commitments
+// ---------------------------------------------------------------------------
+
+export interface CommitmentRecord {
+  id: string;
+  workspace_id: string;
+  contact_id: string | null;
+  conversation_id: string | null;
+  description: string;
+  owner: "me" | "them";
+  due_date: string | null;
+  status: "proposed" | "active" | "completed" | "dismissed";
+  confidence: number | null;
+  is_confirmed: boolean;
+  source_message_id: string | null;
+  source_excerpt: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function createCommitmentProposal(
+  supabase: SupabaseClient,
+  workspaceId: string,
+  input: {
+    conversation_id: string;
+    contact_id: string | null;
+    owner: "me" | "them";
+    description: string;
+    due_date: string | null;
+    confidence: number;
+    source_message_id: string | null;
+    source_excerpt: string;
+    model_metadata: Record<string, unknown>;
+  },
+): Promise<CommitmentRecord> {
+  const { data, error } = await supabase
+    .from("commitments")
+    .insert({ workspace_id: workspaceId, status: "proposed", is_confirmed: false, ...input })
+    .select("*")
+    .single<CommitmentRecord>();
+  if (error) throw new Error(`Failed to save commitment proposal: ${error.message}`);
+  return data;
+}
+
+export async function listCommitments(
+  supabase: SupabaseClient,
+  workspaceId: string,
+  statuses: CommitmentRecord["status"][],
+): Promise<CommitmentRecord[]> {
+  const { data, error } = await supabase
+    .from("commitments")
+    .select("*")
+    .eq("workspace_id", workspaceId)
+    .in("status", statuses)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(`Failed to list commitments: ${error.message}`);
+  return (data ?? []) as CommitmentRecord[];
+}
+
+export async function updateCommitmentStatus(
+  supabase: SupabaseClient,
+  workspaceId: string,
+  commitmentId: string,
+  status: CommitmentRecord["status"],
+  isConfirmed: boolean,
+): Promise<CommitmentRecord> {
+  const { data, error } = await supabase
+    .from("commitments")
+    .update({ status, is_confirmed: isConfirmed })
+    .eq("workspace_id", workspaceId)
+    .eq("id", commitmentId)
+    .select("*")
+    .single<CommitmentRecord>();
+  if (error) throw new Error(`Failed to update commitment: ${error.message}`);
+  return data;
+}
+
+export async function getCommitment(
+  supabase: SupabaseClient,
+  workspaceId: string,
+  commitmentId: string,
+): Promise<CommitmentRecord> {
+  const { data, error } = await supabase
+    .from("commitments")
+    .select("*")
+    .eq("workspace_id", workspaceId)
+    .eq("id", commitmentId)
+    .maybeSingle<CommitmentRecord>();
+  if (error) throw new Error(`Failed to load commitment: ${error.message}`);
+  if (!data) throw notFound("Commitment not found");
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Tasks
+// ---------------------------------------------------------------------------
+
+export interface TaskRecord {
+  id: string;
+  workspace_id: string;
+  title: string;
+  status: "todo" | "in_progress" | "done" | "cancelled";
+  priority: "low" | "medium" | "high";
+  due_date: string | null;
+  contact_id: string | null;
+  conversation_id: string | null;
+  commitment_id: string | null;
+  origin: "manual" | "proposed";
+  created_at: string;
+  updated_at: string;
+}
+
+export async function listTasks(
+  supabase: SupabaseClient,
+  workspaceId: string,
+): Promise<TaskRecord[]> {
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("*")
+    .eq("workspace_id", workspaceId)
+    .is("deleted_at", null)
+    .order("due_date", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(`Failed to list tasks: ${error.message}`);
+  return (data ?? []) as TaskRecord[];
+}
+
+export async function createTask(
+  supabase: SupabaseClient,
+  workspaceId: string,
+  input: {
+    title: string;
+    priority: TaskRecord["priority"];
+    due_date: string | null;
+    contact_id: string | null;
+    conversation_id: string | null;
+    commitment_id: string | null;
+    origin: TaskRecord["origin"];
+  },
+): Promise<TaskRecord> {
+  const { data, error } = await supabase
+    .from("tasks")
+    .insert({ workspace_id: workspaceId, ...input })
+    .select("*")
+    .single<TaskRecord>();
+  if (error) throw new Error(`Failed to create task: ${error.message}`);
+  return data;
+}
+
+export async function updateTask(
+  supabase: SupabaseClient,
+  workspaceId: string,
+  taskId: string,
+  input: Partial<Pick<TaskRecord, "title" | "status" | "priority" | "due_date">>,
+): Promise<TaskRecord> {
+  const { data, error } = await supabase
+    .from("tasks")
+    .update(input)
+    .eq("workspace_id", workspaceId)
+    .eq("id", taskId)
+    .select("*")
+    .single<TaskRecord>();
+  if (error) throw new Error(`Failed to update task: ${error.message}`);
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Audit logging
+// ---------------------------------------------------------------------------
+
+export async function logAudit(
+  supabase: SupabaseClient,
+  workspaceId: string,
+  input: {
+    actor: string;
+    action: string;
+    target_type: string;
+    target_id: string | null;
+    metadata?: Record<string, unknown>;
+  },
+): Promise<void> {
+  const { error } = await supabase.from("audit_logs").insert({
+    workspace_id: workspaceId,
+    actor: input.actor,
+    action: input.action,
+    target_type: input.target_type,
+    target_id: input.target_id,
+    metadata: input.metadata ?? {},
+  });
+  if (error) {
+    // Audit failures must be visible, never silent.
+    console.error(`[audit_log] failed to record ${input.action}: ${error.message}`);
+  }
+}
