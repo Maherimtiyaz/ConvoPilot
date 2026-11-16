@@ -1,0 +1,8 @@
+# Gitleaks configuration for ConvoPilot.
+# Uses the full built-in rule set. Add allowlist entries only for verified
+# false positives, each with a comment explaining why.
+
+title = "ConvoPilot secret scanning"
+
+[extend]
+useDefault = true
