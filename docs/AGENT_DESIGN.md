@@ -1,6 +1,6 @@
 # ConvoPilot — Agent Design
 
-Version: 0.2 · Status: Specification for review (nothing implemented) · Last revised: 2026-11-16
+Version: 0.3 · Status: Specification for review (nothing implemented) · Last revised: 2026-11-16 (M1.3 correction pass)
 
 Labels: **Required**, **Recommended (pending approval)**, **Pending decision** (see `ARCHITECTURE.md` §11). Provider/SDK choice is pending (P3, P4); nothing here depends on a specific vendor.
 
@@ -71,7 +71,7 @@ The per-workflow allow-list in the last column is enforced by the policy layer, 
 - **Propose** — create records in `proposed` (or `draft`) state. Never confirms, approves, deletes or changes confirmed records.
 - **Execute** — external or irreversible actions. Require explicit per-action user approval. **None exist in v0.1.**
 
-Confirmation, rejection, editing and deletion of proposals are **user actions via Server Actions**, never tools.
+Confirmation, rejection, editing and deletion of proposals are **user actions via Server Actions**, never tools. Decisions go only through `public.decide_proposal` / `public.approve_task` (`DATABASE.md` §5.3, §5.6). No tool, workflow, orchestrator or AI service may call these RPCs; only `src/lib/services/proposals/decide.ts` may reference them (CI grep check, EVALUATION A23). Because AI code and the user share one JWT, this rule is enforced by the application, not the database (documented residual limitation).
 
 ## 6. Evidence and citations (Required)
 
@@ -83,7 +83,7 @@ Confirmation, rejection, editing and deletion of proposals are **user actions vi
 ## 7. Memory and style
 
 - Write path: import → store raw → workflow produces proposals (`origin=extracted|inferred`, `status=proposed`, citations) → user confirms/rejects/edits → audit event.
-- Read path: answers use `confirmed` records as facts; `proposed` records may appear only labelled as unverified.
+- Read path: answers use records that are `confirmed` **and** `evidence_state='supported'` as facts; `proposed` records may appear only labelled as unverified; records whose evidence was deleted are flagged, not used (`DATABASE.md` §5.5).
 - **Style preferences:** preferences the user states directly are `user_stated` and confirmed. Preferences learned from approved drafts are `inferred` and remain `proposed` until the user approves them. Only confirmed preferences are used for drafting.
 
 ## 8. Untrusted input (Required)
@@ -102,4 +102,4 @@ Confirmation, rejection, editing and deletion of proposals are **user actions vi
 
 ## 10. Testing
 
-Scenarios A1–A21 and S1–S22 in `EVALUATION.md` §3–§4 use a deterministic, scripted test provider (tests only).
+Scenarios A1–A24 and S1–S36 in `EVALUATION.md` §3–§4 use a deterministic, scripted test provider (tests only).

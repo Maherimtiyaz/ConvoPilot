@@ -1,6 +1,6 @@
 # ConvoPilot — Product Requirements Document (PRD)
 
-Version: 0.2 · Status: Draft for review · Owner: Mahek · Last revised: 2026-11-16
+Version: 0.3 · Status: Draft for review · Owner: Mahek · Last revised: 2026-11-16
 
 Nothing in this document is implemented yet (see `WORKLOG.md`). Technical requirements are specified in `ARCHITECTURE.md`, `DATABASE.md`, `SECURITY.md` and `AGENT_DESIGN.md`.
 
@@ -12,7 +12,7 @@ Our working hypothesis is that busy people — founders first — lose track of 
 
 > ConvoPilot is an AI Chief of Staff that turns conversations into decisions, commitments, and completed work.
 
-Intended initial audience (assumption, not validated): solo founders and small startup operators, then busy professionals. The v0.1 user base is one primary user plus a small number of invited people. How invited people relate to the primary user's data is **pending decision P1** (`ARCHITECTURE.md` §11).
+Intended initial audience (assumption, not validated): solo founders and small startup operators, then busy professionals. The v0.1 user base is one primary user plus a small number of invited people. **Approved:** each person has their own private workspace; invited people never see each other's data; there is no shared-workspace collaboration in the MVP.
 
 ### Long-term vision (not v0.1)
 
@@ -25,7 +25,7 @@ Founder intelligence, daily briefings and recommendations, Gmail/Calendar and ot
 | Runtime | Locked | Local development first; cloud deployment later |
 | AI strategy | Locked | Provider-agnostic abstraction. First provider pending (P3); hosted processing of private content pending (P5) |
 | Conversation intake | Locked | Manual paste/file import first; Gmail later |
-| Users | Locked (model) / Pending (sharing) | Workspace-isolated multi-user data model; friend sharing model pending (P1); sign-up/invitation policy pending (P6) |
+| Users | Approved | Private workspace per user; invite-only sign-up; only a platform operator issues invitations; email magic link / OTP login |
 | Tasks/calendar | Locked | Internal tasks first; calendar later |
 | Autonomy | Locked | Draft and propose only; user approves; no sending in v0.1 |
 | Notifications | Deferred | Later: morning briefing + important alerts |
@@ -91,7 +91,7 @@ Out of scope for v0.1: daily briefing (planned for M6, after v0.1 acceptance), G
 - No message content in logs, analytics or error responses (`SECURITY.md` §9).
 - Provider configuration server-side only; hosted-provider data handling per P5.
 - Stored-data pages respond in under 2 s locally (target, to be measured); AI calls show progress.
-- Data export and deletion implemented before any real deployment.
+- Data export and deletion implemented before any real deployment. Users can request account deletion; access ends immediately and data is permanently deleted after a retention period (period pending owner decision; `DATABASE.md` §8.6).
 
 ## 8. Success metrics (post-MVP, to be measured)
 

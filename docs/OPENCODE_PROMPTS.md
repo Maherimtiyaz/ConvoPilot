@@ -18,9 +18,9 @@ This file is a **log**, not a specification. `AGENTS.md` and the documents it li
 | --- | --- | --- |
 | M1.1 | Baseline verification (`npm ci`, lint, typegen/tsc, build, audit) | ✅ Done 2026-11-16 |
 | — | Specification revision v0.2 and hardening pass | ✅ Documented; awaiting owner review |
-| M1.2 | Tooling & quality gates | ✅ Implemented 2026-11-16 (verified locally; uncommitted) |
-| M1.3 | Database foundation (local/hosted Supabase per P2, first migration, RLS tests) | ⬜ Blocked on P2 (and P1 recommendation approval) |
-| M1.4 | Authentication & protected app shell | ⬜ Blocked on P6 |
+| M1.2 | Tooling & quality gates | ✅ Accepted 2026-11-16 (commit `2bfb522`, CI green) |
+| M1.3 | Database foundation + Supabase Auth integration (local Supabase, migrations, RLS, invitations, sign-up gate, session-bound server client) | 🟡 Stage 0 validation passed 2026-11-16; Stage 1 implementation next |
+| M1.4 | Login UI, `proxy.ts`, protected application shell | ⬜ Not started (after M1.3) |
 | M2 | AI core (provider interface, test provider, structured output, policy, injection harness) | ⬜ Blocked on P4 |
 | M3 | Communication Studio | ⬜ Blocked on P3, P5 |
 | M4 | Contacts, Conversations & retrieval | ⬜ |

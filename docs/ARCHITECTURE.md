@@ -1,6 +1,6 @@
 # ConvoPilot — Architecture
 
-Version: 0.3 · Status: Specification for review (pre-M1.2; hardening pass applied) · Last revised: 2026-11-16
+Version: 0.4 · Status: Specification for review (M1.2 accepted; M1.3 correction pass applied) · Last revised: 2026-11-16
 
 Status labels used in this document:
 
@@ -38,8 +38,8 @@ Application services / use cases (src/lib/services)
    ▼
 Supabase Postgres (RLS on every workspace table) + pgvector (later)
 
-Service-role client: separate server-only module, used only by explicitly listed
-administrative/maintenance jobs, never on a normal user request path.
+Service-role key: used only by the isolated privileged runner (permanent deletion,
+Auth user deletion, retention). Not present in the Next.js runtime; never on a request path.
 ```
 
 ## 2. Module responsibilities
@@ -56,7 +56,7 @@ administrative/maintenance jobs, never on a normal user request path.
 | AI tools | `src/lib/ai/tools` | Thin adapters: Zod-validate args → policy check → call a service | Bypass services or policy |
 | Provider adapters | `src/lib/ai/providers` | Translate the internal provider interface to a vendor SDK/API | Leak vendor types into services |
 | Retrieval | `src/lib/retrieval` | Keyword search (Postgres full-text) in v0.1; vector search later; always workspace-filtered | Return records from other workspaces |
-| Audit | `src/lib/audit` + DB triggers | Data-change events are written by database triggers; non-data events (policy denials, exports, invitations, job runs) by this server-only writer (`DATABASE.md` §10.1) | Accept actor ids from the client; log message bodies or secrets |
+| Audit | DB triggers + definer functions; `src/lib/audit` wraps `public.log_event` | Data-change events by triggers; non-data events through `log_event` with the user's JWT (actor forced to `auth.uid()`) (`DATABASE.md` §10.1) | Use the service-role key; accept actor ids from the client; log content or secrets |
 
 Rule: a new module is introduced only when it has a real responsibility. Business logic is never embedded in UI components.
 
@@ -117,7 +117,7 @@ How they combine on a request:
 **Required:**
 
 - Normal request-time queries use a Supabase client created from the user's session (anon/publishable key + user JWT). RLS is therefore always in force on request paths.
-- `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS. It lives in one `server-only` module (`src/lib/db/admin.ts`, planned) and may be imported only by the allow-list in `SECURITY.md` §4 (audit writer, permanent-deletion/retention job, invitation admin action). A CI grep/lint check rejects imports elsewhere. Code holding the service-role client never runs a query on behalf of user input without first resolving a verified `RequestContext`.
+- `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS. It is used **only** by the isolated privileged runner (`DATABASE.md` §4.5) and is not present in the Next.js runtime. Audit writes, invitations, operator actions and account-deletion requests all run with the user's JWT through definer functions. A CI check rejects any reference to the service-role key or the Auth Admin API under `src/`.
 - **Direct database API access:** the browser holds the publishable key and the user's JWT, so a user can call the Supabase API directly, skipping Next.js and the policy layer. Layer 2 therefore protects only server-mediated operations; every invariant that must hold against the user (membership, workspace immutability, proposal status rules, `decided_by`, audit, soft-delete visibility) is enforced in the database (`DATABASE.md` §4).
 - The LLM never receives a database client, credentials, SQL, or table names to query. It can only request registered tools.
 
@@ -177,7 +177,7 @@ Permission levels: **Read** (retrieve workspace data), **Propose** (create recor
 
 Deferred tools (`prepare_meeting`, `update_contact`) and all execute-level tools are not registered in v0.1 (`AGENT_DESIGN.md` §4).
 
-Any tool call outside the active workflow's list is denied by policy and audit-logged, regardless of model output. Confirmation of proposals is a **user action through a Server Action**, never a tool.
+Any tool call outside the active workflow's list is denied by policy and audit-logged, regardless of model output. Confirmation of proposals is a **user action** through a Server Action that calls `public.decide_proposal` / `public.approve_task` (`DATABASE.md` §5.3, §5.6); no tool, workflow or AI service may call these RPCs (CI grep check + agent test).
 
 ### 5.5 Relationship to `docs/AGENT_DESIGN.md`
 
@@ -185,7 +185,7 @@ Any tool call outside the active workflow's list is denied by policy and audit-l
 
 ## 6. Evidence and grounding
 
-- Every AI-derived fact, commitment, analysis, draft and factual answer references one or more **citations** to stored sources (message or note) in the same workspace (schema: `DATABASE.md` §6). AI-proposed tasks inherit evidence from their required commitment (`DATABASE.md` §5.4).
+- Every AI-derived fact, commitment, analysis, draft and factual answer references one or more **citations** to stored sources (message or note) in the same workspace (schema: `DATABASE.md` §6). AI-proposed tasks inherit evidence from their required commitment (`DATABASE.md` §5.6).
 - Before presenting an answer or storing a proposal, the service verifies each cited source id (a) exists, (b) belongs to the current workspace, (c) is not soft-deleted, (d) was part of the context supplied to the model in this request, and (e) if a quote is given, the quote appears in the source text. Fabricated or failing citations are dropped; if no valid citation remains, the claim is not shown as fact ("I don't have a record of that").
 
 ## 7. Error handling & observability
@@ -230,9 +230,9 @@ docs/
 | D9 | No private-data caching in v0.1 | Required |
 | D10 | Full-text search first; pgvector added once retrieval quality is measured | Recommended (pending approval) |
 
-## 10. CI pipeline (implemented in M1.2: `.github/workflows/ci.yml`; first GitHub run not yet observed)
+## 10. CI pipeline (implemented in M1.2: `.github/workflows/ci.yml`; first GitHub run green on 2026-11-16)
 
-Single reproducible order (GitHub Actions, Node 22). Steps 1–6 run in the `quality` job; step 7 runs in a parallel `secret-scan` job:
+Single reproducible order (GitHub Actions, Node 22). Steps 1–6 run in the `quality` job (which also fails if the service-role key or Auth Admin API appears under `src/`); step 7 runs in a parallel `secret-scan` job; the `database` job (M1.3) runs the local Supabase stack, pgTAP (`supabase test db supabase/tests`) and the Auth/RLS integration tests; it parses the executed test counts and fails on zero or fewer than the expected minimum (83 pgTAP, 22 integration) or on any failure:
 
 1. `npm ci`
 2. `npm run lint`
@@ -242,7 +242,7 @@ Single reproducible order (GitHub Actions, Node 22). Steps 1–6 run in the `qua
 6. `npm run build`
 7. Secret scanning: Gitleaks 8.30.0 (owner-approved), pinned binary with SHA-256 verification, scans full Git history with `.gitleaks.toml` (default rules); fails on findings
 
-Later additions: database/RLS tests against a local Supabase instance (once migrations exist), `npm audit --omit=dev` as a gate on production dependencies.
+Later additions: `npm audit --omit=dev` as a gate on production dependencies. The `database` job has not yet run on GitHub (added in M1.3, uncommitted).
 
 **Dependency audit baseline (observation dated 2026-11-16, not a permanent count):** `npm audit` reported 8 moderate findings, all in the development-only chain `eslint-config-next` → `@typescript-eslint/*` → `@typescript-eslint/typescript-estree` → `minimatch` (GHSA-g3hv-75wg-m249, ReDoS-class DoS). `npm audit --omit=dev` reported 0. The suggested `npm audit fix --force` applies breaking changes and must not be run without review. Re-check on each dependency change.
 
@@ -254,21 +254,23 @@ None of these are approved. Each needs owner approval before the dependent work 
 
 | Decision | Blocks | Can be deferred until |
 | --- | --- | --- |
-| P1 Workspace sharing | M1.3 (sign-up function and membership policies assume Option A) | Approval of the Option A recommendation needed before M1.3 |
-| P2 Local vs hosted Supabase | M1.3 | Before M1.3 |
+| P1 Workspace sharing | — | **Approved 2026-11-16:** private workspaces only; no shared workspaces in the MVP |
+| P2 Local vs hosted Supabase | — | **Approved 2026-11-16:** hosted dev project for manual development; local Supabase (Docker) for automated tests/CI; separate production project |
 | P3 First AI provider | M3 | M2 uses only the test provider |
 | P4 AI SDK | M2 | Before M2 |
 | P5 Hosted processing of private content | M3 (first real model call on user content) | Before M3 |
-| P6 Auth & invitation policy | M1.4 (M1.3 sign-up trigger is policy-neutral) | Before M1.4 |
-| Retention periods (soft delete, audit) | Deletion job (M5/M8) | Before the permanent-deletion job is built |
+| P6 Auth & invitation policy | — | **Approved 2026-11-16:** invite-only; only a platform operator (separate from workspace roles) may invite; email magic link / OTP |
+| Retention periods (soft-deleted content, account deletion, audit) and deletion-cancel policy | Privileged runner implementation | Before the runner is built (not M1.3 schema) |
+| Privileged runner hosting | Privileged runner implementation | Before the runner is built |
+| Invitation default TTL / maximum | M1.3 `create_invitation` | Proposed 7 days default; confirm in M1.3 |
 | File-size / paste limits | M3 | Before M3 |
 | Secret-scanning tool | M1.2 CI step (tool choice can be made inside M1.2 with approval) | M1.2 |
 | M1/M2 split | Milestone planning | Before M1.2 approval |
 
-**No pending decision blocks M1.2** (tooling and quality gates), apart from approving M1.2 itself, its dependencies (Vitest, Zod) and the secret-scanning tool.
+M1.2 was accepted on 2026-11-16 (commit `2bfb522`, CI green). Approved M1.3 dependencies (subject to compatibility checks at install time): Supabase CLI, `@supabase/supabase-js`, `@supabase/ssr`.
 
 ### P1. Friend invitations / workspace sharing
-See `DATABASE.md` §3.3 for the full option analysis. **Recommended default:** one private workspace per user; no shared workspaces in v0.1. Approval required.
+**Approved:** private workspaces only (`DATABASE.md` §3.1).
 
 ### P2. Local vs hosted development Supabase
 
@@ -277,7 +279,7 @@ See `DATABASE.md` §3.3 for the full option analysis. **Recommended default:** o
 | Local Supabase CLI (Docker) | Free, offline, disposable, migrations tested from scratch, RLS tests in CI with the same tooling | Needs Docker locally; differences from hosted config (auth email, SMTP) | No real data leaves the machine; no hosted keys to leak |
 | Hosted dev project | No Docker; real auth emails; closer to production | Shared state drifts from migrations; network dependency; keys must be managed | Hosted keys exist and must be protected; risk of real data entering dev |
 
-**Recommended default:** local Supabase CLI for development and CI, hosted project only at deployment phase. Approval required.
+**Approved (2026-11-16):** hosted development project for manual development, local Supabase (Docker) for automated tests and CI, separate production project.
 
 ### P3. First production AI provider
 
@@ -317,7 +319,7 @@ See `DATABASE.md` §3.3 for the full option analysis. **Recommended default:** o
 | Invite-only: public sign-up disabled; owner issues invites | Matches "primary user + invited friends"; controls cost | Invite flow to build | Smallest attack surface |
 | Magic link vs password vs OAuth (Google) | Magic link: no passwords stored by app; OAuth: convenient | Magic link depends on email delivery; OAuth adds provider config | Magic link/OAuth avoid password reuse risk |
 
-**Recommended default:** invite-only, public sign-up disabled, email magic link (or OTP) via Supabase Auth; OAuth later. Exact Supabase settings to be verified against current Supabase documentation at implementation time. Approval required.
+**Approved (2026-11-16):** invite-only; only a platform operator may invite (platform permission separate from workspace roles); email magic link / OTP. Mechanism in `DATABASE.md` §3.4–§3.6; Supabase hook support must be validated on the local stack.
 
 ## 12. Testing strategy
 
@@ -328,9 +330,9 @@ See `EVALUATION.md`. Summary: unit (Vitest) for schemas, policy and citation val
 | Milestone | Scope | Status |
 | --- | --- | --- |
 | M1.1 | Baseline verification | ✅ Verified 2026-11-16 |
-| M1.2 | Tooling & quality gates: Vitest, Zod, env loader (server-only), `test`/`typecheck` scripts, CI pipeline (§10), `.gitignore` exception | ✅ Implemented and verified locally 2026-11-16 (uncommitted; CI not yet run on GitHub) |
-| M1.3 | Database foundation: Supabase (P2), first migration (`workspaces`, `profiles`, `workspace_members`, `workspace_settings`, `audit_events`, helper and sign-up functions, RLS), RLS tests | Not started |
-| M1.4 | Authentication (P6) and protected app shell: `proxy.ts`, DAL, five screens + Settings with empty states | Not started |
+| M1.2 | Tooling & quality gates: Vitest, Zod, env loader (server-only), `test`/`typecheck` scripts, CI pipeline (§10), `.gitignore` exception | ✅ Accepted 2026-11-16 (commit `2bfb522`, GitHub CI green) |
+| M1.3 | Database foundation and Supabase Auth integration: local Supabase stack + CI database tests, migrations for foundation tables, `app_private` schema, function grants, RLS, operator + invitation model, invite-only sign-up gate and provisioning, `log_event`, account-deletion request function and lifecycle design, Supabase env section, session-bound server client (`@supabase/ssr`) | 🟡 Stage 0 passed; Stage 1 implemented and verified locally 2026-11-16 (uncommitted; GitHub `database` job not yet run) |
+| M1.4 | Login UI (magic link / OTP), `proxy.ts`, protected application shell, frontend session experience | Not started |
 | M2 | AI core: provider interface (P4), test provider, structured output helper, policy layer, tool registry, injection harness | Not started |
 | M3 | Communication Studio | Not started |
 | M4 | Contacts, Conversations, keyword retrieval, cited Q&A | Not started |

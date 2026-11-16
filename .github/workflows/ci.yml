@@ -41,6 +41,14 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Forbid service-role key and Auth Admin API in application code
+        # docs/SECURITY.md §4: only the isolated privileged runner may use them.
+        run: |
+          if grep -rnE "SERVICE_ROLE|service_role|serviceRole|SUPABASE_SECRET|SECRET_KEY|sb_secret_|auth\.admin|admin\.(createUser|deleteUser|updateUserById|inviteUserByEmail|generateLink)" src/; then
+            echo "Service-role / Auth Admin usage is not allowed under src/" >&2
+            exit 1
+          fi
+
       - name: Generate Next.js types
         run: npx next typegen
 
@@ -52,6 +60,63 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+  database:
+    name: Database (local Supabase, pgTAP, Auth integration)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies (lockfile only; includes pinned Supabase CLI)
+        run: npm ci
+
+      - name: Start local Supabase stack
+        run: npx supabase start
+
+      - name: Database tests (pgTAP; explicit path; fail on zero or too few tests)
+        env:
+          MIN_PGTAP_TESTS: "83"
+        run: |
+          set -euo pipefail
+          npx supabase test db supabase/tests 2>&1 | tee pgtap.log
+          tests="$(grep -oE 'Tests=[0-9]+' pgtap.log | tail -1 | cut -d= -f2 || true)"
+          echo "pgTAP tests executed: ${tests:-0}"
+          if [ -z "${tests:-}" ] || [ "${tests}" -lt "${MIN_PGTAP_TESTS}" ]; then
+            echo "::error::expected at least ${MIN_PGTAP_TESTS} pgTAP tests, executed ${tests:-0}"
+            exit 1
+          fi
+          grep -q '^Result: PASS' pgtap.log
+
+      - name: Auth and RLS integration tests (fail on zero or too few tests)
+        env:
+          MIN_INTEGRATION_TESTS: "22"
+        run: |
+          set -euo pipefail
+          npx supabase status -o env > supabase/.temp/status.env
+          npx vitest run --config vitest.integration.config.ts \
+            --reporter=default --reporter=json --outputFile.json=integration-results.json
+          node -e '
+            const r = require("./integration-results.json");
+            const min = Number(process.env.MIN_INTEGRATION_TESTS);
+            console.log(`integration tests: total=${r.numTotalTests} passed=${r.numPassedTests} failed=${r.numFailedTests}`);
+            if (r.numTotalTests < min || r.numFailedTests !== 0 || r.numPassedTests !== r.numTotalTests) {
+              console.error(`::error::expected at least ${min} passing integration tests`);
+              process.exit(1);
+            }'
+
+      - name: Stop local Supabase stack
+        if: always()
+        run: npx supabase stop --no-backup
 
   secret-scan:
     name: Secret scan (Gitleaks)

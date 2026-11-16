@@ -44,7 +44,7 @@ Do not revisit these without explicit owner approval:
 1. **Local development first.** Git for version control, separate development database.
 2. **Provider-agnostic AI.** Business logic depends only on internal provider interfaces; vendor SDKs are imported only inside provider adapters.
 3. **Manual conversation import first.** Paste and `.txt`/`.md`/`.eml` upload in v0.1. Gmail/Google Calendar interfaces may be designed; sync is not implemented before its milestone.
-4. **Multi-user-ready, workspace-isolated.** Every user-owned record carries `workspace_id`; strict tenant isolation via `workspace_members`, RLS and workspace-scoped foreign keys. Whether invited friends share workspaces is **pending (P1)**.
+4. **Multi-user-ready, workspace-isolated.** Every user-owned record carries `workspace_id`; strict tenant isolation via `workspace_members`, RLS and workspace-scoped foreign keys. Approved: one private workspace per user, invite-only sign-up, invitations issued only by a platform operator (a platform permission separate from workspace roles).
 5. **Internal tasks first.** Own task tables; external calendar sync is a later adapter.
 6. **Human-in-the-loop.** The AI reads, analyses, drafts and proposes. The user approves anything that becomes a confirmed fact or leaves the system. v0.1 has no capability to send anything.
 7. **MVP v0.1 = five screens**: Dashboard, Communication Studio, Contacts, Conversations, Tasks (plus a Settings shell). Nothing else until v0.1 passes its acceptance criteria.
@@ -67,7 +67,7 @@ Do not revisit these without explicit owner approval:
 3. Zod validation at every boundary: user input, tool arguments, model outputs, env variables.
 4. Typed errors; never swallow errors silently.
 5. No `any` in new code.
-6. Normal request paths use the user-session Supabase client (RLS applies). The service-role key is confined to the allow-listed modules in `docs/SECURITY.md` §4.
+6. All Next.js request paths use the user-session Supabase client (RLS applies). The service-role key is used only by the isolated privileged runner (`docs/SECURITY.md` §4) and must never appear under `src/`.
 7. The LLM never receives SQL, credentials or a database client; it can only request registered tools.
 8. No caching of private workspace data in v0.1.
 9. No mock or test implementations presented as production integrations; no fake data presented as real. A deterministic test AI provider is allowed only in tests.
@@ -109,6 +109,6 @@ Before changing existing architecture, explain the change and get approval. Do n
 
 ## 8. Milestones
 
-Defined in `docs/ARCHITECTURE.md` §13. Summary: M1 Foundation (M1.1 baseline ✅; M1.2 tooling & quality gates; M1.3 database foundation; M1.4 auth & protected shell) → M2 AI core → M3 Communication Studio → M4 Contacts, Conversations & retrieval → M5 Commitments & Tasks → **v0.1 acceptance** → M6 Daily briefing → M7 Gmail/Calendar (read-only first) → M8 Hardening & deployment.
+Defined in `docs/ARCHITECTURE.md` §13. Summary: M1 Foundation (M1.1 baseline ✅; M1.2 tooling & quality gates ✅; M1.3 database foundation + Supabase Auth integration; M1.4 login UI, proxy & protected shell) → M2 AI core → M3 Communication Studio → M4 Contacts, Conversations & retrieval → M5 Commitments & Tasks → **v0.1 acceptance** → M6 Daily briefing → M7 Gmail/Calendar (read-only first) → M8 Hardening & deployment.
 
 Only one milestone per session, and only after owner approval. Deferred features (briefing, Gmail/Calendar sync, meetings, Slack/Discord, voice, desktop, networking, sending) must not be implemented early.

@@ -1,6 +1,6 @@
 # ConvoPilot — Security
 
-Version: 0.3 · Status: Specification for review (nothing below is implemented yet; hardening pass applied) · Last revised: 2026-11-16
+Version: 0.4 · Status: Specification for review (M1.2 tooling implemented; everything below about auth and data is not yet implemented) · M1.3 correction pass applied · Last revised: 2026-11-16
 
 ## 1. Threat model (summary)
 
@@ -22,8 +22,13 @@ ConvoPilot stores sensitive professional communication, including content writte
 - `proxy.ts` performs only optimistic cookie-based redirects and is not an authorization boundary.
 - Resources in another workspace return **404** (not 403) to avoid revealing existence.
 - State-changing Route Handlers check the `Origin` header; Server Actions rely on Next.js's built-in Origin/Host comparison.
-- Invitation and sign-up policy: **pending decision** (ARCHITECTURE §11 P6). Recommended default: invite-only, public sign-up disabled; under the recommended workspace model an invitation creates an account with its own private workspace and grants no access to the inviter's data (DATABASE §3.3).
-- Membership and roles cannot be changed by users through the database API (DATABASE §3.1a); no self-promotion, no removal of the last owner.
+- **Sign-up is invite-only (approved).** Only a **platform operator** may issue invitations; operator status is a platform-level grant in `app_private.platform_operators`, separate from workspace roles, granted only by a database administrator, never via JWT claims or user metadata (DATABASE §3.4).
+- Invitations are single-use, expiring, bound to one email, stored only as a SHA-256 token hash, revocable, and verified without revealing whether an email exists (DATABASE §3.5). An invitation creates an account with its own private workspace and grants no access to anyone else's data.
+- **Account creation requires the raw invitation token** (DATABASE §3.6): the client sends it in sign-up metadata; the before-user-created hook and a `BEFORE INSERT` trigger on `auth.users` verify `sha256(token)` against an open, unexpired invitation for the same normalized email and consume it atomically. A previously verified invitation without the token is never sufficient (fix for review finding B1, a confirmed account-takeover path through password sign-up).
+- **Passwordless only (approved: magic link / OTP).** GoTrue v2.197 cannot disable password authentication by configuration, so the database enforces it: password hashes are removed at account creation and any later password write is rejected. Password sign-up without a token is rejected (403); with a valid token it creates the invitee's account without a password or session; password login always fails. `enable_confirmations` and `secure_password_change` are on as defence in depth.
+- The raw token is removed wherever Supabase Auth persists sign-up metadata: from `auth.users.raw_user_meta_data` (on insert and on every update, because GoTrue rewrites metadata) and from `auth.identities.identity_data` (on insert and update; GoTrue inserts the identity with the token and rewrites `identity_data` at email confirmation). It is not written to audit records. The integration suite proves the token is absent from every text and JSON column of every base table in `auth`, `public` and `app_private`, and from the Auth/REST/Kong/DB service logs, after sign-up, email confirmation, returning login and an attempted metadata update that re-adds it (verified on the local stack, GoTrue v2.197.0).
+- Login: email magic link or OTP via Supabase Auth (approved).
+- Membership and roles cannot be changed by users through the database API (DATABASE §3.2); no self-promotion, no removal of the last owner.
 - Assume users can call the Supabase API directly with their own JWT. Security and audit invariants are enforced in the database, not only in Next.js (DATABASE §4).
 
 ## 3. Workspace isolation and RLS (Required)
@@ -32,17 +37,17 @@ ConvoPilot stores sensitive professional communication, including content writte
 - Composite `(workspace_id, id)` foreign keys prevent cross-workspace references (DATABASE §7).
 - Repositories filter by `workspace_id` as an independent layer; RLS is the backstop, not the only check.
 
-## 4. Database credentials (Required)
+## 4. Database credentials and privileged execution (Required)
 
-- Normal request paths use a Supabase client bound to the **user's session JWT**, so RLS is evaluated on every query.
-- `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS. It is:
-  - read only in one `server-only` module;
-  - imported only by this allow-list, enforced by a CI grep/lint rule:
-    1. `src/lib/audit` server-only writer (non-data audit events, DATABASE §10.1);
-    2. permanent-deletion and retention job;
-    3. invitation admin action (if approved under P6);
-  - never exposed to the client, never prefixed `NEXT_PUBLIC_`, never logged.
-- Env variables are validated at startup by a Zod schema; missing secrets fail fast with the variable **name** only.
+- All Next.js request paths — including audit writes, invitations, operator actions and account-deletion requests — use a Supabase client bound to the **user's session JWT** (`@supabase/ssr` server client), so RLS and definer-function checks apply.
+- `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS. It is used **only** by the isolated privileged runner (DATABASE §4.5): permanent deletion after retention, Auth user deletion via the Auth Admin API, audit retention. The runner is not part of Next.js request handling, and the key is **not present** in the Next.js runtime environment. A CI check fails if any file under `src/` references the service-role key or the Auth Admin API.
+- Runner hosting is a **pending owner decision**; until decided, nothing uses the service-role key.
+- The key is never exposed to the client, never prefixed `NEXT_PUBLIC_`, never logged.
+- Env variables are validated lazily by Zod (`src/lib/env`); errors name variables, never values.
+
+### 4.1 Database function security (Required)
+
+See DATABASE §4.1–§4.3. Summary: only the `public` schema is exposed through the Data API; internal functions live in the unexposed `app_private` schema; every function sets `search_path = ''`, is owned by `postgres`, has EXECUTE revoked from `public`, `anon` and `authenticated`, and receives only the explicit grants in the DATABASE §4.3 matrix. Default privileges are altered **globally and per schema** so new functions fail closed (the global revoke is required; DATABASE §4.2). The API exposes only `public` (`[api] schemas = ["public"]`, `auto_expose_new_tables = false`); `graphql_public` is not exposed. Validated locally in M1.3 Stage 0; hosted projects must be configured and checked the same way.
 
 ## 5. Three independent layers
 
@@ -74,11 +79,11 @@ A failure in one layer must not expose data; tests target each layer separately 
 
 Append-only `audit_events` (DATABASE §10):
 
-- Users have **no insert, update or delete** access. Events are written only by database triggers (data changes; actor from `auth.uid()`) or by the server-only audit writer (non-data events; actor from the verified `RequestContext`). Users therefore cannot forge events or attribute approvals to another user.
-- `decided_by` on proposals is set by trigger, never by the client.
+- Users have **no insert, update or delete** access. All writes go through `app_private.write_audit`, called from triggers, from definer functions, from `public.log_event` (actor forced to `auth.uid()`, fixed non-approval action list) or from the privileged runner (DATABASE §10.1). Users cannot forge approvals or another user's actions.
+- `decided_by`/`decided_at` are set only inside `public.decide_proposal` / `public.approve_task`; the columns are not user-updatable (DATABASE §5.3).
 - Records actor, action, target ids and codes — never content. Covers proposal decisions, soft delete/restore, permanent deletion, exports, membership changes, invitations and AI policy denials.
-- Workspace-scope events are readable by the workspace owner only; account-scope events (no workspace) are operator-only. Sign-in failures rely on Supabase Auth logs in v0.1.
-- Retention periods pending approval (DATABASE §10.3).
+- Workspace-scope events are readable by the workspace owner only; account-scope events (no workspace) are not readable through the API. Sign-in failures rely on Supabase Auth logs in v0.1.
+- Retention periods are **pending owner decision** (DATABASE §10.3).
 
 ## 9. Private data exposure (Required)
 
@@ -134,14 +139,23 @@ Append-only `audit_events` (DATABASE §10):
 ## 14. Data lifecycle
 
 - Export: per-workspace JSON export before any real deployment.
-- Deletion: soft delete → permanent deletion job, cascading to embeddings, citations and derived records (DATABASE §8).
-- Audit retention: minimal records, retention period pending approval.
+- Deletion: soft delete (immediately invisible, including derived content, DATABASE §8.2) → permanent deletion by the privileged runner after retention, cascading to embeddings and citations; evidence loss is recorded in `evidence_state`, never by changing decision status (DATABASE §5.5, §8.4).
+- Account deletion: request → immediate data-access revocation (workspace soft-deleted) and global sign-out with the user's own session → retention → permanent deletion including `auth.admin.deleteUser` by the privileged runner (DATABASE §8.6).
+- Retention periods (soft-deleted content, account deletion, audit events) and whether users may cancel a deletion request are **pending owner decisions**.
+
+## 14a. Environment separation (approved)
+
+- Hosted Supabase **development** project for manual development; **separate production** project; local Supabase stack (Docker) for automated tests and CI. No production data in development or CI; seed data synthetic only.
+- Each environment has its own keys; CI uses only local-stack keys generated at run time.
 
 ## 15. v0.1 security checklist (all open)
 
 - [ ] Auth verified in every protected Server Action, Route Handler and data read.
+- [ ] Invite-only sign-up and operator-only invitations enforced in the database (hook + provisioning trigger).
+- [ ] No function callable by `anon`/`authenticated` outside the DATABASE §4.3 matrix (catalog test).
+- [ ] Account deletion lifecycle implemented; service-role key absent from the Next.js runtime.
 - [ ] RLS on every workspace table, cross-workspace tests passing.
-- [ ] User-JWT client on request paths; service-role key isolated and CI-enforced.
+- [ ] User-JWT client on all request paths; service-role key only in the privileged runner, CI-enforced.
 - [ ] Policy layer in every service and AI tool call.
 - [ ] Zod validation on all inputs, tool args and model outputs.
 - [ ] Prompt-injection regression tests in CI (with test provider).

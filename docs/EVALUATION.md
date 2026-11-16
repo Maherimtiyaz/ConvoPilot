@@ -1,6 +1,6 @@
 # ConvoPilot — Evaluation and Test Plan
 
-Version: 0.3 · Status: Planned (no tests exist yet; hardening pass applied) · Last revised: 2026-11-16
+Version: 0.4 · Status: Planned (only M1.2 env unit tests exist; database tests start in M1.3) · M1.3 correction pass applied · Last revised: 2026-11-16
 
 Evaluation is a core feature. We measure whether the product is secure and whether the agent is trustworthy with real conversations. Everything here is **planned**; nothing is implemented.
 
@@ -16,7 +16,7 @@ Evaluation is a core feature. We measure whether the product is secure and wheth
 | --- | --- | --- | --- |
 | Unit | Vitest | Yes | Zod schemas, policy `decide()`, citation validation, hashing/normalisation, date ambiguity, env loader, log redaction |
 | Integration | Vitest + deterministic test provider | Yes | Services end-to-end with fake AI responses; Server Action / Route Handler auth checks |
-| Database / RLS | Vitest (or pgTAP) against local Supabase | Yes, once migrations exist | RLS policies, composite FKs, constraints, append-only audit, cascades |
+| Database / RLS | pgTAP (`supabase test db`) and/or Vitest with two real user JWTs, against the local Supabase stack (Docker) | Yes, from M1.3 | RLS policies, function grants, triggers, hooks, constraints, append-only audit, cascades |
 | Agent | Vitest + scripted test provider | Yes | Tool allow-lists, injection handling, loop bounds, approval gating |
 | Model evaluation | Script against a real provider | No (manual/scheduled) | Quality and accuracy on synthetic datasets |
 | E2E | Playwright | Later | Five MVP screens once UI stabilises |
@@ -44,13 +44,35 @@ Each scenario must pass 100% before the related milestone is accepted.
 | S13 | Error responses | Integration | No stack traces, SQL or content in client-visible errors |
 | S14 | Malicious file (oversized, wrong MIME, HTML with script/img, attachment) | Unit/Integration | Rejected or converted to plain text; no remote URL fetched; no HTML or attachment stored |
 | S15 | Authenticated user inserts, updates or deletes `audit_events` directly via the database API | DB | Denied (no privilege) |
-| S16 | User sets `decided_by` to another user's id when confirming a proposal | DB | Trigger overwrites with `auth.uid()`; audit actor is the real user |
+| S16 | User updates `decided_by`, `decided_at`, `status`, `origin` or `evidence_state` directly via the API | DB | Denied by column privileges; only `decide_proposal` changes status and it records `auth.uid()` |
 | S17 | User inserts/updates/deletes `workspace_members` (self-promotion, adding self to another workspace, removing last owner) | DB | Denied |
 | S18 | User changes `workspace_id` on an existing row to another workspace they belong to | DB | Trigger rejects |
 | S19 | Soft-deleted message or conversation | DB + Integration | Invisible to SELECT, search and retrieval functions; not in AI context; restorable until permanent deletion; audit event written |
-| S20 | User sets `deleted_at` via plain UPDATE | DB | Denied; only the soft-delete function works |
+| S20 | User sets `deleted_at` via plain UPDATE, or hard-DELETEs any row | DB | Denied (column grants; DELETE revoked); only the soft-delete function works |
 | S21 | Owner reads workspace audit events; another member/user reads them; anyone reads account-scope events | DB | Owner allowed; others denied; account-scope events invisible to all users |
-| S22 | Invitee after accepting an invitation (Option A) | Integration | Has own private workspace; cannot read inviter's data and vice versa |
+| S22 | Invitee after accepting an invitation | DB + Integration | Exactly one private workspace + owner membership created atomically; cannot read inviter's data and vice versa |
+| S23 | Catalog check: every function in `public` and `app_private` | DB | No EXECUTE for `public`/`anon`/`authenticated` except the DATABASE §4.3 matrix; every function has `search_path` set; owner is `postgres` |
+| S24 | `anon`/`authenticated` call `app_private.*` functions or read `app_private` tables via the API (REST and RPC) | DB | Not exposed / permission denied |
+| S25 | GraphQL endpoint exposure | DB | Disabled, or returns nothing beyond RLS-protected `public` data |
+| S26 | Non-operator (including a workspace owner) calls `create_invitation` / `revoke_invitation` | DB + Integration | Typed `not_authorized` result; no invitation created; denial audit event **persists** (review M1) |
+| S27 | Operator status via forged `user_metadata`/JWT claim | DB | No effect; only `app_private.platform_operators` grants operator status |
+| S28 | Sign-up for an email with no invitation, an expired, revoked, already-consumed, unverified or different-email invitation | DB (Auth hook) | User creation rejected; no profile/workspace created |
+| S29 | Invitation replay: second sign-up attempt with a consumed invitation | DB | Rejected |
+| S30 | Invitation storage | DB | Only `token_hash` stored; plaintext token not present in any table or audit metadata |
+| S31 | `verify_invitation` with wrong token / wrong email | DB | Returns false; response shape identical for unknown email and wrong token |
+| S37 | Account creation with a verified invitation but without the raw token; with a token bound to another email; with a missing token | DB + Integration (Auth API) | Rejected (403 / trigger exception); no user created (review B1) |
+| S38 | Password sign-up without a token; with a valid token; password login; password set/change after login and after recovery | Integration (Auth API) | No token → 403; with token → account created without password or session; password login 400; password writes rejected; `encrypted_password` stays NULL (review B1) |
+| S39 | Concurrent sign-up attempts with one token | Integration | Exactly one user, one membership, one consumption |
+| S40 | Raw invitation token after sign-up, email confirmation, returning login and a metadata update that re-adds it | DB + Integration | Absent from every text/varchar/json/jsonb column of every base table in `auth`, `public` and `app_private` (including `auth.users` and `auth.identities`) and from Auth/REST/Kong/DB logs |
+| S41 | Re-invitation after expiry; duplicate active invitation; revoke then re-invite; concurrent creation | DB + Integration | Expired invitation retired and replaced; active duplicate → `already_invited`; revoked → new invitation allowed; concurrency → exactly one created (review M2) |
+| S42 | ≥ 50 anonymous invalid-token verifications | DB + Integration | Zero audit rows added (review M3) |
+| S43 | `log_event` with free text in target fields or non-allow-listed metadata | DB | Rejected (review L2) |
+| S44 | Operator who requested account deletion creates invitations | DB | `not_authorized` (review L3) |
+| S32 | Provisioning failure mid-way (forced error) | DB | Whole sign-up rolls back; no orphan profile/workspace/membership |
+| S33 | `log_event` with an approval-type action, another user's id or another workspace | DB | Rejected; actor always `auth.uid()` |
+| S34 | Account deletion request | DB + Integration | Workspace soft-deleted; all workspace data immediately invisible to the user's existing JWT; audit event written; global sign-out invoked with the user's session |
+| S35 | Service-role key or Auth Admin API referenced under `src/` | CI check | Build fails |
+| S36 | Soft-deleted workspace | DB | `is_workspace_member` false; all tables return 0 rows for that workspace |
 
 ## 4. AI and memory scenarios
 
@@ -61,7 +83,7 @@ Each scenario must pass 100% before the related milestone is accepted.
 | A3 | Test provider requests an execute-level tool | Agent | Registry rejects; nothing executed |
 | A4 | Q&A loop exceeds 4 tool rounds or token budget | Agent | Stops with typed "incomplete" result |
 | A5 | AI-extracted memory/commitment stored | Integration | `status=proposed`; never `confirmed` without user action |
-| A6 | Attempt to confirm a proposal via direct DB write without `decided_by` | DB | Check constraint rejects |
+| A6 | Attempt to confirm a proposal via direct UPDATE of `status` | DB | Denied by column privileges (`decide_proposal` is the only path) |
 | A7 | Confirm proposal via Server Action as non-member / without auth | Integration | Rejected; status unchanged |
 | A8 | Model cites a non-existent message id | Unit/Integration | Citation dropped; claim not shown as fact |
 | A9 | Model cites a message from another workspace | Integration + DB | Rejected by application validation and composite FK |
@@ -69,14 +91,17 @@ Each scenario must pass 100% before the related milestone is accepted.
 | A11 | Quote not present in cited source | Unit | Citation dropped |
 | A12 | Invalid structured output | Unit | One repair retry, then typed error; nothing persisted |
 | A13 | Message soft-deleted | Integration | Excluded from retrieval and AI context immediately |
-| A14 | Message permanently deleted | DB | Citations and embeddings removed; dependent AI memories flagged and returned to `proposed` |
+| A14 | Message permanently deleted | DB | Citations and embeddings removed; dependent memories/commitments get `evidence_state='sources_deleted'` with `status` unchanged; not presented as fact |
 | A15 | Derived records carry model metadata | Integration | provider, model, prompt_version, token counts present |
 | A16 | Insert AI-origin memory/commitment/task with `status=confirmed` (or task `open`) directly | DB | Insert trigger rejects |
 | A17 | AI proposes a task without `commitment_id` | DB + Agent | Check constraint rejects; tool arg validation rejects |
-| A18 | Approve AI task while its commitment is still proposed, without confirming the commitment | Integration | Rejected unless both are confirmed in one user action (two audit events) |
+| A18 | `approve_task` while the commitment is still proposed and `confirm_commitment=false`; or forced failure mid-approval | DB | Raises with no partial change; with `confirm_commitment=true` both change atomically with two audit events |
 | A19 | Inferred style preference used before approval | Integration | Not used in drafting |
 | A20 | Model cites a soft-deleted message | Unit/Integration | Citation dropped |
 | A21 | Deferred tool (`prepare_meeting`, `update_contact`) requested | Agent | Registry rejects; nothing executed |
+| A22 | Invalid status transitions (`rejected`→`confirmed`, `superseded`→anything, `proposed`→`superseded`) and `origin` change | DB | Raise |
+| A23 | Any AI workflow or tool path reaches `decide_proposal`/`approve_task` | Agent + CI grep | Not reachable; only `src/lib/services/proposals/decide.ts` references them |
+| A24 | Conversation soft-deleted | DB + Integration | Its messages, analyses, drafts, participants and citations invisible; not returned by `get_contact_history` or retrieval |
 
 ## 5. Model evaluation (quality)
 

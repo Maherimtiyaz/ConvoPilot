@@ -4,6 +4,122 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 8 — M1.3 final security corrections (2026-11-16)
+
+**Scope:** the remaining acceptance blocker from the independent re-review, plus the brittle pgTAP assertion. Nothing committed.
+
+- **Token in `auth.identities.identity_data` (re-review MEDIUM).** Traced GoTrue v2.197.0 writes (key names only): the identity is INSERTed with the token at the sign-up request and `identity_data` is UPDATEd (token included) at email confirmation; returning logins and `PUT /user` do not write identities. Added `app_private.strip_invitation_token_from_identity()` (`security invoker`, empty `search_path`, no grants) with a `BEFORE INSERT OR UPDATE` trigger on `auth.identities` (migration `20261116000600_signup.sql`).
+- **Regression coverage.** The integration token test now scans every text/varchar/json/jsonb column of every base table in `auth`, `public` and `app_private` (114 columns locally) after sign-up request, email confirmation, returning login and a `PUT /user` that re-adds the token; it also checks Auth/REST/Kong/DB logs and that legitimate fields (`email_verified`, other metadata) survive. pgTAP adds identity-trigger tests (insert, update, non-object JSON, preserved keys) and a catalog check.
+- **Brittle pgTAP test #38** now scoped to the fixture user; suite re-run with unrelated committed denial/verification audit rows present: still PASS (rows removed afterwards).
+- CI minimum pgTAP count raised to 83.
+
+Remaining documented limitations: HTTP 500 on rejected password writes (transaction rolls back; hash stays NULL); password `/signup` with a valid token creates a passwordless, unconfirmed account (no password, no session without inbox verification).
+
+---
+
+## Session 7 — M1.3 security remediation (2026-11-16)
+
+**Scope:** fixes for the independent M1.3 security review (B1, M1–M4, LOW L1–L8). Local Supabase only. Nothing committed.
+
+### Fixes
+
+- **B1 (account takeover via password sign-up).** Root cause: sign-up was admitted by email + previously set `verified_at`, and password sign-up was enabled with autoconfirm. Fix: the raw invitation token travels in sign-up metadata; the hook and a `BEFORE INSERT` trigger on `auth.users` require `sha256(token)` + matching email and consume the invitation atomically; the token is stripped on insert and on every update; password hashes are removed at creation and any later password write is rejected. `enable_confirmations` and `secure_password_change` are now on. Investigation evidence: the hook payload has `user_metadata` but no password data; `/otp` and `/signup` INSERTs are identical; GoTrue rewrites metadata in later UPDATEs; an unsatisfiable `minimum_password_length` breaks OTP sign-up (GoTrue validates its internal random password), so configuration cannot disable passwords.
+- **M1.** `create_invitation` / `revoke_invitation` return typed `jsonb` statuses instead of raising; denial audit events commit.
+- **M2.** Per-email advisory lock; expired open invitations are retired (`revoked_reason = 'expired_replaced'`, audited) before the replacement is inserted; `create_invitation` returns `invitation_id` so operators can revoke.
+- **M3.** `verify_invitation` performs no writes for unknown/invalid tokens; only the first successful verification is recorded and audited.
+- **M4.** CI runs `supabase test db supabase/tests`, parses `Tests=N`, requires `Result: PASS` and ≥ 78 tests; integration tests use the Vitest JSON report and require ≥ 22 passing tests with 0 failures.
+
+### LOW findings — disposition
+
+| ID | Finding | Disposition |
+| --- | --- | --- |
+| L1 | `audit_events_id_seq` UPDATE for API roles | **Fixed**: sequence privileges revoked; default privileges revoke sequences for API roles; pgTAP checks |
+| L2 | Free text accepted by `log_event` | **Fixed**: target-type allow-list, identifier-shaped values, allow-listed metadata keys |
+| L3 | Operator rights after deletion request | **Fixed**: `is_platform_operator()` requires no pending deletion |
+| L4 | Verification audit actor recorded as system | **Fixed**: actor is `auth.uid()` when signed in |
+| L5 | Service-role guard heuristic | **Improved** (secret-key names, camelCase, Admin API methods). Residual risk: a grep cannot catch every obfuscation. **Deferred**: ESLint import/identifier restriction — M1.4 (when application code that could import Supabase admin clients first appears). |
+| L6 | `app_private` tables without RLS | **Fixed**: RLS enabled (no policies) |
+| L7 | `service_role` lacks SELECT/INSERT/UPDATE on public tables | **Deferred (intentional)**: the privileged runner does not exist yet; grant minimal privileges when it is built (post-M1.3, with runner hosting decision). Risk: none today (nothing uses service_role). |
+| L8 | `supabase/.temp/status.env` holds local stack keys | **Accepted / documented**: gitignored, local demo values only, created by `test:integration`; never used against hosted projects. Revisit only if local keys ever become non-default. |
+
+### Known limitation (owner decision)
+
+Password `/signup` **with a valid token** cannot be rejected outright with GoTrue v2.197 (indistinguishable from OTP sign-up at creation). It creates the invitee's account **without a password and without a session**; password login always fails. Alternative for outright rejection: accounts created only through a Next.js Server Action adding an HMAC proof that the hook verifies (requires a new server secret).
+
+### Checks run
+
+See the session report: `supabase db reset`; pgTAP 25 + 53 = 78 (also via the real `supabase test db`); integration 22/22; unit, lint, typegen, typecheck, build; adversarial probes; catalog snapshot; Gitleaks.
+
+---
+
+## Session 6 — M1.3 Stage 0 validation and Stage 1 implementation (2026-11-16)
+
+**Scope:** M1.3 only. Local Supabase stack (Docker); no hosted project touched; no secrets used outside the local stack. Nothing committed.
+
+### Stage 0 — local compatibility and security validation (disposable PoC in the session scratchpad)
+
+- Pinned **Supabase CLI 2.122.1** (`v2.stable`; `latest` 3.1.0 is a one-week-old new major and was not used). Local images: Postgres 17.11.0.006, GoTrue v2.197.0, PostgREST v16.5, Kong 2.8.1, Mailpit v1.31.3.
+- `before_user_created` hook: accepted by the CLI config, loaded by GoTrue (`GOTRUE_HOOK_BEFORE_USER_CREATED_ENABLED=true`), invoked from the non-public `app_private` schema; rejects missing / unverified / expired / consumed invitations (403); valid invitation accepted.
+- Provisioning trigger fires as `supabase_auth_admin` with **no** EXECUTE grant; forced failure rolls back user creation completely (GoTrue returns 500).
+- `supabase_auth_admin` needs only `usage on schema app_private` + `execute` on the hook.
+- API exposes only `public`; `app_private` → PGRST106; `/graphql/v1` not served; `pg_graphql` not installed locally.
+- **Finding (spec corrected):** per-schema `alter default privileges … revoke execute` does not remove PostgreSQL's global EXECUTE-to-PUBLIC default; a global `alter default privileges for role postgres revoke execute on functions from public` is required (DATABASE §4.2).
+- Global sign-out revokes refresh tokens; already-issued access tokens remain valid until expiry (data access for deleted accounts is still cut immediately by RLS).
+- Default local email template sends magic links (token_hash), not 6-digit codes; OTP codes need a custom template.
+- `@supabase/supabase-js` 2.119.0 + `@supabase/ssr` 0.12.7: clean install with Next 16.4.6 / React 19.3.0, typecheck/lint/build pass, runtime smoke test against local stack passes.
+- Environment limitation: `supabase test db` could not pull its `pg_prove` runner image in this sandbox (ECR/GHCR blobs blocked by proxy, Docker Hub 429); pgTAP files were executed with `psql` instead. The GitHub `database` job will use `supabase test db`.
+
+### Stage 1 — implemented
+
+- `supabase/config.toml` (API schemas `public` only, `auto_expose_new_tables = false`, hook enabled, unused services disabled).
+- Migrations 0001–0008 as specified in DATABASE §3–§4, §8.6, §10.
+- pgTAP: `supabase/tests/00_catalog.test.sql` (20), `10_tenancy_and_lifecycle.test.sql` (30).
+- Integration (real Auth/PostgREST/Mailpit): `tests/integration/auth-signup.test.ts` (12) via `npm run test:integration`.
+- App: `src/lib/env/supabase.ts` (lazy), `src/lib/supabase/server.ts` (session-bound `@supabase/ssr` client), unit tests (5).
+- Dependencies (exact): `@supabase/supabase-js@2.119.0`, `@supabase/ssr@0.12.7`, dev `supabase@2.122.1`; lockfile additive only (30 packages).
+- CI: `database` job; service-role / Auth Admin guard on `src/`. `.env.example` no longer lists the service-role key.
+
+### Checks run (local)
+
+`supabase db reset` (8 migrations) ✓; pgTAP 20/20 + 30/30 ✓ (via psql); integration 12/12 ✓; lint ✓; typegen ✓; tsc ✓; unit 27/27 ✓; build without Supabase env ✓; Gitleaks (non-ignored files) no leaks ✓; `git diff --check` ✓; production audit 0.
+
+### Not verified
+
+GitHub `database` job (needs a push); `supabase test db` runner image; hosted dev project configuration (exposed schemas, `pg_graphql`, hook); privileged runner (not built; hosting pending).
+
+---
+
+## Session 5 — M1.3 documentation correction pass (2026-11-16)
+
+**Scope:** Documentation only. M1.2 accepted (commit `2bfb522`, GitHub CI run 43844657413 green). No code, migrations, Supabase project, secrets or dependencies. Nothing committed.
+
+### Owner decisions recorded (approved 2026-11-16)
+
+Private workspaces only; hosted Supabase dev project for manual development, local Supabase (Docker) for automated tests/CI, separate production; database-enforced authorization; invite-only sign-up; operator-only invitations (platform permission separate from workspace roles); magic link / OTP; M1.3 = database foundation + Supabase Auth integration + session-bound server client + account lifecycle design, M1.4 = login UI, `proxy.ts`, protected shell; Supabase CLI, `@supabase/supabase-js`, `@supabase/ssr` approved subject to compatibility checks.
+
+### Review findings addressed (DATABASE v0.4 unless noted)
+
+- H1: service-role key only in an isolated privileged runner, absent from the Next.js runtime; audit writes via `app_private.write_audit` / `public.log_event` with the user's JWT (§4.5, §10.1; SECURITY §4).
+- H2: role model, exposed schemas (`public` only; GraphQL to be disabled or proven harmless), `app_private` schema, `postgres` ownership (custom owner role rejected with reasons), `search_path = ''`, default-privilege revokes, explicit grant matrix (§4.1–§4.3).
+- H3: `decide_proposal` only; column grants block direct status/decision edits; AI code barred by CI grep + agent test; residual shared-JWT limitation documented (§5.3).
+- H4: per-table visibility matrix incl. derived/child records; `deleted_at` added to commitments, thread analyses, companies (§8.2).
+- H5: platform operator table separate from workspace roles; invitation model with hashed tokens, expiry, single use, email binding, revocation; invite-only sign-up gate (§3.4–§3.6).
+- M1: EVALUATION A6/S16 redefined. M2: immutable origin, transition table, `revise_record` (§5.4). M3: `approve_task` (§5.6). M4: `evidence_state` separate from status (§5.5). M5: full RLS policy matrix, column grants, DELETE revoked (§4.4). M7: account deletion lifecycle (§8.6).
+
+### Not changed
+
+`docs/OPENCODE_PROMPTS.md` (not in this pass's authorised file list) still shows M1.3/M1.4 as "Blocked on P2/P6" — stale; to be updated with the next authorised docs change.
+
+### Open owner decisions
+
+Retention periods (soft-deleted content, account deletion, audit); whether users can cancel a deletion request; privileged-runner hosting; invitation default TTL (7 days proposed).
+
+### Validation still required (local Supabase stack)
+
+Before-user-created hook availability; `supabase_auth_admin` grants for the provisioning trigger; default-privilege revokes; `app_private` helper usable from RLS policies; GraphQL exposure; `pgcrypto` availability; policy performance.
+
+---
+
 ## Session 4 — M1.2 Engineering foundation (2026-11-16)
 
 **Scope:** M1.2 only, as approved (Vitest, Zod, Gitleaks, `.gitignore` exception, lazy env validation). No Supabase, auth, schema, migrations, routes, UI or AI code. Nothing committed.
