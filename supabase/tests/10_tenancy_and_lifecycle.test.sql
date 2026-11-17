@@ -70,7 +70,7 @@ select throws_ok($$ select pg_temp.new_user(gen_random_uuid(), 'expired@example.
 select pg_temp.invite('rollback@example.com');
 alter table public.workspaces add constraint zz_force_fail check (name <> 'Personal') not valid;
 select throws_ok($$ select pg_temp.new_user(gen_random_uuid(), 'rollback@example.com', 'rollback@example.com-token') $$,
-  '23514', null, 'provisioning failure aborts the account creation');
+  'P0001', 'account provisioning failed', 'provisioning failure aborts the account creation with a generic error');
 alter table public.workspaces drop constraint zz_force_fail;
 select ok((select consumed_at is null from app_private.invitations where email_normalized = 'rollback@example.com')
       and not exists (select 1 from auth.users where email = 'rollback@example.com')

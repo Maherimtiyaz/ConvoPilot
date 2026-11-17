@@ -24,12 +24,12 @@ select is(
   (select array_agg(p.proname::text order by p.proname) from pg_proc p
     where p.pronamespace in ('public'::regnamespace, 'app_private'::regnamespace)
       and has_function_privilege('anon', p.oid, 'execute')),
-  array['verify_invitation'], 'anon can execute only verify_invitation');
+  array['join_waitlist', 'verify_invitation'], 'anon can execute only join_waitlist and verify_invitation');
 select is(
   (select array_agg(p.proname::text order by p.proname) from pg_proc p
     where p.pronamespace in ('public'::regnamespace, 'app_private'::regnamespace)
       and has_function_privilege('authenticated', p.oid, 'execute')),
-  array['create_invitation', 'is_workspace_member', 'is_workspace_owner', 'log_event',
+  array['create_invitation', 'is_workspace_member', 'is_workspace_owner', 'join_waitlist', 'log_event',
         'request_account_deletion', 'revoke_invitation', 'verify_invitation'],
   'authenticated can execute only the allow-listed functions');
 select is(

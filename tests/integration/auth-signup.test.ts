@@ -95,7 +95,7 @@ async function emailLinkTokenHash(email: string): Promise<string> {
     if (newest && !seenMessages.has(newest.ID)) {
       seenMessages.add(newest.ID);
       const message = (await fetch(`${MAILPIT}/api/v1/message/${newest.ID}`).then((r) => r.json())) as { Text?: string };
-      const match = (message.Text ?? "").match(/[?&]token=([A-Za-z0-9_-]+)/);
+      const match = (message.Text ?? "").match(/[#&]th=([A-Za-z0-9_-]+)/);
       if (match) return match[1];
     }
     await new Promise((resolve) => setTimeout(resolve, 250));

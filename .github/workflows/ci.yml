@@ -62,7 +62,7 @@ jobs:
         run: npm run build
 
   database:
-    name: Database (local Supabase, pgTAP, Auth integration)
+    name: Database (local Supabase, pgTAP, Auth integration, end-to-end)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -85,7 +85,7 @@ jobs:
 
       - name: Database tests (pgTAP; explicit path; fail on zero or too few tests)
         env:
-          MIN_PGTAP_TESTS: "83"
+          MIN_PGTAP_TESTS: "95"
         run: |
           set -euo pipefail
           npx supabase test db supabase/tests 2>&1 | tee pgtap.log
@@ -111,6 +111,29 @@ jobs:
             console.log(`integration tests: total=${r.numTotalTests} passed=${r.numPassedTests} failed=${r.numFailedTests}`);
             if (r.numTotalTests < min || r.numFailedTests !== 0 || r.numPassedTests !== r.numTotalTests) {
               console.error(`::error::expected at least ${min} passing integration tests`);
+              process.exit(1);
+            }'
+
+      - name: Build the app for end-to-end tests
+        run: npm run build
+
+      - name: Install Playwright Chromium (version pinned by package-lock)
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser end-to-end tests (fail on zero or too few tests)
+        env:
+          MIN_E2E_TESTS: "12"
+        run: |
+          set -euo pipefail
+          npx supabase status -o env > supabase/.temp/status.env
+          npx playwright test
+          node -e '
+            const r = require("./test-results/e2e.json");
+            const s = r.stats;
+            const min = Number(process.env.MIN_E2E_TESTS);
+            console.log(`e2e tests: passed=${s.expected} failed=${s.unexpected} flaky=${s.flaky} skipped=${s.skipped}`);
+            if (s.expected < min || s.unexpected !== 0 || s.flaky !== 0 || s.skipped !== 0) {
+              console.error(`::error::expected at least ${min} passing end-to-end tests`);
               process.exit(1);
             }'
 

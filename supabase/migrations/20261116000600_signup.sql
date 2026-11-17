@@ -151,12 +151,19 @@ begin
     raise exception 'sign-up requires a valid invitation' using errcode = '42501';
   end if;
 
-  insert into public.profiles (user_id) values (new.id);
-  insert into public.workspaces (name, created_by) values ('Personal', new.id) returning id into v_ws;
-  insert into public.workspace_settings (workspace_id) values (v_ws);
-  insert into public.workspace_members (workspace_id, user_id, role) values (v_ws, new.id, 'owner');
-  perform app_private.write_audit('account', null, null, 'account.provisioned', 'user', new.id::text,
-    jsonb_build_object('invitation_id', v_inv, 'workspace_id', v_ws));
+  -- Any failure here aborts the sign-up. Supabase Auth returns the database error message to the
+  -- caller, so details are replaced by a generic message (M1.4 Stage 0a finding: the raw error
+  -- exposed table/constraint names and row ids).
+  begin
+    insert into public.profiles (user_id) values (new.id);
+    insert into public.workspaces (name, created_by) values ('Personal', new.id) returning id into v_ws;
+    insert into public.workspace_settings (workspace_id) values (v_ws);
+    insert into public.workspace_members (workspace_id, user_id, role) values (v_ws, new.id, 'owner');
+    perform app_private.write_audit('account', null, null, 'account.provisioned', 'user', new.id::text,
+      jsonb_build_object('invitation_id', v_inv, 'workspace_id', v_ws));
+  exception when others then
+    raise exception 'account provisioning failed' using errcode = 'P0001';
+  end;
   return new;
 end;
 $$;

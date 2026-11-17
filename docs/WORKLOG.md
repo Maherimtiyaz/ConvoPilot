@@ -4,6 +4,44 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 9 — M1.4 login + protected shell, W1 landing page + waitlist (2026-11-17)
+
+**Scope:** `CLAUDE.md` consolidated master plan; M1.4 (login UI, `proxy.ts`, protected shell) and W1 (public landing page + waitlist). Local Supabase only; no hosted systems touched.
+
+### What was built
+
+- **Login (M1.4).** Passwordless email links only. Custom Auth email templates (confirmation, magic link, recovery) link to `/auth/confirm#th=<token hash>`; the token stays in the URL fragment and is used only by a POST when the person presses **Continue** (scanners that GET the page use nothing). `/invite#t=<token>` removes the token from the address bar immediately. `/login` shows the same "check your email" page for known and unknown addresses. HttpOnly / SameSite=Lax / Secure-in-production session cookies with a 30-day lifetime (`src/lib/supabase/cookies.ts`). `getRequestContext()` = `connection()` + one `auth.getUser()` + membership via RLS, called by every protected page (`ProtectedPage`) and by the account-unavailable page. `src/proxy.ts` only refreshes cookies and redirects signed-out visitors away from `/app`. Sign out (this device / everywhere). Security headers (`X-Frame-Options`, CSP `frame-ancestors`/`form-action`/`base-uri`/`object-src`, `nosniff`, `no-referrer`, Permissions-Policy, COOP, HSTS in production; `X-Powered-By` removed).
+- **App shell.** `/app` Dashboard and Communication Studio, Contacts, Conversations, Tasks, Settings with loading, error and empty states (no fake data). `/app/account-unavailable` for accounts without a workspace.
+- **Waitlist (W1).** Landing page `/` (story, how it works, trust principles, waitlist form, FAQ), draft `/privacy`. Form → Server Action → `public.join_waitlist` (migration 0009): Zod validation, hidden bot-trap field, consent required, `?ref=` source tracking, same answer for new and repeated emails, global flood limit.
+- **Database.** Provisioning failures now raise a generic `P0001 account provisioning failed` (no table/constraint/row details). Auth config: access tokens 15 min, email links 30 min, redirect allow-list.
+- **Operator SQL** until the M1.5 console: `docs/operations/review-waitlist.sql`, `docs/operations/invite-from-waitlist.sql` (tested locally: creates hashed invitations, marks entries invited, writes audit events, idempotent on re-run).
+
+### Bugs found and fixed by the new tests
+
+- Supabase's default **recovery** email still used a GET-consumable link → custom recovery template.
+- After **sign out everywhere**, another device bounced between `/login` and `/app` because `proxy.ts` trusted a stale cookie → removed the "signed in → skip /login" redirect.
+- Protected pages hit Next.js "unstable `Date.now()` while prerendering" (the Auth client reads the clock during runtime prefetch) → `await connection()` before the identity check.
+- The Supabase client read env before `cookies()`, so the build tried to prerender a protected page → `cookies()` first.
+
+### Checks run (all local)
+
+- `npm run lint` ✅ · `npx next typegen` ✅ · `npx tsc --noEmit` ✅ · `npm test` ✅ 60/60 (8 files) · `npm run build` ✅
+- `npx supabase test db supabase/tests` ✅ Files=3, Tests=95, PASS
+- `npm run test:integration` ✅ 22/22 (email-link parser updated to `#th=`)
+- `npm run test:e2e` ✅ 12/12 (Playwright 1.63.0, Chromium; also validated in `CI=1` mode with the JSON gate)
+- CI: `MIN_PGTAP_TESTS` 95; database job now builds the app and runs Playwright with `MIN_E2E_TESTS` 12. Not yet run on GitHub.
+
+### Tracked follow-ups (TODO register)
+
+- **Email change template** (`email_change`) still uses the Supabase default link; the app offers no email change. Customise before any email-change feature.
+- **Rate limiting of public endpoints** (`verify_invitation`, Auth email sending) relies on hosted Supabase limits; must be checked on the hosted dev project (H1). The app no longer calls `verify_invitation`.
+- **Bot challenge** (e.g. Turnstile) and **waitlist confirmation email**: need owner accounts (W1 later).
+- **L5 ESLint import restriction** for admin clients: still deferred (CI grep guard remains); revisit in M1.5.
+- **Privacy notice and FAQ pricing line** are drafts: owner/legal review before going live.
+- **Stale session cookies** after a revoked session stay in the browser until the next sign-in (harmless: every request is re-verified).
+
+---
+
 ## Session 8 — M1.3 final security corrections (2026-11-16)
 
 **Scope:** the remaining acceptance blocker from the independent re-review, plus the brittle pgTAP assertion. Nothing committed.
