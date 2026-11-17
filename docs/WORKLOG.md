@@ -4,6 +4,17 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 14 — M2 AI core (2026-11-17)
+
+- Built SDK-free behind the internal `AiProvider` interface, so no new dependency and P4 only affects the M3 adapter.
+- `src/lib/ai/`: provider interface; `callModel` (timeout, one retry for transient errors, typed errors, no provider bodies surfaced); per-request `TokenBudget`; versioned `definePrompt`; `generateStructured` (JSON Schema from Zod in the system prompt, Zod validation, one repair retry that describes only paths/codes, typed `invalid_output`, model metadata); nonce-delimited `wrapUntrusted` + standing preamble; `validateCitations` / `keepCited`; tool `ToolRegistry` (rejects execute tools), `WORKFLOW_TOOLS` allow-list, deterministic `decide`, `executeToolCall` (lookup → Zod → policy → handler → quoted result; denials audited via `log_event('ai.policy_denied')`; handler errors hidden); `runToolLoop` (askHistory only, ≤ 4 rounds, typed incomplete on rounds/budget).
+- Tests: 27 new unit tests incl. the prompt-injection harness (hostile email; fully persuaded model cannot send, approve, write memories, draft or cross workspaces). Scripted provider lives in `tests/` only.
+- CI: `scripts/ci/ai-guards.sh` (decision RPCs, vendor SDK location, test provider never in src).
+- Checks: lint, typegen, tsc, unit 87/87, build. Database and e2e unchanged.
+- Tracked for M3: per-workspace daily AI cost cap (DB ledger) after owner sets the cap; P3/P4/P5 decisions.
+
+---
+
 ## Session 13 — M1.5 operator console (2026-11-17)
 
 - H1 still waits on the owner (Supabase project + token; PR #3 not yet merged), so M1.5 was built.

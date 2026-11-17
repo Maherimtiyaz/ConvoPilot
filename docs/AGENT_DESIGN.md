@@ -1,6 +1,14 @@
 # ConvoPilot — Agent Design
 
-Version: 0.3 · Status: Specification for review (nothing implemented) · Last revised: 2026-11-16 (M1.3 correction pass)
+Version: 0.4 · Status: Core implemented in M2 (2026-11-17); workflows and tools arrive in M3–M5
+
+**Implementation map (M2):** provider interface `src/lib/ai/provider.ts` · timeout + one retry +
+budget `call.ts` / `budget.ts` · versioned prompts `prompts.ts` · structured output with one repair
+retry `structured.ts` · untrusted-content delimiters `untrusted.ts` · citation validation
+`citations.ts` · tool registry, per-workflow allow-list, policy, executor, audit
+`tools/` · bounded loop (≤ 4 rounds) `tool-loop.ts`. Tests: `tests/unit/ai/` (scripted test
+provider, injection harness). The per-workspace daily cost cap (§9) is a database ledger added with
+the first real provider in M3, once the owner sets the cap.
 
 Labels: **Required**, **Recommended (pending approval)**, **Pending decision** (see `ARCHITECTURE.md` §11). Provider/SDK choice is pending (P3, P4); nothing here depends on a specific vendor.
 

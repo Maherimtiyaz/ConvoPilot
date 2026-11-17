@@ -49,6 +49,9 @@ jobs:
             exit 1
           fi
 
+      - name: AI architecture guards (decision RPCs, vendor SDKs, test provider)
+        run: scripts/ci/ai-guards.sh
+
       - name: Generate Next.js types
         run: npx next typegen
 

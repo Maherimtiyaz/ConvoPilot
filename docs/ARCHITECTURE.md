@@ -257,7 +257,7 @@ None of these are approved. Each needs owner approval before the dependent work 
 | P1 Workspace sharing | — | **Approved 2026-11-16:** private workspaces only; no shared workspaces in the MVP |
 | P2 Local vs hosted Supabase | — | **Approved 2026-11-16:** hosted dev project for manual development; local Supabase (Docker) for automated tests/CI; separate production project |
 | P3 First AI provider | M3 | M2 uses only the test provider |
-| P4 AI SDK | M2 | Before M2 |
+| P4 AI SDK | M3 (first real adapter) | Before M3 — M2 was built SDK-free behind `AiProvider`, so the choice only affects `src/lib/ai/providers/` |
 | P5 Hosted processing of private content | M3 (first real model call on user content) | Before M3 |
 | P6 Auth & invitation policy | — | **Approved 2026-11-16:** invite-only; only a platform operator (separate from workspace roles) may invite; email magic link / OTP |
 | Retention periods (soft-deleted content, account deletion, audit) and deletion-cancel policy | Privileged runner implementation | Before the runner is built (not M1.3 schema) |
@@ -333,7 +333,7 @@ See `EVALUATION.md`. Summary: unit (Vitest) for schemas, policy and citation val
 | M1.2 | Tooling & quality gates: Vitest, Zod, env loader (server-only), `test`/`typecheck` scripts, CI pipeline (§10), `.gitignore` exception | ✅ Accepted 2026-11-16 (commit `2bfb522`, GitHub CI green) |
 | M1.3 | Database foundation and Supabase Auth integration: local Supabase stack + CI database tests, migrations for foundation tables, `app_private` schema, function grants, RLS, operator + invitation model, invite-only sign-up gate and provisioning, `log_event`, account-deletion request function and lifecycle design, Supabase env section, session-bound server client (`@supabase/ssr`) | 🟡 Stage 0 passed; Stage 1 implemented and verified locally 2026-11-16 (uncommitted; GitHub `database` job not yet run) |
 | M1.4 | Login UI (magic link / OTP), `proxy.ts`, protected application shell, frontend session experience | Not started |
-| M2 | AI core: provider interface (P4), test provider, structured output helper, policy layer, tool registry, injection harness | Not started |
+| M2 | AI core: provider interface (P4), test provider, structured output helper, policy layer, tool registry, injection harness | Done 2026-11-17 (`src/lib/ai/`; no vendor SDK; P4 deferred to the first adapter in M3) |
 | M3 | Communication Studio | Not started |
 | M4 | Contacts, Conversations, keyword retrieval, cited Q&A | Not started |
 | M5 | Commitments & Tasks with approval queue | Not started |

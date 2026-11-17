@@ -105,7 +105,7 @@ untrusted data (never instructions), rendered as plain text, no remote images; n
 message content in logs; Gitleaks + service-role guard in CI; HttpOnly session cookies; security
 headers; links/tokens never in server-visible URLs where avoidable.
 
-## 6. AI design (detail: `docs/AGENT_DESIGN.md`) — starts in M2
+## 6. AI design (detail: `docs/AGENT_DESIGN.md`) — core built in M2 (`src/lib/ai/`)
 
 One orchestrator. Deterministic workflows for predictable tasks (analyse thread, draft reply,
 extract commitments, propose memories); a bounded read-only tool loop (max 4 rounds) only for
@@ -113,6 +113,10 @@ extract commitments, propose memories); a bounded read-only tool loop (max 4 rou
 repository. Read/Propose/Execute permissions; **no Execute tools in v0.1**. Structured outputs
 validated with Zod; citations validated against stored sources; versioned prompts; token/cost
 limits; model metadata on derived records. AI code can never call decision functions.
+CI guard `scripts/ci/ai-guards.sh`: decision RPCs only in `src/lib/services/proposals/decide.ts`;
+vendor AI SDKs only in `src/lib/ai/providers/`; the scripted test provider never in `src/`.
+**Before M3 (owner):** first AI provider (P3), SDK vs raw HTTP adapter (P4), hosted processing of
+private content (P5), per-workspace daily AI cost cap.
 
 ## 7. Testing and CI (detail: `docs/EVALUATION.md`)
 
@@ -145,7 +149,7 @@ cost** and **email deliverability**, not the database.
 | **W1** | Public landing page + waitlist | ✅ built and tested locally (§11); goes live in H1 |
 | M1.5 | Operator console: review waitlist, invite in batches, revoke | ✅ built and tested locally (`/app/operator`) |
 | H1 | Hosted setup: Supabase dev/prod, Vercel, email domain, go-live of landing page | 🟡 Started — checklist `docs/operations/GO_LIVE.md` (stage A: waitlist on `*.vercel.app`; stage B: domain + Resend) |
-| M2 | AI core | ⬜ |
+| M2 | AI core: provider interface, structured outputs, citations, budgets, tool registry + policy, bounded loop, injection harness | ✅ built and tested (`src/lib/ai/`; test provider only) |
 | M3–M5 | Communication Studio, Contacts/Conversations, Commitments/Tasks | ⬜ |
 | — | v0.1 acceptance → early access for ~1,000 users | ⬜ |
 | M6–M8 | Briefing, Gmail/Calendar, production hardening & scale | ⬜ |
