@@ -51,7 +51,7 @@ import first; private workspace per user (no shared workspaces in MVP); invite-o
 only by a platform operator; passwordless email login (magic link); the AI drafts and proposes,
 the user approves everything that becomes a fact or leaves the system.
 
-**Brand:** `docs/BRAND.md` (draft v0.1 — voice, colours, typography, UI and email style; all UI and
+**Brand:** `docs/BRAND.md` and the visual brand bible canvas (claude.ai artifact, owner-private) (draft v0.1 — voice, colours, typography, UI and email style; all UI and
 marketing copy follows it).
 
 ## 3. Architecture (detail: `docs/ARCHITECTURE.md`)
@@ -140,7 +140,7 @@ cost** and **email deliverability**, not the database.
 | **M1.4** | Login experience + protected app shell | ✅ built and tested locally (§10) |
 | **W1** | Public landing page + waitlist | ✅ built and tested locally (§11); goes live in H1 |
 | M1.5 | Operator console: review waitlist, invite in batches, revoke | ⬜ Next |
-| H1 | Hosted setup: Supabase dev/prod, Vercel, email domain, go-live of landing page | ⬜ Needs owner accounts (§13) |
+| H1 | Hosted setup: Supabase dev/prod, Vercel, email domain, go-live of landing page | 🟡 Started — checklist `docs/operations/GO_LIVE.md` (stage A: waitlist on `*.vercel.app`; stage B: domain + Resend) |
 | M2 | AI core | ⬜ |
 | M3–M5 | Communication Studio, Contacts/Conversations, Commitments/Tasks | ⬜ |
 | — | v0.1 acceptance → early access for ~1,000 users | ⬜ |
