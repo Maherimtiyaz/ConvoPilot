@@ -9,7 +9,7 @@ export default function DashboardPage() {
     <ProtectedPage title="Dashboard" description="Your follow-ups, commitments and recent conversations at a glance.">
       {(context) => (
         <div className="space-y-6">
-          <p className="text-sm text-slate-700">
+          <p className="text-sm text-ink-700">
             Signed in as <span className="font-medium">{context.email ?? "your account"}</span>.
           </p>
           <EmptyState

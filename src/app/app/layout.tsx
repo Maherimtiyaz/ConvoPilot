@@ -12,10 +12,10 @@ export const metadata: Metadata = { title: { default: "ConvoPilot", template: "%
  */
 export default function AppLayout({ children }: LayoutProps<"/app">) {
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-slate-50 md:flex-row">
-      <aside className="border-b border-slate-200 bg-white p-4 md:w-64 md:border-b-0 md:border-r">
+    <div className="flex min-h-full flex-1 flex-col bg-paper md:flex-row">
+      <aside className="border-b border-ink-200 bg-white p-4 md:w-64 md:border-b-0 md:border-r">
         <div className="mb-4 md:mb-8">
-          <Logo />
+          <Logo className="h-6 w-auto" />
         </div>
         <NavLinks />
       </aside>

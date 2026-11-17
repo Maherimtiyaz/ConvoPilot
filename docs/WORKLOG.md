@@ -4,6 +4,16 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 12 — Brand approved; animated brand bible; app restyled (2026-11-17)
+
+- Owner approved identity v1.0 and the name ConvoPilot; asked for a more alive brand bible and UI.
+- New animated brand bible page (claude.ai artifact; source in `docs/brand/brand-bible/`, logos inlined from `public/brand` by `build.py`): logo build animation, live product demo with pause, strategy, voice, logo system, colour (click to copy), type, motion principles, applications, tokens, prompts, rules; light and dark; checked at desktop and phone width (no overflow, no console errors).
+- App restyled: brand fonts (`next/font`), Tailwind v4 theme tokens, brand favicon, new landing page with the Highlight and animated product demo, auth pages, app shell, empty states, privacy page. One e2e assertion updated for the new headline; another tightened.
+- Checks: lint, typegen, tsc, unit 60/60, build, Playwright 12/12 (CI mode, fresh server).
+- Tracked: brand the Supabase email templates (stage B); product dark theme.
+
+---
+
 ## Session 11 — Brand identity system v1.0 proposal (2026-11-17)
 
 - Audited the v0.1 brand bible (kept the positioning and voice; replaced the template indigo, placeholder "C" mark and Geist).

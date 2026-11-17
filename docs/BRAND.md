@@ -1,10 +1,9 @@
 # ConvoPilot — Brand Identity System v1.0
 
-> **Status:** v1.0 proposal for owner approval (replaces draft v0.1). The visual version is the
+> **Status:** v1.0 **approved by the owner** (2026-11-17), name ConvoPilot. Applied to the app. The visual version is the
 > "ConvoPilot Brand Bible" canvas (claude.ai artifact, owner-private). Vector logo files:
 > `public/brand/` (built by `scripts/brand/build_logo.py`). Tokens: `docs/brand/tokens.json` and
-> `tokens.css`. The product UI still uses the v0.1 look; adopting v1.0 in the app is a separate,
-> scheduled task (§15).
+> `tokens.css`. The animated brand bible page source is in `docs/brand/brand-bible/`.
 >
 > **Name caveat:** `convopilot.com` and `convopilot.ai` belong to others. The identity is built so
 > the symbol and system survive a rename; only the wordmark would change.
@@ -381,7 +380,15 @@ type families max · one Highlight · evidence visible · sentence case · voice
 2. Confirm the product name (domain and trademark check) before printing anything.
 3. Optional: commission a type designer to customise the wordmark once the name is final.
 
-## 15. Adoption plan (engineering)
-Apply v1.0 to the app in one change: fonts (Instrument Sans, Newsreader, IBM Plex Mono via
-`next/font`), tokens in `globals.css`, logo files in the header and emails, favicon/app icon,
-updated landing page with the Highlight, and visual re-check of all pages and e2e tests.
+## 15. Adoption (done 2026-11-17)
+Fonts via `next/font`; brand theme in `src/app/globals.css` (Tailwind v4 `@theme`); logo files in
+headers; `src/app/icon.svg` favicon; landing page with the Highlight and the animated product demo
+(`src/app/product-demo.tsx`: renders complete at rest, loops only when motion is allowed, has a
+pause button); auth pages, app shell, empty states and privacy page restyled. Still to brand:
+the Supabase email templates (stage B, with the sending domain) and a product dark theme.
+
+## 16. Motion principles
+Calm and purposeful: things are underlined, quoted and connected. Ease `cubic-bezier(.2,.7,.2,1)`;
+160 ms for controls, 280 ms for cards, 480 ms for highlights. No bounce, spin or parallax. Every
+animation is decorative-only, has a complete resting state, and is disabled under
+`prefers-reduced-motion`; anything that loops longer than 5 s can be paused.

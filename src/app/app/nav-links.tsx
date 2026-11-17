@@ -23,8 +23,8 @@ export function NavLinks() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ${
-              active ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium ${
+              active ? "bg-ink-100 font-semibold text-ink shadow-[inset_3px_0_0_var(--color-ink)]" : "text-ink-700 hover:bg-ink-100 hover:text-ink"
             }`}
           >
             {item.label}

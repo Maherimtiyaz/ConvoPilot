@@ -17,8 +17,8 @@ export function ProtectedPage({ title, description, children }: ProtectedPagePro
   return (
     <div className="mx-auto max-w-4xl">
       <header className="mb-8">
-        <h1 className="text-2xl font-semibold text-slate-900">{title}</h1>
-        <p className="mt-1 text-sm text-slate-600">{description}</p>
+        <h1 className="font-display text-4xl font-medium tracking-tight text-ink">{title}</h1>
+        <p className="mt-1 text-sm text-ink-700">{description}</p>
       </header>
       <Suspense fallback={<LoadingState />}>
         <Verified>{children}</Verified>
@@ -34,7 +34,7 @@ async function Verified({ children }: { children: (context: RequestContext) => R
 
 export function LoadingState() {
   return (
-    <div role="status" aria-live="polite" className="animate-pulse rounded-2xl border border-slate-200 bg-white p-8 text-sm text-slate-500">
+    <div role="status" aria-live="polite" className="animate-pulse rounded-[10px] border border-ink-200 bg-white p-8 text-sm text-ink-500">
       Loading…
     </div>
   );
@@ -42,10 +42,15 @@ export function LoadingState() {
 
 export function EmptyState({ heading, body, milestone }: { heading: string; body: string; milestone: string }) {
   return (
-    <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-      <h2 className="text-base font-semibold text-slate-900">{heading}</h2>
-      <p className="mx-auto mt-2 max-w-md text-sm text-slate-600">{body}</p>
-      <p className="mt-4 inline-block rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{milestone}</p>
+    <section className="rounded-2xl border border-dashed border-ink-300 bg-white px-6 py-12 text-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/brand/pattern-quotes-ink.svg" alt="" width={60} height={40} className="mx-auto h-8 w-auto opacity-20" />
+      <h2 className="mt-4 font-display text-2xl font-medium text-ink">{heading}</h2>
+      <p className="mx-auto mt-2 max-w-md text-[15px] leading-relaxed text-ink-700">{body}</p>
+      <p className="mt-5 inline-flex items-center gap-2 rounded-[2px] bg-ink-100 px-2.5 py-1 font-mono text-xs text-ink-700">
+        <span className="cp-chisel" aria-hidden="true" />
+        {milestone}
+      </p>
     </section>
   );
 }

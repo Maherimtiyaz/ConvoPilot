@@ -15,14 +15,14 @@ export default function PrivacyPage() {
       <header className="mx-auto max-w-3xl px-6 py-5">
         <Logo />
       </header>
-      <main className="mx-auto max-w-3xl px-6 pb-20 text-slate-700">
-        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+      <main className="mx-auto max-w-3xl px-6 pb-20 text-ink-700">
+        <p className="rounded-md border border-warning/30 bg-warning-50 px-3 py-2 text-sm text-warning">
           Draft — this notice is being reviewed and may change before ConvoPilot opens more widely.
         </p>
-        <h1 className="mt-6 text-3xl font-bold text-slate-900">Privacy notice</h1>
+        <h1 className="mt-6 font-display text-5xl font-medium tracking-tight text-ink">Privacy notice</h1>
         <div className="mt-6 space-y-6 text-sm leading-6">
           <section>
-            <h2 className="text-lg font-semibold text-slate-900">Joining the waitlist</h2>
+            <h2 className="text-lg font-semibold text-ink">Joining the waitlist</h2>
             <p>
               When you request early access we store your name, work email, role, company size, your answer about
               communication challenges (if you give one), where you heard about us, and when you agreed to be contacted.
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
             </p>
           </section>
           <section>
-            <h2 className="text-lg font-semibold text-slate-900">Using ConvoPilot</h2>
+            <h2 className="text-lg font-semibold text-ink">Using ConvoPilot</h2>
             <p>
               Your account is a private workspace. Conversations you paste or upload are stored so ConvoPilot can analyse
               them and help you reply. Other users can&apos;t see or change your data. ConvoPilot cannot send messages on
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
             </p>
           </section>
           <section>
-            <h2 className="text-lg font-semibold text-slate-900">Service providers</h2>
+            <h2 className="text-lg font-semibold text-ink">Service providers</h2>
             <p>
               We use hosting, database and email providers to run ConvoPilot. When AI features launch, the text you
               choose to analyse will be processed by an AI provider. We&apos;ll name every provider and explain its data
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
             </p>
           </section>
           <section>
-            <h2 className="text-lg font-semibold text-slate-900">Your choices</h2>
+            <h2 className="text-lg font-semibold text-ink">Your choices</h2>
             <p>
               You can ask us to remove you from the waitlist, or to delete your account and its data, at any time. Deleted
               content disappears from your workspace immediately and is permanently erased after a retention period
@@ -56,7 +56,7 @@ export default function PrivacyPage() {
           </section>
         </div>
         <p className="mt-10 text-sm">
-          <Link href="/" className="font-medium text-indigo-700 underline">Back to home</Link>
+          <Link href="/" className="font-medium text-route underline">Back to home</Link>
         </p>
       </main>
     </div>

@@ -14,7 +14,7 @@ const initial: WaitlistState = { status: "idle" };
 function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
-    <p id={id} className="text-xs text-red-700">
+    <p id={id} className="text-xs text-error">
       {message}
     </p>
   );
@@ -27,7 +27,7 @@ export function WaitlistForm() {
 
   if (state.status === "joined") {
     return (
-      <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-900">
+      <div role="status" className="rounded-2xl border border-success/30 bg-success-50 p-6 text-ink">
         <h3 className="font-semibold">You&apos;re on the list.</h3>
         <p className="mt-1 text-sm">
           Thanks! We&apos;re inviting people in small groups. If you&apos;re picked, you&apos;ll get a personal invitation
@@ -45,21 +45,21 @@ export function WaitlistForm() {
       {state.status === "error" && <ErrorNotice message={state.message} />}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
-          <label htmlFor="fullName" className="text-sm font-medium text-slate-800">
+          <label htmlFor="fullName" className="text-sm font-medium text-ink">
             Name
           </label>
           <input id="fullName" name="fullName" autoComplete="name" required maxLength={120} aria-invalid={!!errors.fullName} aria-describedby={describedBy("fullName")} className={inputClass} />
           <FieldError id="fullName-error" message={errors.fullName} />
         </div>
         <div className="space-y-1">
-          <label htmlFor="waitlist-email" className="text-sm font-medium text-slate-800">
+          <label htmlFor="waitlist-email" className="text-sm font-medium text-ink">
             Work email
           </label>
           <input id="waitlist-email" name="email" type="email" autoComplete="email" required maxLength={320} aria-invalid={!!errors.email} aria-describedby={describedBy("email")} className={inputClass} />
           <FieldError id="email-error" message={errors.email} />
         </div>
         <div className="space-y-1">
-          <label htmlFor="role" className="text-sm font-medium text-slate-800">
+          <label htmlFor="role" className="text-sm font-medium text-ink">
             Your role
           </label>
           <select id="role" name="role" required defaultValue="" aria-invalid={!!errors.role} aria-describedby={describedBy("role")} className={inputClass}>
@@ -75,7 +75,7 @@ export function WaitlistForm() {
           <FieldError id="role-error" message={errors.role} />
         </div>
         <div className="space-y-1">
-          <label htmlFor="companySize" className="text-sm font-medium text-slate-800">
+          <label htmlFor="companySize" className="text-sm font-medium text-ink">
             Company size
           </label>
           <select id="companySize" name="companySize" required defaultValue="" aria-invalid={!!errors.companySize} aria-describedby={describedBy("companySize")} className={inputClass}>
@@ -92,8 +92,8 @@ export function WaitlistForm() {
         </div>
       </div>
       <div className="space-y-1">
-        <label htmlFor="biggestChallenge" className="text-sm font-medium text-slate-800">
-          What&apos;s your biggest communication headache? <span className="font-normal text-slate-500">(optional)</span>
+        <label htmlFor="biggestChallenge" className="text-sm font-medium text-ink">
+          What&apos;s your biggest communication headache? <span className="font-normal text-ink-500">(optional)</span>
         </label>
         <textarea id="biggestChallenge" name="biggestChallenge" rows={3} maxLength={500} aria-describedby={describedBy("biggestChallenge")} className={inputClass} placeholder="e.g. I lose track of what I promised investors over email" />
         <FieldError id="biggestChallenge-error" message={errors.biggestChallenge} />
@@ -105,11 +105,11 @@ export function WaitlistForm() {
       </div>
       <input type="hidden" name="source" value={source.slice(0, 40)} />
       <div className="space-y-1">
-        <label className="flex items-start gap-2 text-sm text-slate-700">
-          <input type="checkbox" name="consent" value="yes" required aria-invalid={!!errors.consent} aria-describedby={describedBy("consent")} className="mt-1 h-4 w-4 rounded border-slate-300" />
+        <label className="flex items-start gap-2 text-sm text-ink-700">
+          <input type="checkbox" name="consent" value="yes" required aria-invalid={!!errors.consent} aria-describedby={describedBy("consent")} className="mt-1 h-4 w-4 rounded border-ink-300" />
           <span>
             I agree that ConvoPilot may store these details and email me about early access, as described in the{" "}
-            <Link href="/privacy" className="font-medium text-indigo-700 underline">
+            <Link href="/privacy" className="font-medium text-route underline">
               privacy notice
             </Link>
             .

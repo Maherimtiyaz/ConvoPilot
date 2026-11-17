@@ -13,7 +13,7 @@ export function LoginForm() {
     <form action={formAction} className="space-y-4">
       <ErrorNotice message={state.error} />
       <div className="space-y-1">
-        <label htmlFor="email" className="font-medium text-slate-800">
+        <label htmlFor="email" className="font-medium text-ink">
           Email address
         </label>
         <input id="email" name="email" type="email" autoComplete="email" required maxLength={320} className={inputClass} />

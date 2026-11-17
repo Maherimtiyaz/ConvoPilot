@@ -5,12 +5,12 @@ import { quote, sql, testEmail } from "./support";
 test.describe("landing page and waitlist", () => {
   test("shows the product story and links", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("AI chief of staff");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Nothing important slips");
     await expect(page.getByRole("heading", { name: "How it works" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Request early access" })).toBeVisible();
     await page.getByRole("link", { name: "Privacy", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Privacy notice" })).toBeVisible();
-    await expect(page.getByText(/^Draft/)).toBeVisible();
+    await expect(page.getByText(/^Draft — this notice is being reviewed/)).toBeVisible();
   });
 
   test("joins the waitlist with the referral source, and a repeat looks identical", async ({ page }) => {

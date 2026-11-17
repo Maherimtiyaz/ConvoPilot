@@ -51,11 +51,12 @@ import first; private workspace per user (no shared workspaces in MVP); invite-o
 only by a platform operator; passwordless email login (magic link); the AI drafts and proposes,
 the user approves everything that becomes a fact or leaves the system.
 
-**Brand:** identity system v1.0 proposal "The Highlighted Quote" — `docs/BRAND.md`, tokens in
+**Brand:** identity system v1.0 **approved by the owner** (name ConvoPilot) — "The Highlighted Quote" — `docs/BRAND.md`, tokens in
 `docs/brand/`, vector logos in `public/brand/` (built by `scripts/brand/build_logo.py`), visual
-brand bible canvas (claude.ai artifact, owner-private). Ink `#0E1B2C`, Marker `#FFD23F`, Paper
-`#F3F5F7`; Newsreader / Instrument Sans / IBM Plex Mono. The app still uses the v0.1 look until
-the owner approves v1.0 (adoption plan: `docs/BRAND.md` §15).
+animated brand bible page (claude.ai artifact, owner-private; source `docs/brand/brand-bible/`).
+Ink `#0E1B2C`, Marker `#FFD23F`, Paper `#F3F5F7`; Newsreader / Instrument Sans / IBM Plex Mono.
+Applied to the app (theme in `src/app/globals.css`, fonts via `next/font`, animated product demo
+`src/app/product-demo.tsx`; motion respects reduced-motion and can be paused).
 
 ## 3. Architecture (detail: `docs/ARCHITECTURE.md`)
 
@@ -213,7 +214,7 @@ local stack does not enforce email rate limits (must be checked on hosted dev).
 
 ## 13. Open owner decisions
 
-Domain and final product name (`convopilot.com` and `.ai` are already registered by others — check trademark) · brand identity v1.0 approval (`docs/BRAND.md`) · Vercel and Supabase accounts (dev + prod) · email-sending service
+Domain for the name ConvoPilot (`convopilot.com` and `.ai` are already registered by others — check trademark) · Vercel and Supabase accounts (dev + prod) · email-sending service
 and domain · privacy/legal review of `/privacy` · countries of users (privacy law) · brand
 assets · retention periods for deleted data · invitation lifetime (default 7 days) · whether to
 add 6-digit codes later.

@@ -20,7 +20,7 @@ export function InviteForm() {
     return (
       <p role="alert">
         This invitation link is incomplete. Open the full link from your invitation email, or{" "}
-        <Link href="/login" className="font-medium text-indigo-700 underline">
+        <Link href="/login" className="font-medium text-route underline">
           sign in
         </Link>{" "}
         if you already have an account.
@@ -32,7 +32,7 @@ export function InviteForm() {
       <ErrorNotice message={state.error} />
       <input type="hidden" name="token" value={invitation.token} />
       <div className="space-y-1">
-        <label htmlFor="email" className="font-medium text-slate-800">
+        <label htmlFor="email" className="font-medium text-ink">
           The email address this invitation was sent to
         </label>
         <input id="email" name="email" type="email" autoComplete="email" required maxLength={320} className={inputClass} />

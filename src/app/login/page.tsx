@@ -12,9 +12,9 @@ export default function LoginPage() {
     <AuthCard title="Sign in to ConvoPilot">
       <p>We&apos;ll email you a secure sign-in link. No password needed.</p>
       <LoginForm />
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-ink-500">
         ConvoPilot is invite-only right now. Not invited yet?{" "}
-        <Link href="/#waitlist" className="font-medium text-indigo-700 underline">
+        <Link href="/#waitlist" className="font-medium text-route underline">
           Request early access
         </Link>
         .
