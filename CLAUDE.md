@@ -51,8 +51,11 @@ import first; private workspace per user (no shared workspaces in MVP); invite-o
 only by a platform operator; passwordless email login (magic link); the AI drafts and proposes,
 the user approves everything that becomes a fact or leaves the system.
 
-**Brand:** `docs/BRAND.md` and the visual brand bible canvas (claude.ai artifact, owner-private) (draft v0.1 — voice, colours, typography, UI and email style; all UI and
-marketing copy follows it).
+**Brand:** identity system v1.0 proposal "The Highlighted Quote" — `docs/BRAND.md`, tokens in
+`docs/brand/`, vector logos in `public/brand/` (built by `scripts/brand/build_logo.py`), visual
+brand bible canvas (claude.ai artifact, owner-private). Ink `#0E1B2C`, Marker `#FFD23F`, Paper
+`#F3F5F7`; Newsreader / Instrument Sans / IBM Plex Mono. The app still uses the v0.1 look until
+the owner approves v1.0 (adoption plan: `docs/BRAND.md` §15).
 
 ## 3. Architecture (detail: `docs/ARCHITECTURE.md`)
 
@@ -210,7 +213,7 @@ local stack does not enforce email rate limits (must be checked on hosted dev).
 
 ## 13. Open owner decisions
 
-Domain and final product name (`convopilot.com` and `.ai` are already registered by others — check trademark) · brand bible approval (`docs/BRAND.md`) · Vercel and Supabase accounts (dev + prod) · email-sending service
+Domain and final product name (`convopilot.com` and `.ai` are already registered by others — check trademark) · brand identity v1.0 approval (`docs/BRAND.md`) · Vercel and Supabase accounts (dev + prod) · email-sending service
 and domain · privacy/legal review of `/privacy` · countries of users (privacy law) · brand
 assets · retention periods for deleted data · invitation lifetime (default 7 days) · whether to
 add 6-digit codes later.

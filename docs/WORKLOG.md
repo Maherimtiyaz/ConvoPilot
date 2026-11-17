@@ -4,6 +4,16 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 11 — Brand identity system v1.0 proposal (2026-11-17)
+
+- Audited the v0.1 brand bible (kept the positioning and voice; replaced the template indigo, placeholder "C" mark and Geist).
+- Creative direction "The Highlighted Quote": combination mark (chisel-cut highlighter stroke holding two geometric closing quotes; shared 20° lean) + lowercase Instrument Sans wordmark.
+- Real vector logos generated from exact geometry (`scripts/brand/build_logo.py`, needs Python fonttools + the OFL font; not part of the app build) into `public/brand/` (14 SVGs: primary, secondary, mono, dark, symbol, wordmark, app icon, favicon, avatar, pattern). Visually checked at sizes down to 16 px; a slanted tittle was rejected (read as an accent).
+- Palette with measured WCAG contrast; type system; graphic language; tokens (`docs/brand/tokens.json`, `tokens.css`); applications; AI logo and mockup prompts; usage rules; QA audit. `docs/BRAND.md` rewritten as v1.0; visual canvas rebuilt (17 boards).
+- Not applied to the app yet (pending owner approval). Tracked: adopt v1.0 in the UI (§15), trademark search on name and symbol.
+
+---
+
 ## Session 10 — Brand bible draft and domain check (2026-11-17)
 
 - `docs/BRAND.md` drafted (v0.1, awaiting owner approval) from the plan and the existing UI.
