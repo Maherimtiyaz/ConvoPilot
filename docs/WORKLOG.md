@@ -4,6 +4,15 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 10 — Brand bible draft and domain check (2026-11-17)
+
+- `docs/BRAND.md` drafted (v0.1, awaiting owner approval) from the plan and the existing UI.
+- Domain check via registry RDAP: `convopilot.com` (registered 2024-09-16) and `convopilot.ai` are taken;
+  `convopilot.app`, `convopilot.dev`, `getconvopilot.com`, `convopilothq.com` returned "not found" (likely
+  available; confirm at a registrar). Name/trademark decision added to CLAUDE.md §13.
+
+---
+
 ## Session 9 — M1.4 login + protected shell, W1 landing page + waitlist (2026-11-17)
 
 **Scope:** `CLAUDE.md` consolidated master plan; M1.4 (login UI, `proxy.ts`, protected shell) and W1 (public landing page + waitlist). Local Supabase only; no hosted systems touched.

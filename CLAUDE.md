@@ -51,6 +51,9 @@ import first; private workspace per user (no shared workspaces in MVP); invite-o
 only by a platform operator; passwordless email login (magic link); the AI drafts and proposes,
 the user approves everything that becomes a fact or leaves the system.
 
+**Brand:** `docs/BRAND.md` (draft v0.1 — voice, colours, typography, UI and email style; all UI and
+marketing copy follows it).
+
 ## 3. Architecture (detail: `docs/ARCHITECTURE.md`)
 
 - **Modular monolith:** one Next.js 16 App Router app (React 19, TypeScript strict, Tailwind v4),
@@ -207,7 +210,7 @@ local stack does not enforce email rate limits (must be checked on hosted dev).
 
 ## 13. Open owner decisions
 
-Domain and final product name · Vercel and Supabase accounts (dev + prod) · email-sending service
+Domain and final product name (`convopilot.com` and `.ai` are already registered by others — check trademark) · brand bible approval (`docs/BRAND.md`) · Vercel and Supabase accounts (dev + prod) · email-sending service
 and domain · privacy/legal review of `/privacy` · countries of users (privacy law) · brand
 assets · retention periods for deleted data · invitation lifetime (default 7 days) · whether to
 add 6-digit codes later.
