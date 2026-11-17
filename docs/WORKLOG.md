@@ -4,6 +4,27 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 16 — M4 Contacts, Conversations and "ask your history" (2026-11-17)
+
+- Migration 0012: companies, contacts, contact_identifiers, conversation_participants; `save_contact`
+  (links past messages), auto-linking trigger for later imports, audited `soft_delete_contact`,
+  full-text `search_messages`.
+- AI: `askHistory` workflow (bounded read-only tool loop ≤ 4 rounds; citations validated against
+  messages the tools returned; otherwise "no record"); tool loop now reports usage and model.
+  Shared AI runtime (`src/lib/services/ai-runtime.ts`: consent, daily cap, usage ledger).
+- UI: Contacts (list, search by name, add), contact page (details, edit, delete, conversations,
+  "Ask about …"), Conversations (all conversations, keyword search with snippets, "Ask your
+  history"), Studio "Save as contact" / "View contact" per sender.
+- Fix: the menu highlight now sits behind Suspense (Next.js 16 cannot know the URL of
+  `/app/contacts/[id]` while prerendering; the build failed without it).
+- Tests: unit 105 (+5 askHistory), pgTAP 167 (+22), integration 22, Playwright 19 (+1 full contacts
+  flow incl. cited answer, no-record, another user sees nothing, delete). Mock Anthropic server now
+  speaks the tool-use protocol. CI gates raised (pgTAP 167, E2E 19).
+- Not verified: a real Anthropic call (no API key here). Search is keyword-only (no embeddings yet,
+  per DATABASE.md §9).
+
+---
+
 ## Session 15 — M3 Communication Studio (2026-11-17)
 
 - Owner decisions: Anthropic, official SDK, hosted processing with consent, $1/day cap.

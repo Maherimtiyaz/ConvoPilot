@@ -5,15 +5,15 @@ import type { AiProvider, ChatMessage } from "./provider";
 import type { AuditSink } from "./tools/audit";
 import { executeToolCall } from "./tools/executor";
 import type { ToolRegistry } from "./tools/registry";
-import type { AiContext } from "./types";
+import type { AiContext, TokenUsage } from "./types";
 import { untrustedPreamble } from "./untrusted";
 
 export const MAX_TOOL_ROUNDS = 4;
 const MAX_CALLS_PER_ROUND = 6;
 
 export type ToolLoopResult =
-  | { status: "answered"; text: string; rounds: number; model: string }
-  | { status: "incomplete"; reason: "max_rounds" | "budget"; rounds: number };
+  | { status: "answered"; text: string; rounds: number; model: string; usage: TokenUsage }
+  | { status: "incomplete"; reason: "max_rounds" | "budget"; rounds: number; model: string; usage: TokenUsage };
 
 /**
  * Bounded read-only tool loop for open-ended questions (askHistory only; §1). At most
@@ -41,16 +41,21 @@ export async function runToolLoop(options: {
     { role: "user", content: options.user },
   ];
 
+  const usage: TokenUsage = { inputTokens: 0, outputTokens: 0 };
+  let model = "unknown";
   for (let round = 0; ; round++) {
     let result;
     try {
       result = await callModel(provider, { messages, tools, maxOutputTokens: options.maxOutputTokens ?? 1_200 }, budget);
     } catch (error) {
-      if (error instanceof AiError && error.code === "budget_exceeded") return { status: "incomplete", reason: "budget", rounds: round };
+      if (error instanceof AiError && error.code === "budget_exceeded") return { status: "incomplete", reason: "budget", rounds: round, model, usage };
       throw error;
     }
-    if (result.toolCalls.length === 0) return { status: "answered", text: result.text, rounds: round, model: result.model };
-    if (round >= maxRounds) return { status: "incomplete", reason: "max_rounds", rounds: round };
+    usage.inputTokens += result.usage.inputTokens;
+    usage.outputTokens += result.usage.outputTokens;
+    model = result.model;
+    if (result.toolCalls.length === 0) return { status: "answered", text: result.text, rounds: round, model, usage };
+    if (round >= maxRounds) return { status: "incomplete", reason: "max_rounds", rounds: round, model, usage };
 
     const calls = result.toolCalls.slice(0, MAX_CALLS_PER_ROUND);
     messages.push({ role: "assistant", content: result.text, toolCalls: calls, providerState: result.providerState });

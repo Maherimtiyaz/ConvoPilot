@@ -50,6 +50,22 @@ Approved owner decisions reflected here (2026-11-16): private workspaces only (n
 | `citations` | Evidence links (§6) | see §6 |
 | `embeddings` | Vectors (added with pgvector, §9) | see §9 |
 
+### 2.3 Implemented in M4 (migration `20261118001200_contacts.sql`)
+
+- Tables `companies` (unique lower(name) per workspace), `contacts`, `contact_identifiers` (kind `email`,
+  unique per workspace), `conversation_participants` (pk workspace, conversation, contact, role). RLS:
+  members only; children are visible only while their parent contact/conversation is visible.
+  Column-level UPDATE grants only (`companies.name/domain`; `contacts.full_name, company_id,
+  role_title, relationship_context, last_interaction_at`); `workspace_id` never updatable.
+- `public.save_contact(...)` (invoker, RLS applies): typed `created` / `existing` / `invalid`; links
+  every existing message from that email and sets `last_interaction_at`. Trigger
+  `app_private.link_message_to_contact` links later imports automatically.
+- `public.soft_delete_contact(id)` (definer, member check, audited, removes identifiers so the email
+  can be saved again; conversations are kept).
+- `public.search_messages(workspace, query, contact?, limit ≤ 25)` (invoker): `websearch_to_tsquery
+  ('simple')` over non-deleted messages of non-deleted conversations; returns at most 4,000
+  characters of each body. Full-text only; embeddings remain deferred (§9).
+
 Changes from earlier drafts (justified):
 
 - `users.workspace_id` replaced by `profiles` + `workspace_members` (membership, roles, invited users).

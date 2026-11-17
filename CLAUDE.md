@@ -155,7 +155,8 @@ cost** and **email deliverability**, not the database.
 | H1 | Hosted setup: Supabase dev/prod, Vercel, email domain, go-live of landing page | 🟡 Started — checklist `docs/operations/GO_LIVE.md` (stage A: waitlist on `*.vercel.app`; stage B: domain + Resend) |
 | M2 | AI core: provider interface, structured outputs, citations, budgets, tool registry + policy, bounded loop, injection harness | ✅ built and tested (`src/lib/ai/`; test provider only) |
 | M3 | Communication Studio: import (paste/.txt/.md/.eml), cited analysis, drafts in your style, edit/save/copy/delete | ✅ built and tested (mock AI in tests; real key needed to use) |
-| M4–M5 | Contacts/Conversations & "what did I discuss with X?", Commitments/Tasks | ⬜ |
+| M4 | Contacts, Conversations, keyword search, "what did I discuss with X?" with citations | ✅ built and tested (mock AI in tests) |
+| M5 | Commitments/Tasks proposed by AI, approved by the user | ⬜ |
 | — | v0.1 acceptance → early access for ~1,000 users | ⬜ |
 | M6–M8 | Briefing, Gmail/Calendar, production hardening & scale | ⬜ |
 

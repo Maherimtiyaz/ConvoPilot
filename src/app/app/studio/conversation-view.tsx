@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import type { StoredPoint } from "@/lib/ai/workflows/analyze-thread";
 import type { ConversationDetail } from "@/lib/services/studio";
 
+import { SenderContact } from "./sender-contact";
 import { analyzeAction, deleteConversationAction, deleteDraftAction, draftAction, saveDraftAction, setAiConsentAction } from "./actions";
 
 interface AiState {
@@ -45,7 +46,7 @@ function Citations({ point, onFocus }: { point: StoredPoint; onFocus: (position:
   );
 }
 
-export function ConversationView({ detail, ai, createdLabel }: { detail: ConversationDetail; ai: AiState; createdLabel: string }) {
+export function ConversationView({ detail, ai, createdLabel, contacts }: { detail: ConversationDetail; ai: AiState; createdLabel: string; contacts: Record<string, string> }) {
   const { conversation, messages, analysis, drafts } = detail;
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState<"analyze" | "draft" | null>(null);
@@ -138,6 +139,7 @@ export function ConversationView({ detail, ai, createdLabel }: { detail: Convers
                     <span className="font-semibold">{m.senderName ?? m.senderEmail ?? "Unknown sender"}</span>
                     {m.senderName && m.senderEmail && <span className="text-ink-500"> · {m.senderEmail}</span>}
                     {m.direction === "outbound" && <span className="ml-2 rounded-full bg-ink-100 px-2 py-0.5 font-mono text-[11px] text-ink-700">you</span>}
+                    {m.direction !== "outbound" && m.senderEmail && <SenderContact name={m.senderName} email={m.senderEmail} contactId={contacts[m.senderEmail.toLowerCase()]} />}
                   </span>
                   {m.sentAt && <span className="font-mono text-xs text-ink-500">{m.sentAt.slice(0, 16).replace("T", " ")} UTC</span>}
                 </p>

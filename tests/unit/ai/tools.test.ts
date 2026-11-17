@@ -100,7 +100,7 @@ describe("runToolLoop", () => {
   it("answers after tool rounds, feeding results back as tool messages", async () => {
     const p = new ScriptedProvider([{ text: "", toolCalls: [call("a")] }, { text: "You promised the deck by Friday [m1]." }]);
     const r = await runToolLoop(base(p));
-    expect(r).toEqual({ status: "answered", text: "You promised the deck by Friday [m1].", rounds: 1, model: "scripted-1" });
+    expect(r).toEqual({ status: "answered", text: "You promised the deck by Friday [m1].", rounds: 1, model: "scripted-1", usage: { inputTokens: 200, outputTokens: 100 } });
     const last = p.requests[1].messages;
     expect(last.at(-1)).toMatchObject({ role: "tool", toolCallId: "a" });
     expect(p.requests[0].tools?.map((t) => t.name)).toEqual(["search_messages"]);
@@ -109,7 +109,7 @@ describe("runToolLoop", () => {
   it("stops after 4 tool rounds with a typed incomplete result", async () => {
     const p = new ScriptedProvider(Array.from({ length: 6 }, (_, i) => ({ text: "", toolCalls: [call(`c${i}`)] })));
     const r = await runToolLoop(base(p));
-    expect(r).toEqual({ status: "incomplete", reason: "max_rounds", rounds: 4 });
+    expect(r).toMatchObject({ status: "incomplete", reason: "max_rounds", rounds: 4 });
     expect(p.calls).toBe(5);
   });
 

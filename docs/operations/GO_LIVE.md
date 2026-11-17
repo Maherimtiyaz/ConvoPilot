@@ -30,7 +30,7 @@ the Claude environment settings and is revoked afterwards.
 
 With the token and project ref, Claude:
 
-1. Applies the 11 migrations (schema, security, invitations, waitlist, operator console, Communication Studio) to `convopilot-prod`.
+1. Applies the 12 migrations (schema, security, invitations, waitlist, operator console, Communication Studio, contacts) to `convopilot-prod`.
 2. Pushes the Auth settings from `supabase/config.toml` (passwordless, invite-only hook, link and
    session lifetimes, scanner-safe email templates) with the production site URL.
 3. Verifies: the API exposes only `public`; anonymous users can join the waitlist but cannot read

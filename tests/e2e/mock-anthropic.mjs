@@ -12,7 +12,28 @@ function firstMessageQuote(userText) {
   return m ? m[1].trim().slice(0, 40).trim() : "";
 }
 
+const textOf = (content) =>
+  typeof content === "string" ? content : Array.isArray(content) ? content.map((b) => (typeof b.content === "string" ? b.content : (b.text ?? ""))).join("\n") : "";
+
+/**
+ * "Ask your history" tool loop: round 1 searches messages for the question's last word;
+ * round 2 answers from the first result (quoting it exactly) or reports no record.
+ */
+function toolTurn(body) {
+  const results = body.messages.filter((m) => Array.isArray(m.content) && m.content.some((b) => b.type === "tool_result"));
+  if (results.length === 0) {
+    const question = /([^\n]*\?)/.exec(textOf(body.messages[0]?.content))?.[1] ?? "";
+    const keyword = question.replace(/[^\p{L}\s]/gu, " ").trim().split(/\s+/).at(-1) ?? "";
+    return { tool: { name: "search_messages", input: { query: keyword || "nothing" } } };
+  }
+  const hit = /"ref":"(M\d+)"[^{}]*?"text":"((?:[^"\\]|\\.)*)"/.exec(textOf(results.at(-1).content));
+  if (!hit) return { found: false, answer: "", citations: [] };
+  const text = JSON.parse(`"${hit[2]}"`);
+  return { found: true, answer: "You discussed the revised deck and its Friday deadline.", citations: [{ ref: hit[1], quote: text.split("\n")[0].slice(0, 30).trim() }] };
+}
+
 function reply(body) {
+  if (body.tools?.length) return toolTurn(body);
   const system = typeof body.system === "string" ? body.system : "";
   const user = body.messages?.map((m) => (typeof m.content === "string" ? m.content : "")).join("\n") ?? "";
   const quote = firstMessageQuote(user);
@@ -56,15 +77,16 @@ createServer((req, res) => {
   req.on("end", () => {
     calls += 1;
     const body = JSON.parse(raw || "{}");
-    const text = JSON.stringify(reply(body));
+    const out = reply(body);
+    const content = out.tool ? [{ type: "tool_use", id: `toolu_mock_${calls}`, name: out.tool.name, input: out.tool.input }] : [{ type: "text", text: JSON.stringify(out) }];
     res.writeHead(200, { "content-type": "application/json" }).end(
       JSON.stringify({
         id: `msg_mock_${calls}`,
         type: "message",
         role: "assistant",
         model: body.model,
-        content: [{ type: "text", text }],
-        stop_reason: "end_turn",
+        content,
+        stop_reason: out.tool ? "tool_use" : "end_turn",
         stop_sequence: null,
         usage: { input_tokens: 1200, output_tokens: 300 },
       }),

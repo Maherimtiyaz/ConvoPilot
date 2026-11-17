@@ -49,6 +49,14 @@ Every denial is audit-logged (`DATABASE.md` §10). Tools never call repositories
 | `proposeMemories` | Deterministic | thread → model call (`MemoryProposalSchema[]`) → citation validation → store memories `status=proposed` | Proposed memories |
 | `askHistory` | Bounded loop (≤ 4 rounds) | contact/date resolution → read tools → answer with citations → citation validation | Answer + validated citations, or "no record found" |
 
+**Implemented in M4 (`src/lib/ai/workflows/ask-history.ts`, prompt `ask-history@1`):** tools
+`search_contacts`, `get_contact_history`, `search_messages` (Read only; registered per request on a
+workspace-bound `HistorySource`). Messages returned to the model are labelled `M1`, `M2`… and the
+final answer must be JSON `{found, answer, citations:[{ref, quote}]}`. Citations are validated against
+the messages the tools actually returned in that request (same workspace, quote present in the text);
+an answer without a valid citation is shown as "no record". Usage and model metadata are recorded
+against the daily cap; nothing is stored from the answer.
+
 Pasted text is first stored as a conversation (provenance), then workflows run on stored message ids.
 
 ## 4. Tool contracts (v0.1)
