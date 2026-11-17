@@ -12,6 +12,11 @@ export interface ChatMessage {
   toolCallId?: string;
   /** For role "assistant": tool calls the model made in this turn. */
   toolCalls?: ToolCallRequest[];
+  /**
+   * Opaque provider data for an assistant turn (e.g. the raw content blocks, including thinking
+   * blocks that must be sent back unchanged). Only the adapter that produced it reads it.
+   */
+  providerState?: unknown;
 }
 
 export interface ToolSpec {
@@ -44,6 +49,8 @@ export interface GenerateResult {
   usage: TokenUsage;
   model: string;
   finishReason: "stop" | "tool_calls" | "length" | "other";
+  /** Opaque data to attach to the assistant turn if the conversation continues (tool loop). */
+  providerState?: unknown;
 }
 
 export interface AiProvider {

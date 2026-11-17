@@ -2,7 +2,24 @@ import type { Metadata } from "next";
 
 import { signOutAction } from "@/app/auth/actions";
 
-import { ProtectedPage } from "../protected-page";
+import { Suspense } from "react";
+
+import type { RequestContext } from "@/lib/auth/context";
+import { getAiSettings } from "@/lib/services/studio";
+
+import { LoadingState, ProtectedPage } from "../protected-page";
+
+import { AiConsentToggle, StyleForm } from "./ai-settings";
+
+async function AiSettingsSection({ ctx }: { ctx: RequestContext }) {
+  const settings = await getAiSettings(ctx);
+  return (
+    <>
+      <AiConsentToggle optIn={settings.optIn} configured={settings.configured} />
+      <StyleForm style={settings.style} />
+    </>
+  );
+}
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -11,7 +28,7 @@ const secondaryButton =
 
 export default function SettingsPage() {
   return (
-    <ProtectedPage title="Settings" description="Your account and sessions.">
+    <ProtectedPage title="Settings" description="Your account, AI processing, writing style and sessions.">
       {(context) => (
         <div className="space-y-6">
           <section className="rounded-[10px] border border-ink-200 bg-white p-6">
@@ -21,6 +38,9 @@ export default function SettingsPage() {
               <dd className="font-medium text-ink">{context.email ?? "—"}</dd>
             </dl>
           </section>
+          <Suspense fallback={<LoadingState />}>
+            <AiSettingsSection ctx={context} />
+          </Suspense>
           <section className="rounded-[10px] border border-ink-200 bg-white p-6">
             <h2 className="text-base font-semibold text-ink">Sign out</h2>
             <p className="mt-1 text-sm text-ink-700">

@@ -30,7 +30,7 @@ the Claude environment settings and is revoked afterwards.
 
 With the token and project ref, Claude:
 
-1. Applies the 10 migrations (schema, security, invitations, waitlist, operator console) to `convopilot-prod`.
+1. Applies the 11 migrations (schema, security, invitations, waitlist, operator console, Communication Studio) to `convopilot-prod`.
 2. Pushes the Auth settings from `supabase/config.toml` (passwordless, invite-only hook, link and
    session lifetimes, scanner-safe email templates) with the production site URL.
 3. Verifies: the API exposes only `public`; anonymous users can join the waitlist but cannot read
@@ -54,6 +54,9 @@ Delete the `claude-setup-temporary` token in Supabase and the variable in the Cl
    - `NEXT_PUBLIC_SUPABASE_URL` = the Project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = the **publishable** key (`sb_publishable_…`).
      Never the `secret`/`service_role` key.
+   - `ANTHROPIC_API_KEY` = an Anthropic API key (console.anthropic.com → API keys). **Secret**:
+     paste it only into Vercel, mark it "Sensitive", never into chat or the repository. Optional
+     until you want AI features live; without it the app says "AI isn't connected yet".
    - `NEXT_PUBLIC_APP_URL` = the site's address (e.g. `https://convopilot-xyz.vercel.app`), used to
      build invitation links in the operator console.
 3. Deploy. Vercel publishes the `main` branch, so the reviewed work is merged into `main` first

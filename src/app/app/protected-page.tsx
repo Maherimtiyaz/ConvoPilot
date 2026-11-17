@@ -3,6 +3,8 @@ import { Suspense, type ReactNode } from "react";
 import { requireRequestContext, type RequestContext } from "@/lib/auth/context";
 
 interface ProtectedPageProps {
+  /** Wide pages (e.g. the Studio's three-column layout) use more of the screen. */
+  wide?: boolean;
   title: string;
   description: string;
   children: (context: RequestContext) => ReactNode;
@@ -13,9 +15,9 @@ interface ProtectedPageProps {
  * membership through RLS) before anything private renders; signed-out visitors are redirected
  * to /login. The check streams behind Suspense as Cache Components requires.
  */
-export function ProtectedPage({ title, description, children }: ProtectedPageProps) {
+export function ProtectedPage({ title, description, children, wide = false }: ProtectedPageProps) {
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className={`mx-auto ${wide ? "max-w-7xl" : "max-w-4xl"}`}>
       <header className="mb-8">
         <h1 className="font-display text-4xl font-medium tracking-tight text-ink">{title}</h1>
         <p className="mt-1 text-sm text-ink-700">{description}</p>

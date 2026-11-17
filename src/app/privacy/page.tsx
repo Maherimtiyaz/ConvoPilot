@@ -41,9 +41,10 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-ink">Service providers</h2>
             <p>
-              We use hosting, database and email providers to run ConvoPilot. When AI features launch, the text you
-              choose to analyse will be processed by an AI provider. We&apos;ll name every provider and explain its data
-              terms here before that happens.
+              We use hosting, database and email providers to run ConvoPilot. AI features use Anthropic (the maker of
+              Claude) through its business API. A conversation is sent to Anthropic only after you allow AI processing
+              in Settings and only when you press Analyse or Draft for that conversation. We&apos;ll list every provider
+              and its data terms here before ConvoPilot opens more widely.
             </p>
           </section>
           <section>

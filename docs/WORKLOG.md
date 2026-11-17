@@ -4,6 +4,19 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 15 — M3 Communication Studio (2026-11-17)
+
+- Owner decisions: Anthropic, official SDK, hosted processing with consent, $1/day cap.
+- `@anthropic-ai/sdk` pinned to 1.4.0 (newest release ≥ 2 weeks old). Adapter uses the beta Messages endpoint with `fallbacks: "default"`, effort medium, SDK retries off; maps typed SDK errors to ProviderError; refusals → `refused`. Discovered: SDK 1.x sends the API key as `Authorization: Bearer` (the e2e mock accepts both).
+- Migration 0011 (conversations, messages, thread_analyses, drafts, citations, ai_usage_daily + import/soft-delete/usage functions).
+- Dependency-free parser (`src/lib/conversations/parse.ts`): Gmail/Outlook reply chains, .eml headers, multipart, quoted-printable, base64, RFC 2047, HTML → text (never rendered).
+- Workflows `analyze-email@1`, `draft-reply@1`; service `src/lib/services/studio.ts` (consent, daily cap, budget, usage recording incl. failed runs).
+- UI: Studio (list, import paste/file, messages, analysis with clickable citations, consent card, draft options, editable drafts with save/copy/delete, delete conversation), Settings (AI processing switch, writing style). Privacy notice names Anthropic.
+- Tests: unit 100 (parser 9, workflows 4 new), pgTAP 145 (+26), integration 22, Playwright 18 (+3) against a local Anthropic mock (`tests/e2e/mock-anthropic.mjs`). Fixed a data-dependent pgTAP assertion.
+- Not verified: a real Anthropic call (no API key in this environment).
+
+---
+
 ## Session 14 — M2 AI core (2026-11-17)
 
 - Built SDK-free behind the internal `AiProvider` interface, so no new dependency and P4 only affects the M3 adapter.

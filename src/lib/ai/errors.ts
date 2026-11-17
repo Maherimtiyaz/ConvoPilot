@@ -5,7 +5,11 @@ export type AiErrorCode =
   | "timeout"
   | "invalid_output" // structured output failed validation after one repair retry
   | "budget_exceeded" // per-request token budget
-  | "incomplete"; // tool loop hit its round limit
+  | "incomplete" // tool loop hit its round limit
+  | "refused" // the model declined the request for safety reasons
+  | "not_configured" // no AI provider key is set
+  | "daily_limit" // the workspace reached today's AI spending cap
+  | "consent_required"; // the user has not allowed hosted AI processing
 
 export class AiError extends Error {
   constructor(
@@ -21,7 +25,7 @@ export class AiError extends Error {
 export class ProviderError extends Error {
   constructor(
     readonly retryable: boolean,
-    readonly kind: "network" | "rate_limited" | "server" | "client" | "timeout",
+    readonly kind: "network" | "rate_limited" | "server" | "client" | "timeout" | "refused",
   ) {
     super(`provider ${kind} error`);
     this.name = "ProviderError";

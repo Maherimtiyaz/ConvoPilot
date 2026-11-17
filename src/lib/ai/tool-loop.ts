@@ -53,7 +53,7 @@ export async function runToolLoop(options: {
     if (round >= maxRounds) return { status: "incomplete", reason: "max_rounds", rounds: round };
 
     const calls = result.toolCalls.slice(0, MAX_CALLS_PER_ROUND);
-    messages.push({ role: "assistant", content: result.text, toolCalls: calls });
+    messages.push({ role: "assistant", content: result.text, toolCalls: calls, providerState: result.providerState });
     for (const call of calls) {
       const outcome = await executeToolCall(ctx, call, registry, audit, nonce);
       messages.push({ role: "tool", toolCallId: outcome.toolCallId, content: outcome.content });

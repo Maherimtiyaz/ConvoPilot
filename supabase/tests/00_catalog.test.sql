@@ -29,9 +29,10 @@ select is(
   (select array_agg(p.proname::text order by p.proname) from pg_proc p
     where p.pronamespace in ('public'::regnamespace, 'app_private'::regnamespace)
       and has_function_privilege('authenticated', p.oid, 'execute')),
-  array['create_invitation', 'current_user_is_operator', 'invite_waitlist_entries', 'is_workspace_member',
-        'is_workspace_owner', 'join_waitlist', 'list_invitations', 'list_waitlist', 'log_event',
-        'request_account_deletion', 'revoke_invitation', 'set_waitlist_entry_status', 'verify_invitation'],
+  array['create_invitation', 'current_user_is_operator', 'import_conversation', 'invite_waitlist_entries',
+        'is_workspace_member', 'is_workspace_owner', 'join_waitlist', 'list_invitations', 'list_waitlist', 'log_event',
+        'record_ai_usage', 'request_account_deletion', 'revoke_invitation', 'set_waitlist_entry_status',
+        'soft_delete_conversation', 'soft_delete_draft', 'verify_invitation'],
   'authenticated can execute only the allow-listed functions');
 select is(
   (select array_agg(p.proname::text order by p.proname) from pg_proc p

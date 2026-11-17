@@ -14,7 +14,7 @@ const fmt = (iso: string | null) => (iso ? dateFormat.format(new Date(iso)) : ""
 
 export default function OperatorPage({ searchParams }: PageProps<"/app/operator">) {
   return (
-    <ProtectedPage title="Operator console" description="Review the waitlist, invite people in batches, and manage invitations.">
+    <ProtectedPage wide title="Operator console" description="Review the waitlist, invite people in batches, and manage invitations.">
       {() => (
         <Suspense fallback={<LoadingState />}>
           <Console searchParams={searchParams} />

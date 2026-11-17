@@ -26,6 +26,10 @@ insert into app_private.waitlist_entries (id, email_normalized, full_name, role,
   ('11111111-0000-0000-0000-000000000003', 'w3@example.com', 'Three', 'investor', '11-50', now(), now() - interval '1 hour'),
   ('11111111-0000-0000-0000-000000000004', 'member@example.com', 'Member', 'founder', 'solo', now(), now());
 
+create temp table expected_pending on commit drop as
+  select count(*)::int as n from app_private.waitlist_entries where status = 'pending';
+grant select on expected_pending to authenticated;
+
 -- ---------------------------------------------------------------- anon: no access at all
 set local role anon;
 select throws_ok($$ select public.list_waitlist() $$, '42501', null, 'anon cannot call list_waitlist');
@@ -54,7 +58,8 @@ select is((select status from app_private.waitlist_entries where id = '11111111-
 set local role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000e1');
 select is(public.current_user_is_operator(), true, 'the operator is recognised');
-select is(public.list_waitlist() -> 'counts' ->> 'pending', '4', 'operator sees counts by status');
+select is((public.list_waitlist() -> 'counts' ->> 'pending')::int,
+  (select n from expected_pending), 'operator sees counts by status');
 select is(public.list_waitlist('pending', 2, 0) #>> '{entries,0,email}', 'member@example.com',
   'entries are newest first and paginated');
 select is(public.list_waitlist('bogus') ->> 'status', 'invalid', 'unknown status filter is rejected');

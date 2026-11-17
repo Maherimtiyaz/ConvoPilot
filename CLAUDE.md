@@ -115,8 +115,12 @@ validated with Zod; citations validated against stored sources; versioned prompt
 limits; model metadata on derived records. AI code can never call decision functions.
 CI guard `scripts/ci/ai-guards.sh`: decision RPCs only in `src/lib/services/proposals/decide.ts`;
 vendor AI SDKs only in `src/lib/ai/providers/`; the scripted test provider never in `src/`.
-**Before M3 (owner):** first AI provider (P3), SDK vs raw HTTP adapter (P4), hosted processing of
-private content (P5), per-workspace daily AI cost cap.
+**Owner decisions (2026-11-17):** P3 = Anthropic; P4 = official SDK `@anthropic-ai/sdk` (pinned
+1.4.0, only in `src/lib/ai/providers/anthropic.ts`); P5 = yes, hosted processing of conversations the
+user chooses, behind a per-user opt-in (`workspace_settings.ai_hosted_processing_opt_in`); daily
+AI cap $1 per workspace (`AI_DAILY_COST_CAP_USD`, ledger `ai_usage_daily`). Model `claude-opus-5-5`
+(configurable via `AI_MODEL`), server-side refusal fallback on. Import limits: 200k characters,
+50 messages, 50k per message, 750 KB files. E2E tests use a local mock of the Anthropic API.
 
 ## 7. Testing and CI (detail: `docs/EVALUATION.md`)
 
@@ -150,7 +154,8 @@ cost** and **email deliverability**, not the database.
 | M1.5 | Operator console: review waitlist, invite in batches, revoke | ✅ built and tested locally (`/app/operator`) |
 | H1 | Hosted setup: Supabase dev/prod, Vercel, email domain, go-live of landing page | 🟡 Started — checklist `docs/operations/GO_LIVE.md` (stage A: waitlist on `*.vercel.app`; stage B: domain + Resend) |
 | M2 | AI core: provider interface, structured outputs, citations, budgets, tool registry + policy, bounded loop, injection harness | ✅ built and tested (`src/lib/ai/`; test provider only) |
-| M3–M5 | Communication Studio, Contacts/Conversations, Commitments/Tasks | ⬜ |
+| M3 | Communication Studio: import (paste/.txt/.md/.eml), cited analysis, drafts in your style, edit/save/copy/delete | ✅ built and tested (mock AI in tests; real key needed to use) |
+| M4–M5 | Contacts/Conversations & "what did I discuss with X?", Commitments/Tasks | ⬜ |
 | — | v0.1 acceptance → early access for ~1,000 users | ⬜ |
 | M6–M8 | Briefing, Gmail/Calendar, production hardening & scale | ⬜ |
 

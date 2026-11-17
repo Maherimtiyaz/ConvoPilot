@@ -10,6 +10,8 @@ retry `structured.ts` · untrusted-content delimiters `untrusted.ts` · citation
 provider, injection harness). The per-workspace daily cost cap (§9) is a database ledger added with
 the first real provider in M3, once the owner sets the cap.
 
+**M3 (2026-11-17):** Anthropic adapter `src/lib/ai/providers/anthropic.ts` (official SDK, server-side refusal fallback, SDK retries off); workflows `workflows/analyze-thread.ts` (`analyze-email@1`) and `workflows/draft-reply.ts` (`draft-reply@1`); orchestration, consent check, daily cap ($1, ledger `ai_usage_daily`) and usage recording in `src/lib/services/studio.ts`. Analysis statements whose citations fail validation are removed and counted (`droppedUnsupported`). Drafts never promise unstated dates/prices/decisions (placeholders instead).
+
 Labels: **Required**, **Recommended (pending approval)**, **Pending decision** (see `ARCHITECTURE.md` §11). Provider/SDK choice is pending (P3, P4); nothing here depends on a specific vendor.
 
 ## 1. Model

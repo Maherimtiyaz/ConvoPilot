@@ -424,3 +424,15 @@ per-entry `created` with the one-time token, `already_invited`, `already_member`
 `not_found`) · `set_waitlist_entry_status(id, pending|declined)` · `list_invitations(limit,
 offset)` (state only, never tokens or hashes). Tests: `supabase/tests/30_operator_console.test.sql`.
 
+## Communication Studio tables (M3, migration 0011)
+
+Created: `conversations`, `messages`, `thread_analyses`, `drafts`, `citations` (subjects in M3:
+`thread_analysis_id`, `draft_id`; source: `message_id`; composite workspace FKs), `ai_usage_daily`.
+RLS as in §4.4 (member + `deleted_at is null`); hard DELETE revoked; UPDATE only `conversations.subject`
+and `drafts.content/tone/length/edited_by_user`; drafts can only be inserted as `draft`; citations
+are hidden when their subject or source is deleted. Functions: `import_conversation` (security
+invoker, atomic, duplicate detection by import hash), `soft_delete_conversation` /
+`soft_delete_draft` (definer, audited, cascade `deleted_at` to messages, analyses and drafts),
+`record_ai_usage` (definer, member-only, append to today's UTC total). Tests:
+`supabase/tests/40_studio.test.sql`.
+

@@ -28,6 +28,7 @@ export async function callModel(
       if (error instanceof AiError) throw error;
       if (error instanceof ProviderError) {
         if (error.kind === "timeout") throw new AiError("timeout");
+        if (error.kind === "refused") throw new AiError("refused");
         throw new AiError(error.retryable ? "provider_unavailable" : "provider_rejected");
       }
       throw new AiError("provider_unavailable");

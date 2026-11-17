@@ -256,14 +256,14 @@ None of these are approved. Each needs owner approval before the dependent work 
 | --- | --- | --- |
 | P1 Workspace sharing | — | **Approved 2026-11-16:** private workspaces only; no shared workspaces in the MVP |
 | P2 Local vs hosted Supabase | — | **Approved 2026-11-16:** hosted dev project for manual development; local Supabase (Docker) for automated tests/CI; separate production project |
-| P3 First AI provider | M3 | M2 uses only the test provider |
-| P4 AI SDK | M3 (first real adapter) | Before M3 — M2 was built SDK-free behind `AiProvider`, so the choice only affects `src/lib/ai/providers/` |
-| P5 Hosted processing of private content | M3 (first real model call on user content) | Before M3 |
+| P3 First AI provider | M3 | **Decided 2026-11-17: Anthropic** (model `claude-opus-5-5`, configurable) |
+| P4 AI SDK | M3 | **Decided 2026-11-17: official `@anthropic-ai/sdk`** (pinned 1.4.0) behind `AiProvider`, imported only in `src/lib/ai/providers/` |
+| P5 Hosted processing of private content | M3 | **Decided 2026-11-17: yes**, per-user opt-in, only conversations the user analyses/drafts; daily cap $1/workspace |
 | P6 Auth & invitation policy | — | **Approved 2026-11-16:** invite-only; only a platform operator (separate from workspace roles) may invite; email magic link / OTP |
 | Retention periods (soft-deleted content, account deletion, audit) and deletion-cancel policy | Privileged runner implementation | Before the runner is built (not M1.3 schema) |
 | Privileged runner hosting | Privileged runner implementation | Before the runner is built |
 | Invitation default TTL / maximum | M1.3 `create_invitation` | Proposed 7 days default; confirm in M1.3 |
-| File-size / paste limits | M3 | Before M3 |
+| File-size / paste limits | M3 | Engineering default: 200k chars, 50 messages, 50k/message, 750 KB files |
 | Secret-scanning tool | M1.2 CI step (tool choice can be made inside M1.2 with approval) | M1.2 |
 | M1/M2 split | Milestone planning | Before M1.2 approval |
 
@@ -334,7 +334,7 @@ See `EVALUATION.md`. Summary: unit (Vitest) for schemas, policy and citation val
 | M1.3 | Database foundation and Supabase Auth integration: local Supabase stack + CI database tests, migrations for foundation tables, `app_private` schema, function grants, RLS, operator + invitation model, invite-only sign-up gate and provisioning, `log_event`, account-deletion request function and lifecycle design, Supabase env section, session-bound server client (`@supabase/ssr`) | 🟡 Stage 0 passed; Stage 1 implemented and verified locally 2026-11-16 (uncommitted; GitHub `database` job not yet run) |
 | M1.4 | Login UI (magic link / OTP), `proxy.ts`, protected application shell, frontend session experience | Not started |
 | M2 | AI core: provider interface (P4), test provider, structured output helper, policy layer, tool registry, injection harness | Done 2026-11-17 (`src/lib/ai/`; no vendor SDK; P4 deferred to the first adapter in M3) |
-| M3 | Communication Studio | Not started |
+| M3 | Communication Studio | Done 2026-11-17 |
 | M4 | Contacts, Conversations, keyword retrieval, cited Q&A | Not started |
 | M5 | Commitments & Tasks with approval queue | Not started |
 | — | **v0.1 acceptance** (`PRD.md` §5) | — |
