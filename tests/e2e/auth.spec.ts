@@ -1,25 +1,7 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
+import { acceptInvitation, completeLink } from "./flows";
 import { createInvitation, emailCount, latestEmailLink, quote, sql, testEmail } from "./support";
-
-async function acceptInvitation(page: Page, email: string) {
-  const token = createInvitation(email);
-  await page.goto(`/invite#t=${token}`);
-  await expect(page.getByLabel(/email address this invitation was sent to/)).toBeVisible();
-  expect(page.url()).not.toContain(token);
-  await page.getByLabel(/email address this invitation was sent to/).fill(email);
-  await page.getByRole("button", { name: "Create my account" }).click();
-  await expect(page).toHaveURL(/\/auth\/check-email$/);
-  return latestEmailLink(email);
-}
-
-async function completeLink(page: Page, link: string) {
-  await page.goto(link);
-  await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
-  expect(page.url()).not.toContain("#th=");
-  await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL(/\/app$/);
-}
 
 test.describe("sign-in and protected app", () => {
   test("signed-out visitors are sent to the login page", async ({ page }) => {

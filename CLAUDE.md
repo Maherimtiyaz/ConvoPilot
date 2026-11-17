@@ -143,7 +143,7 @@ cost** and **email deliverability**, not the database.
 | M1.3 | Database foundation, invite-only passwordless sign-up, RLS, hardening | ✅ `f4168e2` (CI green) |
 | **M1.4** | Login experience + protected app shell | ✅ built and tested locally (§10) |
 | **W1** | Public landing page + waitlist | ✅ built and tested locally (§11); goes live in H1 |
-| M1.5 | Operator console: review waitlist, invite in batches, revoke | ⬜ Next |
+| M1.5 | Operator console: review waitlist, invite in batches, revoke | ✅ built and tested locally (`/app/operator`) |
 | H1 | Hosted setup: Supabase dev/prod, Vercel, email domain, go-live of landing page | 🟡 Started — checklist `docs/operations/GO_LIVE.md` (stage A: waitlist on `*.vercel.app`; stage B: domain + Resend) |
 | M2 | AI core | ⬜ |
 | M3–M5 | Communication Studio, Contacts/Conversations, Commitments/Tasks | ⬜ |
@@ -171,7 +171,7 @@ cost** and **email deliverability**, not the database.
 
 **Routes:** `/` (landing + waitlist) · `/privacy` · `/login` · `/invite` · `/auth/check-email` ·
 `/auth/confirm` · `/app` (Dashboard) and `/app/{studio,contacts,conversations,tasks,settings}` ·
-`/app/account-unavailable`.
+`/app/account-unavailable` · `/app/operator` (platform operators only).
 
 **Engineering defaults (owner may override):** login links expire after 30 minutes; access tokens
 15 minutes; signed-in for 30 days; Playwright 1.63.0 for browser tests; plain Tailwind UI until M3;
@@ -187,8 +187,8 @@ local stack does not enforce email rate limits (must be checked on hosted dev).
 ## 11. W1 — public landing page and waitlist (separate from product sign-up)
 
 - **Waitlist = public interest list.** Anyone can request early access; it never creates an account.
-- **Product sign-up = invite-only.** The operator picks people from the waitlist and sends
-  invitation links (M1.5 console; SQL until then).
+- **Product sign-up = invite-only.** The operator picks people from the waitlist in the operator
+  console (`/app/operator`, M1.5) and sends each person their invitation link.
 - Landing page at `/`: what ConvoPilot does, how it works, trust/privacy principles, waitlist form,
   FAQ. `/privacy`: plain-language privacy notice (**draft — needs owner/legal review**).
 - Form fields: name, work email, role, company size, biggest communication challenge (optional),
@@ -203,10 +203,11 @@ local stack does not enforce email rate limits (must be checked on hosted dev).
 2. Promote: founder communities, LinkedIn/X posts, your network, newsletters; one clear message:
    “AI chief of staff that turns your conversations into follow-ups — request early access”.
 3. Review weekly: look at who joined and why (role, challenge); pick a batch (start with 20–50).
-4. Invite: create invitations for the batch (M1.5 console; meanwhile run
-   `docs/operations/invite-from-waitlist.sql` in the Supabase SQL editor — it creates the links and
-   marks people invited), then send each person their own private link. Review with
-   `docs/operations/review-waitlist.sql`. Use `?ref=<channel>` links (e.g. `/?ref=linkedin`) to see
+4. Invite: in the operator console (`/app/operator`) tick the people to invite and press
+   **Invite selected**; copy each person's private link (shown once) and send it to them. Decline
+   or restore entries and revoke unused invitations there too. One-time setup: the owner becomes
+   the first operator with `docs/operations/bootstrap-operator.sql`. (The SQL scripts
+   `review-waitlist.sql` / `invite-from-waitlist.sql` remain as a fallback.) Use `?ref=<channel>` links (e.g. `/?ref=linkedin`) to see
    which channel brings people.
 5. Learn: short feedback form or call after one week of use; track activation (signed in, pasted a
    conversation, saved a draft).

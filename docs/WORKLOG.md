@@ -4,6 +4,16 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 13 — M1.5 operator console (2026-11-17)
+
+- H1 still waits on the owner (Supabase project + token; PR #3 not yet merged), so M1.5 was built.
+- Migration 0010: operator-only `list_waitlist`, `invite_waitlist_entries` (batch ≤ 50, reuses `create_invitation`, links waitlist entry to invitation), `set_waitlist_entry_status`, `list_invitations`, `current_user_is_operator`; denials audited; no tokens in listings.
+- App: `/app/operator` (waitlist with status filters and counts, select and invite, one-time links with copy buttons, decline/restore, invitations tab with revoke); Operator menu item only for operators (session read inside Suspense); service `src/lib/services/operator.ts` with Zod-validated results; server actions re-check auth and use `refresh()`.
+- `docs/operations/bootstrap-operator.sql` (owner becomes the first operator); GO_LIVE step 3b; DATABASE.md section.
+- Checks: lint, typegen, tsc, unit 60/60, build, pgTAP 119/119 (new file 30: 24 tests), integration 22/22, Playwright 15/15 (new: member denied, full waitlist → invite → account creation, revoke). CI gates raised (pgTAP 119, E2E 15).
+
+---
+
 ## Session 12 — Brand approved; animated brand bible; app restyled (2026-11-17)
 
 - Owner approved identity v1.0 and the name ConvoPilot; asked for a more alive brand bible and UI.

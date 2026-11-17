@@ -413,3 +413,14 @@ Audit retention periods for workspace-scope and account-scope events are **pendi
 ## 11. Migrations policy
 
 Supabase CLI migrations in `supabase/migrations/`, numbered, forward-only. Destructive changes require explicit approval. `supabase/seed.sql` contains synthetic data only and never grants operator status. Automated tests run against the local Supabase stack (Docker); the hosted development project is for manual development; production is a separate project.
+
+## Operator console functions (M1.5, migration 0010)
+
+All `security definer`, empty `search_path`, EXECUTE for `authenticated` only, and each re-checks
+`app_private.is_platform_operator()`; denials return `not_authorized` and are audited
+(`*_denied`). `current_user_is_operator()` · `list_waitlist(status, limit, offset)` (audited as
+`waitlist.viewed`) · `invite_waitlist_entries(ids[], ttl)` (≤ 50; reuses `create_invitation`;
+per-entry `created` with the one-time token, `already_invited`, `already_member`, `declined`,
+`not_found`) · `set_waitlist_entry_status(id, pending|declined)` · `list_invitations(limit,
+offset)` (state only, never tokens or hashes). Tests: `supabase/tests/30_operator_console.test.sql`.
+

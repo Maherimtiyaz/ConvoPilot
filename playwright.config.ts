@@ -27,6 +27,7 @@ export default defineConfig({
     env: {
       NEXT_PUBLIC_SUPABASE_URL: supabase.API_URL,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: supabase.PUBLISHABLE_KEY || supabase.ANON_KEY,
+      NEXT_PUBLIC_APP_URL: `http://127.0.0.1:${PORT}`,
     },
   },
 });

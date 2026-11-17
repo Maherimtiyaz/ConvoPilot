@@ -30,11 +30,18 @@ the Claude environment settings and is revoked afterwards.
 
 With the token and project ref, Claude:
 
-1. Applies the 9 migrations (schema, security, invitations, waitlist) to `convopilot-prod`.
+1. Applies the 10 migrations (schema, security, invitations, waitlist, operator console) to `convopilot-prod`.
 2. Pushes the Auth settings from `supabase/config.toml` (passwordless, invite-only hook, link and
    session lifetimes, scanner-safe email templates) with the production site URL.
 3. Verifies: the API exposes only `public`; anonymous users can join the waitlist but cannot read
    it; sign-up without an invitation is refused.
+
+## 3b. Become the first operator (owner, ~3 minutes)
+
+Run `docs/operations/bootstrap-operator.sql` in the Supabase SQL Editor (step 1), open the link it
+returns and create your account (Supabase's built-in email reaches you because you own the
+project), then run step 2. "Operator" appears in the app's menu; from then
+on you invite people from `/app/operator`. (Inviting others needs stage B email, see below.)
 
 ## 4. Remove Claude's access (owner, 1 minute)
 
@@ -47,6 +54,8 @@ Delete the `claude-setup-temporary` token in Supabase and the variable in the Cl
    - `NEXT_PUBLIC_SUPABASE_URL` = the Project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = the **publishable** key (`sb_publishable_…`).
      Never the `secret`/`service_role` key.
+   - `NEXT_PUBLIC_APP_URL` = the site's address (e.g. `https://convopilot-xyz.vercel.app`), used to
+     build invitation links in the operator console.
 3. Deploy. Vercel publishes the `main` branch, so the reviewed work is merged into `main` first
    (Claude opens a pull request; you press Merge).
 4. Send Claude the address (e.g. `convopilot-xyz.vercel.app`); Claude sets it as the Auth site URL

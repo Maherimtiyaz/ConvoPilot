@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 
 export const APP_NAV = [
   { href: "/app", label: "Dashboard" },
@@ -12,25 +13,30 @@ export const APP_NAV = [
   { href: "/app/settings", label: "Settings" },
 ] as const;
 
-export function NavLinks() {
+export function NavItem({ href, label }: { href: string; label: string }) {
   const pathname = usePathname();
+  const active = href === "/app" ? pathname === "/app" : pathname.startsWith(href);
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium ${
+        active ? "bg-ink-100 font-semibold text-ink shadow-[inset_3px_0_0_var(--color-ink)]" : "text-ink-700 hover:bg-ink-100 hover:text-ink"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
+/** Main navigation. `extra` holds items that depend on the signed-in user (e.g. Operator). */
+export function NavLinks({ extra }: { extra?: ReactNode }) {
   return (
     <nav aria-label="Main" className="flex gap-1 overflow-x-auto md:flex-col">
-      {APP_NAV.map((item) => {
-        const active = item.href === "/app" ? pathname === "/app" : pathname.startsWith(item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={active ? "page" : undefined}
-            className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium ${
-              active ? "bg-ink-100 font-semibold text-ink shadow-[inset_3px_0_0_var(--color-ink)]" : "text-ink-700 hover:bg-ink-100 hover:text-ink"
-            }`}
-          >
-            {item.label}
-          </Link>
-        );
-      })}
+      {APP_NAV.map((item) => (
+        <NavItem key={item.href} href={item.href} label={item.label} />
+      ))}
+      {extra}
     </nav>
   );
 }
