@@ -6,3 +6,12 @@ title = "ConvoPilot secret scanning"
 
 [extend]
 useDefault = true
+
+# Verified false positive (commit 3fc23fc): a synthetic, non-secret test value in the unit test
+# for URL-fragment parsing. It is not a credential and grants access to nothing. Matched exactly,
+# so real keys in the same file would still be reported.
+[[allowlists]]
+description = "Synthetic fragment-token fixture in tests/unit/auth/fragment.test.ts"
+paths = ['''^tests/unit/auth/fragment\.test\.ts$''']
+regexes = ['''pkce_0123456789abcdef0123456789abcdef''']
+condition = "AND"

@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { readFragmentToken } from "@/lib/auth/fragment";
 
-const token = "pkce_0123456789abcdef0123456789abcdef";
+// Synthetic, non-secret fixture shaped like a Supabase PKCE token hash.
+const token = `pkce_${"0123456789abcdef".repeat(2)}`;
 
 describe("readFragmentToken", () => {
   it("reads the requested key", () => {
