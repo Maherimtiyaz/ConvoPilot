@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import type { RequestContext } from "@/lib/auth/context";
-import { listTasks, utcDays } from "@/lib/services/commitments";
+import { getTimeZone, listTasks, localDays } from "@/lib/services/commitments";
 import { listConversations } from "@/lib/services/studio";
 
 import { LoadingState, ProtectedPage } from "./protected-page";
@@ -55,11 +55,8 @@ function Stat({
 }
 
 async function Dashboard({ ctx }: { ctx: RequestContext }) {
-  const [tasks, conversations] = await Promise.all([
-    listTasks(ctx),
-    listConversations(ctx),
-  ]);
-  const { today, inAWeek: week } = utcDays();
+  const [tasks, conversations, timeZone] = await Promise.all([listTasks(ctx), listConversations(ctx), getTimeZone(ctx)]);
+  const { today, inAWeek: week } = localDays(timeZone);
   const open = tasks.filter((t) => t.status === "open");
   const awaiting = tasks.filter((t) => t.status === "proposed").length;
   const overdue = open.filter((t) => t.dueDate && t.dueDate < today).length;

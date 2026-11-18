@@ -4,6 +4,26 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 19 — P1 pre-launch: retention, restore, erasure, time zone (2026-11-18)
+
+- Owner merged PR #3 (at M4) and PR #4 (M5 + acceptance); `main` CI green. Fixed a flaky e2e
+  selector first (Next.js route announcer also has role=alert).
+- Owner decisions: 30-day retention; users restore conversations/contacts; accounts restored only
+  by the operator on request.
+- Migration 0015: `list_recently_deleted`, `restore_conversation`, `restore_contact` (emails kept on
+  delete), `purge_expired` scheduled daily with pg_cron (no service-role key anywhere), account
+  erasure deletes workspaces then the Auth user, `workspace_settings.time_zone`.
+- App: Settings → Time zone (server-rendered list with current zone names, device suggestion) and
+  Recently deleted (restore); Dashboard/Tasks "today/overdue/this week" in the user's zone; wording
+  on privacy, account-deletion and deleted-account pages states 30 days;
+  `docs/operations/restore-account.sql` (tested in a rolled-back transaction).
+- Found while testing: the server's zone list used the outdated `Asia/Calcutta`; now modern names.
+- Tests: unit 116 (+3), pgTAP 264 (+32), integration 22, Playwright 23 (+1). CI gates raised.
+- Still open: real-model evaluation (key), hosted setup (accounts), privacy/legal review,
+  audit-log retention period.
+
+---
+
 ## Session 18 — v0.1 acceptance (2026-11-18)
 
 - Independent security review (read-only subagent): no critical/high. Fixed M1 (AI cost-cap race:

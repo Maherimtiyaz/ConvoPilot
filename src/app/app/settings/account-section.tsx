@@ -55,7 +55,7 @@ export function AccountDataSection() {
         <div className="mt-4 rounded-md border border-error/30 bg-error-50 p-4 text-sm">
           <p className="font-semibold text-error">This can&apos;t be undone from the app.</p>
           <p className="mt-1 text-ink-700">
-            Your workspace, conversations, contacts, drafts and tasks become inaccessible immediately, you&apos;re signed out everywhere, and the data is permanently erased after the retention period.
+            Your workspace, conversations, contacts, drafts and tasks become inaccessible immediately, you&apos;re signed out everywhere, and the data is permanently erased after 30 days (until then the ConvoPilot team can restore your account if you ask).
             Download your data first if you want a copy.
           </p>
           <label className="mt-3 block space-y-1 font-medium">

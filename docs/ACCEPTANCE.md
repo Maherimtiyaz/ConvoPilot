@@ -43,9 +43,8 @@ directly. **No critical or high findings.** Findings and outcomes:
 
 ## 3. Security checklist (`SECURITY.md` §15)
 
-See the updated checklist in `SECURITY.md` §15: 17 of 19 items are met. Two are partial by design
-and listed in §6: permanent deletion after the retention period (the privileged runner waits for the
-owner's retention decision) and the restore functions for soft-deleted items.
+See the updated checklist in `SECURITY.md` §15: **all 19 items are met** (since 2026-11-18, when
+retention, restore and permanent erasure were built after the owner chose a 30-day retention).
 
 ## 4. Test scenarios and model evaluation (`EVALUATION.md`)
 
@@ -86,7 +85,8 @@ careless one fails exactly the right metrics). **Real-model results are pending 
 3. `'unsafe-inline'` in `script-src` (no injection sink exists; content is rendered as plain text).
 4. The public Auth API reveals whether an email has an account (accepted in M1.4).
 5. A revoked session's access token works against the database API for up to 15 minutes.
-6. Dates are UTC; there is no per-user time zone yet.
+6. Dates such as "imported on" are shown in UTC; "today", "overdue" and "due this week" follow the
+   user's time zone (Settings).
 7. Services rely on authentication, database rules and definer functions rather than a separate
    policy function per service (`SECURITY.md` §5 updated to say so); AI tool calls do use the
    deterministic policy layer.
@@ -97,5 +97,5 @@ careless one fails exactly the right metrics). **Real-model results are pending 
 | --- | --- | --- |
 | Real-model evaluation passes the targets (`npm run eval` with an Anthropic key) | Owner provides the key in a safe place; Claude runs and reviews | ⏳ needs key |
 | Hosted setup (Supabase production, Vercel, email domain) per `docs/operations/GO_LIVE.md` | Owner accounts, then Claude | ⏳ needs owner |
-| Privacy notice, retention period for deleted data, user countries reviewed | Owner (and legal) | ⏳ needs owner |
+| Privacy notice and user countries reviewed (retention decided: 30 days, now stated in the notice) | Owner (and legal) | ⏳ needs owner |
 | Manual walkthrough on the hosted dev site with the real AI (5 screens, phone and desktop) | Claude, then owner | ⏳ after hosting |

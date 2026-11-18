@@ -91,7 +91,7 @@ jobs:
 
       - name: Database tests (pgTAP; explicit path; fail on zero or too few tests)
         env:
-          MIN_PGTAP_TESTS: "232"
+          MIN_PGTAP_TESTS: "264"
         run: |
           set -euo pipefail
           npx supabase test db supabase/tests 2>&1 | tee pgtap.log
@@ -128,7 +128,7 @@ jobs:
 
       - name: Browser end-to-end tests (fail on zero or too few tests)
         env:
-          MIN_E2E_TESTS: "22"
+          MIN_E2E_TESTS: "23"
         run: |
           set -euo pipefail
           npx supabase status -o env > supabase/.temp/status.env

@@ -105,6 +105,18 @@ Deviations from §5, decided as engineering defaults (owner may override):
   settles the real cost and releases the reservation. A crashed request's reservation lasts at most
   until the UTC day ends. (Security review M1.)
 
+### 2.6 Retention and restore (migration `20261118001500_retention_restore.sql`)
+
+- Owner decisions 2026-11-18: deleted data is kept **30 days**, then permanently erased; users
+  restore their own conversations and contacts; accounts are restored only by the operator.
+- `app_private.retention_interval()`; `public.list_recently_deleted()`, `public.restore_conversation(id)`,
+  `public.restore_contact(id)` (definer, membership checked, audited); `contacts.deleted_emails` (kept
+  on delete so a restore can bring the emails back; an email now used by another contact stays there).
+- `app_private.purge_expired(now)` scheduled with `pg_cron` daily (§4.5, §8.3–§8.6); not callable
+  through the API; returns counts only.
+- `workspace_settings.time_zone` (IANA name, default `UTC`; validated by the app and by a format
+  check): "today", "overdue" and "due this week" use it.
+
 Changes from earlier drafts (justified):
 
 - `users.workspace_id` replaced by `profiles` + `workspace_members` (membership, roles, invited users).
@@ -271,7 +283,7 @@ Additional rules:
 The service-role key is used **only** by a privileged runner that is not part of the Next.js application's request handling:
 
 - Responsibilities: permanent deletion after retention, deleting Auth users via the supported Supabase Auth Admin API (`auth.admin.deleteUser`), audit retention cleanup.
-- Hosting: **pending owner decision** (options: scheduled GitHub Actions workflow with an environment-protected secret; Supabase scheduled Edge Function; a manually run operator script). Until decided, no code path uses the service-role key.
+- Hosting: **decided 2026-11-18 (engineering):** a `pg_cron` job inside the database (`app_private.purge_expired()`, daily 03:17 UTC). The job runs as the database owner, so **no service-role key exists anywhere**; deleting the `auth.users` row from SQL removes the Auth user with its identities, sessions and refresh tokens (this replaces `auth.admin.deleteUser`). No code path uses the service-role key.
 - Never reachable from browser-initiated requests; its secret is not present in the Next.js runtime environment.
 
 ## 5. Memory and proposal model
@@ -397,11 +409,11 @@ A single polymorphic table cannot have real foreign keys. Options considered: po
 
 ### 8.3 Permanent deletion
 
-Performed only by the isolated privileged runner (§4.5) for rows soft-deleted longer than the retention window. Retention window: **pending owner decision** (no value assumed). Users can request immediate permanent deletion, which the runner performs on its next run.
+Performed only by the erasure job (§4.5) for rows soft-deleted longer than the retention window. Retention window: **30 days (owner decision 2026-11-18)**, defined once in `app_private.retention_interval()`. Immediate permanent deletion on request is not offered in v0.1. Users restore their own deleted conversations and contacts within the window (`restore_conversation`, `restore_contact`, listed by `list_recently_deleted`; Settings → Recently deleted); restoring a conversation brings back exactly the messages, analyses and drafts deleted with it, and is refused if the same thread was imported again meanwhile.
 
 ### 8.4 Cascade of derived data
 
-Permanently deleting a message deletes its embeddings and citations; deleting a conversation deletes its messages, analyses and drafts. Memories/commitments that lose all citations get `evidence_state='sources_deleted'` (status unchanged) and are flagged for review. Optionally the user may choose "also delete derived items" (M4 UI).
+Permanently deleting a conversation deletes its messages, analyses, drafts, citations and — v0.1 decision, privacy first — the commitments and AI-proposed tasks derived from it (they reference the conversation, so `sources_deleted` is not used in v0.1). The user's own tasks linked to it are kept and unlinked. Erasing a contact unlinks (does not erase) commitments and tasks that referred to it. During the 30 days before erasure, commitments of a deleted conversation show `sources_hidden` and their tasks are flagged for review.
 
 ### 8.5 Workspace deletion
 
@@ -413,9 +425,9 @@ Soft deletion of a workspace immediately revokes access to all of its content (�
 | --- | --- | --- | --- |
 | 1. Request | User asks to delete their account | `public.request_account_deletion()` sets `profiles.deletion_requested_at`, soft-deletes the user's workspace, writes an audit event | User JWT (definer function) |
 | 2. Immediate access revocation | Same request | Data access ends at once because `is_workspace_member` returns false for the soft-deleted workspace. The application then calls Supabase Auth `signOut({ scope: 'global' })` **with the user's own session** to revoke their refresh tokens. Already-issued access tokens remain valid until expiry but grant no data access. A PostgreSQL function does not and cannot revoke Auth sessions. | User session |
-| 3. Retention | Between request and permanent deletion | Data retained, inaccessible to the user; restore policy (whether users can cancel) is **pending owner decision** | — |
-| 4. Permanent deletion | After the retention period (**pending owner decision**) | Privileged runner deletes workspace content, then calls `auth.admin.deleteUser(user_id)` via the supported Auth Admin API; `profiles`, `workspace_members` and `platform_operators` rows cascade from `auth.users` | Service role, runner only (§4.5) |
-| 5. Record | After deletion | Minimal account-scope audit event (ids, timestamps, no content) kept for the audit retention period | Runner |
+| 3. Retention | 30 days after the request | Data retained, inaccessible to the user. Owner decision 2026-11-18: an account is restored only by the operator, on the person's request (`docs/operations/restore-account.sql`) | Operator (SQL Editor) |
+| 4. Permanent deletion | After 30 days | The daily erasure job deletes the user's workspaces (all content cascades), then the `auth.users` row; `profiles`, `workspace_members` and `platform_operators` rows cascade | Database job (§4.5) |
+| 5. Record | After deletion | Minimal account-scope audit event `account.erased` (system actor, user id, no content) kept for the audit retention period (still a pending decision) | Database job |
 
 Sign-in during retention: the Auth user still exists, so OTP sign-in can succeed, but the user has no accessible workspace. The application shows an "account scheduled for deletion" state (M1.4). The sign-up trigger does not run again because no new `auth.users` row is created.
 

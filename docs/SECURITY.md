@@ -162,7 +162,7 @@ Append-only `audit_events` (DATABASE §10):
 - [x] Auth verified in every protected Server Action, Route Handler and data read (CI guard `scripts/ci/app-guards.mjs`; there are no Route Handlers).
 - [x] Invite-only sign-up and operator-only invitations enforced in the database (hook + provisioning trigger).
 - [x] No function callable by `anon`/`authenticated` outside the DATABASE §4.3 matrix (catalog test).
-- [~] Account deletion lifecycle implemented; service-role key absent from the Next.js runtime. *Deletion request, immediate loss of access and global sign-out are built and tested; permanent erasure after retention waits for the privileged runner and the owner's retention decision.*
+- [x] Account deletion lifecycle implemented; service-role key absent from the Next.js runtime (and from everywhere: erasure is a database job). Request → immediate loss of access → global sign-out → 30 days → permanent erasure, all tested.
 - [x] RLS on every workspace table, cross-workspace tests passing.
 - [x] User-JWT client on all request paths; service-role key only in the privileged runner, CI-enforced.
 - [x] Policy layer in every service and AI tool call (as defined in §5).
@@ -176,5 +176,5 @@ Append-only `audit_events` (DATABASE §10):
 - [x] Log redaction verified by test (CI guard: no logging calls in `src/` at all; integration test: no invitation token in service logs).
 - [x] No private-data caching (CI guard).
 - [x] Secret scanning in CI.
-- [~] Export and deletion implemented before real deployment. *Full JSON export and the deletion request are built and tested; permanent erasure as above.*
+- [x] Export and deletion implemented before real deployment (JSON export; deletion with 30-day restore window and permanent erasure).
 - [x] No send capability exists in v0.1 (CI guard: no outbound calls outside the AI adapter, no mail/messaging dependencies).

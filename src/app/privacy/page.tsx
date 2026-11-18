@@ -50,9 +50,10 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-ink">Your choices</h2>
             <p>
-              You can ask us to remove you from the waitlist, or to delete your account and its data, at any time. Deleted
-              content disappears from your workspace immediately and is permanently erased after a retention period
-              we&apos;ll state here before launch.
+              You can ask us to remove you from the waitlist at any time. Inside the app you can download all your data
+              and delete your account (Settings). Anything you delete disappears from your workspace immediately and is
+              permanently erased after 30 days. Until then you can restore deleted conversations and contacts yourself,
+              and we can restore a deleted account if you ask us to.
             </p>
           </section>
         </div>
