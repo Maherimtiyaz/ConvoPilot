@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import type { RequestContext } from "@/lib/auth/context";
+import { listCommitments } from "@/lib/services/commitments";
 import { contactIdsByEmail } from "@/lib/services/contacts";
 import { getAiSettings, getConversation, listConversations, StudioError, type ConversationDetail } from "@/lib/services/studio";
 import { uuidSchema } from "@/lib/validation/studio";
@@ -43,7 +44,9 @@ async function Studio({ ctx, searchParams }: { ctx: RequestContext; searchParams
     }
   }
 
-  const contacts = detail ? await contactIdsByEmail(ctx, detail.messages.map((m) => m.senderEmail ?? "")) : {};
+  const [contacts, commitments] = detail
+    ? await Promise.all([contactIdsByEmail(ctx, detail.messages.map((m) => m.senderEmail ?? "")), listCommitments(ctx, detail.conversation.id)])
+    : [{}, []];
 
   return (
     <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
@@ -88,6 +91,7 @@ async function Studio({ ctx, searchParams }: { ctx: RequestContext; searchParams
             key={detail.conversation.id}
             detail={detail}
             contacts={contacts}
+            commitments={commitments}
             ai={{ configured: settings.configured, optIn: settings.optIn, spentTodayUsd: settings.spentTodayUsd, capUsd: settings.capUsd }}
             createdLabel={dateFormat.format(new Date(detail.conversation.created_at))}
           />

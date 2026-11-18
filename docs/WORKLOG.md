@@ -4,6 +4,48 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 18 — v0.1 acceptance (2026-11-18)
+
+- Independent security review (read-only subagent): no critical/high. Fixed M1 (AI cost-cap race:
+  `reserve_ai_usage` + settle, migration 0014), L2 (CSP: self-only content), L3 (argument checks),
+  L5 (stored analysis validated on read), NUL bytes rejected in imports. Accepted and documented:
+  L1 (claimed senders in quoted history, `SECURITY.md` §7a), L4 (self-forged provenance).
+- Independent scenario mapping (S1–S44, A1–A24), then gaps closed: new pgTAP file 70 (31 tests),
+  new CI guard `scripts/ci/app-guards.mjs` (Server Actions start with `requireRequestContext()`; no
+  logging; no caching; no send capability).
+- Settings: "Download my data" (JSON export, audited) and "Delete my account" (typed confirmation,
+  workspace hidden at once, global sign-out, `/account-deleted`).
+- Model evaluation harness: synthetic dataset (7 threads, 5 questions), scorer, runner,
+  `npm run eval` (needs a key; cost-capped); proven in CI with fake models.
+- `docs/ACCEPTANCE.md` written; `SECURITY.md` §5/§7a/§15, `EVALUATION.md`, `DATABASE.md` §2.5 updated.
+- Tests: unit 113, pgTAP 232, integration 22, Playwright 22. CI gates raised (pgTAP 232, E2E 22).
+- Tracked (not built): permanent erasure runner and `restore_*` functions (retention decision);
+  "claimed sender" labelling (L1); per-user time zone.
+- Not verified: real Anthropic calls (no key here) — the real-model evaluation is the first gate.
+
+---
+
+## Session 17 — M5 Commitments, Tasks and Dashboard (2026-11-18)
+
+- Migration 0013: `commitments`, `tasks` (read-only to the API), commitment citations,
+  `store_commitment_proposals` (cited, same-conversation, quote re-checked in SQL, no duplicates),
+  `decide_proposal`, `approve_task` (atomic confirm + open), `create_task`, `set_task_status`
+  (done/dismiss/reopen), evidence trigger on message deletion. Deviations recorded in DATABASE.md §2.4.
+- AI: `extractCommitments` workflow (`extract-commitments@1`): structured output, citation validation,
+  no invented dates, tasks only for the user's own promises. Decision RPCs only in
+  `src/lib/services/proposals/decide.ts` (CI guard passes).
+- UI: Studio "Commitments" panel (Find commitments, clickable sources, Confirm and add task / Confirm
+  only / Not a commitment / Add task / No task needed); Tasks screen (waiting for approval, open with
+  overdue marking, done and dismissed with reopen, add a task); Dashboard with counts, next tasks and
+  recent conversations.
+- Tests: unit 107 (+2), pgTAP 201 (+34), integration 22, Playwright 20 (+1 full flow incl. evidence
+  dropping, no duplicates, approval from Tasks, audit count). CI gates raised (pgTAP 201, E2E 20).
+- Tracked (not built): edit a proposal before deciding; `revise_record`; user-authored commitments;
+  deleting tasks/commitments; per-user time zone (dates are UTC).
+- Not verified: real Anthropic calls (no key here).
+
+---
+
 ## Session 16 — M4 Contacts, Conversations and "ask your history" (2026-11-17)
 
 - Migration 0012: companies, contacts, contact_identifiers, conversation_participants; `save_contact`

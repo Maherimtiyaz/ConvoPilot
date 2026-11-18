@@ -70,6 +70,24 @@ export interface StoredAnalysis {
   droppedUnsupported: number;
 }
 
+const storedPoint = z.object({
+  text: z.string(),
+  citations: z.array(z.object({ messageId: z.string(), position: z.number().int(), quote: z.string().nullable() })),
+});
+
+/** Validates an analysis read back from the database (rows are user-writable through the API). */
+export const storedAnalysisSchema = z.object({
+  version: z.literal(1),
+  intent: storedPoint.nullable(),
+  mainPoints: z.array(storedPoint),
+  expectedResponse: storedPoint.nullable(),
+  urgency: z.enum(["low", "medium", "high"]),
+  urgencyReason: z.string(),
+  risks: z.array(storedPoint),
+  confidence: z.enum(["low", "medium", "high"]),
+  droppedUnsupported: z.number().int().min(0),
+}) satisfies z.ZodType<StoredAnalysis>;
+
 export interface AnalysisResult {
   analysis: StoredAnalysis;
   metadata: ModelMetadata;

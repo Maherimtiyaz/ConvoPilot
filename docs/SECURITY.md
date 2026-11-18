@@ -52,7 +52,7 @@ See DATABASE §4.1–§4.3. Summary: only the `public` schema is exposed through
 ## 5. Three independent layers
 
 1. **Application auth** (§2) — who the user is and which workspace they belong to.
-2. **Deterministic policy** — `decide(context, action, resource)` returns allow / deny / requires_approval. Implemented as plain code, never by an LLM. Applied in every service and before every AI tool execution.
+2. **Deterministic policy** — plain code, never an LLM. For AI tool calls it is `decide(context, action, resource)` (`src/lib/ai/tools/policy.ts`: allow-list per workflow, permission level, no execute tools). For user actions (v0.1 acceptance clarification) the deterministic rules live in Zod validation at the Server Action plus the SECURITY DEFINER database functions, which check membership, valid state transitions and evidence before any write (for example `decide_proposal`, `approve_task`, `reserve_ai_usage`); services add no separate policy function.
 3. **Database RLS** (§3).
 
 A failure in one layer must not expose data; tests target each layer separately (EVALUATION.md).
@@ -74,6 +74,15 @@ A failure in one layer must not expose data; tests target each layer separately 
 - HTML emails are converted to text server-side at import; the original HTML is not stored in v0.1.
 - No automatic loading of remote images, tracking pixels, iframes or URLs from imported content or model output. Links are shown as text; if made clickable later, they open only on explicit click with `rel="noopener noreferrer"` and a visible full URL.
 - Model output is rendered as plain text or a restricted markdown subset with images disabled.
+
+### 7a. Accepted residual risk: claimed senders in quoted history (security review L1)
+
+In pasted or `.eml` threads, the `From:` lines of *quoted* earlier messages are text written by
+whoever sent the email. A forged quoted block can claim to be from the user (shown as "you", and
+proposed as the user's own commitment) or from a saved contact (linked to that contact). Accepted
+for v0.1 because nothing becomes a fact or a task without the user's approval and every proposal
+shows the message it came from. Planned fix: label quoted-history senders as "claimed", don't
+auto-link them, and use authoritative headers once Gmail import arrives (M7).
 
 ## 8. Audit events (Required)
 
@@ -148,24 +157,24 @@ Append-only `audit_events` (DATABASE §10):
 - Hosted Supabase **development** project for manual development; **separate production** project; local Supabase stack (Docker) for automated tests and CI. No production data in development or CI; seed data synthetic only.
 - Each environment has its own keys; CI uses only local-stack keys generated at run time.
 
-## 15. v0.1 security checklist (all open)
+## 15. v0.1 security checklist (status at v0.1 acceptance, 2026-11-18 — see `ACCEPTANCE.md`)
 
-- [ ] Auth verified in every protected Server Action, Route Handler and data read.
-- [ ] Invite-only sign-up and operator-only invitations enforced in the database (hook + provisioning trigger).
-- [ ] No function callable by `anon`/`authenticated` outside the DATABASE §4.3 matrix (catalog test).
-- [ ] Account deletion lifecycle implemented; service-role key absent from the Next.js runtime.
-- [ ] RLS on every workspace table, cross-workspace tests passing.
-- [ ] User-JWT client on all request paths; service-role key only in the privileged runner, CI-enforced.
-- [ ] Policy layer in every service and AI tool call.
-- [ ] Zod validation on all inputs, tool args and model outputs.
-- [ ] Prompt-injection regression tests in CI (with test provider).
-- [ ] Citation validation enforced.
-- [ ] No automatic confirmation of AI proposals.
-- [ ] Append-only audit events.
-- [ ] Plain-text rendering; no remote content loading.
-- [ ] File size/type limits; HTML converted to text.
-- [ ] Log redaction verified by test.
-- [ ] No private-data caching.
-- [ ] Secret scanning in CI.
-- [ ] Export and deletion implemented before real deployment.
-- [ ] No send capability exists in v0.1.
+- [x] Auth verified in every protected Server Action, Route Handler and data read (CI guard `scripts/ci/app-guards.mjs`; there are no Route Handlers).
+- [x] Invite-only sign-up and operator-only invitations enforced in the database (hook + provisioning trigger).
+- [x] No function callable by `anon`/`authenticated` outside the DATABASE §4.3 matrix (catalog test).
+- [~] Account deletion lifecycle implemented; service-role key absent from the Next.js runtime. *Deletion request, immediate loss of access and global sign-out are built and tested; permanent erasure after retention waits for the privileged runner and the owner's retention decision.*
+- [x] RLS on every workspace table, cross-workspace tests passing.
+- [x] User-JWT client on all request paths; service-role key only in the privileged runner, CI-enforced.
+- [x] Policy layer in every service and AI tool call (as defined in §5).
+- [x] Zod validation on all inputs, tool args and model outputs (stored analyses are validated on read too).
+- [x] Prompt-injection regression tests in CI (with test provider).
+- [x] Citation validation enforced (in the app, and again in SQL for commitments).
+- [x] No automatic confirmation of AI proposals.
+- [x] Append-only audit events.
+- [x] Plain-text rendering; no remote content loading (CSP `default-src 'self'`, `img-src 'self' data: blob:`, `connect-src 'self'`).
+- [x] File size/type limits; HTML converted to text; NUL bytes rejected with a typed error.
+- [x] Log redaction verified by test (CI guard: no logging calls in `src/` at all; integration test: no invitation token in service logs).
+- [x] No private-data caching (CI guard).
+- [x] Secret scanning in CI.
+- [~] Export and deletion implemented before real deployment. *Full JSON export and the deletion request are built and tested; permanent erasure as above.*
+- [x] No send capability exists in v0.1 (CI guard: no outbound calls outside the AI adapter, no mail/messaging dependencies).

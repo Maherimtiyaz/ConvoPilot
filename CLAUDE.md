@@ -156,8 +156,8 @@ cost** and **email deliverability**, not the database.
 | M2 | AI core: provider interface, structured outputs, citations, budgets, tool registry + policy, bounded loop, injection harness | ✅ built and tested (`src/lib/ai/`; test provider only) |
 | M3 | Communication Studio: import (paste/.txt/.md/.eml), cited analysis, drafts in your style, edit/save/copy/delete | ✅ built and tested (mock AI in tests; real key needed to use) |
 | M4 | Contacts, Conversations, keyword search, "what did I discuss with X?" with citations | ✅ built and tested (mock AI in tests) |
-| M5 | Commitments/Tasks proposed by AI, approved by the user | ⬜ |
-| — | v0.1 acceptance → early access for ~1,000 users | ⬜ |
+| M5 | Commitments/Tasks proposed by AI, approved by the user; Dashboard | ✅ built and tested (mock AI in tests) |
+| — | v0.1 acceptance: security review + fixes, scenario coverage, account export/deletion, evaluation harness (`docs/ACCEPTANCE.md`) | 🟡 done locally; gates left: real-AI eval (key), hosted setup, privacy review → early access for ~1,000 users |
 | M6–M8 | Briefing, Gmail/Calendar, production hardening & scale | ⬜ |
 
 ## 10. M1.4 — login experience and protected shell
@@ -239,4 +239,6 @@ npm run db:start                         # local Supabase (Docker)
 npx supabase test db supabase/tests      # pgTAP
 npm run test:integration                 # Auth integration (local stack)
 npm run test:e2e                         # Playwright end-to-end (local stack + built app)
+node scripts/ci/app-guards.mjs && scripts/ci/ai-guards.sh   # architecture/security guards
+ANTHROPIC_API_KEY=… npm run eval         # model evaluation on synthetic data (manual; costs ≈ $1–2)
 ```

@@ -96,6 +96,12 @@ describe("parseEml", () => {
     expect(parseFile("big.txt", new Uint8Array(LIMITS.maxFileBytes + 1))).toEqual({ ok: false, error: "file_too_large" });
     expect(parseFile("t.MD", bytes).ok).toBe(true);
   });
+
+  it("rejects binary content (NUL bytes) with a typed error", () => {
+    expect(parsePastedText("hello\u0000world")).toEqual({ ok: false, error: "invalid_text" });
+    expect(parseFile("notes.txt", new Uint8Array([104, 105, 0, 105]))).toEqual({ ok: false, error: "invalid_text" });
+    expect(parseFile("mail.eml", new TextEncoder().encode("From: a@example.com\r\n\r\nhi\u0000"))).toEqual({ ok: false, error: "invalid_text" });
+  });
 });
 
 describe("helpers", () => {

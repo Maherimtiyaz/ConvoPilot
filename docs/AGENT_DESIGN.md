@@ -57,6 +57,14 @@ the messages the tools actually returned in that request (same workspace, quote 
 an answer without a valid citation is shown as "no record". Usage and model metadata are recorded
 against the daily cap; nothing is stored from the answer.
 
+**Implemented in M5 (`src/lib/ai/workflows/extract-commitments.ts`, prompt `extract-commitments@1`):**
+a single structured call (no tool loop), so the `extract_commitments` / `create_task` Propose tools
+below are not registered; the workflow's output is stored by the service through
+`store_commitment_proposals` as `proposed` only. Each proposal needs ≥ 1 validated citation (dropped
+otherwise, and re-checked in the database); exact dates only when a message states the calendar
+date, otherwise the deadline text is kept and `due_date` stays empty; tasks only for the user's own
+commitments. Decisions are made only by the user through `src/lib/services/proposals/decide.ts`.
+
 Pasted text is first stored as a conversation (provenance), then workflows run on stored message ids.
 
 ## 4. Tool contracts (v0.1)

@@ -29,6 +29,7 @@ const PARSE_MESSAGES: Record<string, string> = {
   too_many_messages: `That thread has more than ${LIMITS.maxMessages} messages. Import a shorter part of it.`,
   unsupported_file: "Choose a .txt, .md or .eml file.",
   file_too_large: "That file is too large (limit: 750 KB).",
+  invalid_text: "That file contains unreadable (binary) content. Export the email as text or .eml and try again.",
 };
 
 const AI_MESSAGES: Record<string, string> = {
@@ -102,7 +103,7 @@ export async function draftAction(conversationId: string, options: unknown): Pro
 
 export async function saveDraftAction(draftId: string, content: string): Promise<ActionState> {
   const ctx = await requireRequestContext();
-  if (!uuidSchema.safeParse(draftId).success || content.trim().length === 0 || content.length > 20000) {
+  if (!uuidSchema.safeParse(draftId).success || typeof content !== "string" || content.trim().length === 0 || content.length > 20000) {
     return { error: "A draft can't be empty or longer than 20,000 characters." };
   }
   try {
