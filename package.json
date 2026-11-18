@@ -16,7 +16,8 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
-    "test:e2e": "supabase status -o env > supabase/.temp/status.env && playwright test"
+    "test:e2e": "supabase status -o env > supabase/.temp/status.env && playwright test",
+    "eval": "vitest run --config vitest.eval.config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "1.4.0",

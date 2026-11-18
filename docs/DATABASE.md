@@ -96,6 +96,15 @@ Deviations from §5, decided as engineering defaults (owner may override):
 - Not yet built (tracked in WORKLOG): editing a proposal's text before deciding, `revise_record` for
   confirmed records, user-authored (`user_stated`) commitments, deleting tasks/commitments.
 
+### 2.5 v0.1 acceptance (migration `20261118001400_acceptance_hardening.sql`)
+
+- `ai_usage_daily.reserved_micro_usd` and `public.reserve_ai_usage(workspace, amount, cap)`
+  (definer, member check, row lock): every AI run reserves its worst-case cost (its token budget
+  priced as output) before calling the model. A lone request may start while today's spend is under
+  the cap; concurrent requests must fit within the cap together. `record_ai_usage(..., release)`
+  settles the real cost and releases the reservation. A crashed request's reservation lasts at most
+  until the UTC day ends. (Security review M1.)
+
 Changes from earlier drafts (justified):
 
 - `users.workspace_id` replaced by `profiles` + `workspace_members` (membership, roles, invited users).

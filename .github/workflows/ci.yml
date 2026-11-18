@@ -52,6 +52,9 @@ jobs:
       - name: AI architecture guards (decision RPCs, vendor SDKs, test provider)
         run: scripts/ci/ai-guards.sh
 
+      - name: App guards (Server Actions verify the user first; no logging; no caching of private data)
+        run: node scripts/ci/app-guards.mjs
+
       - name: Generate Next.js types
         run: npx next typegen
 
@@ -88,7 +91,7 @@ jobs:
 
       - name: Database tests (pgTAP; explicit path; fail on zero or too few tests)
         env:
-          MIN_PGTAP_TESTS: "201"
+          MIN_PGTAP_TESTS: "232"
         run: |
           set -euo pipefail
           npx supabase test db supabase/tests 2>&1 | tee pgtap.log
@@ -125,7 +128,7 @@ jobs:
 
       - name: Browser end-to-end tests (fail on zero or too few tests)
         env:
-          MIN_E2E_TESTS: "20"
+          MIN_E2E_TESTS: "22"
         run: |
           set -euo pipefail
           npx supabase status -o env > supabase/.temp/status.env

@@ -4,6 +4,27 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 18 — v0.1 acceptance (2026-11-18)
+
+- Independent security review (read-only subagent): no critical/high. Fixed M1 (AI cost-cap race:
+  `reserve_ai_usage` + settle, migration 0014), L2 (CSP: self-only content), L3 (argument checks),
+  L5 (stored analysis validated on read), NUL bytes rejected in imports. Accepted and documented:
+  L1 (claimed senders in quoted history, `SECURITY.md` §7a), L4 (self-forged provenance).
+- Independent scenario mapping (S1–S44, A1–A24), then gaps closed: new pgTAP file 70 (31 tests),
+  new CI guard `scripts/ci/app-guards.mjs` (Server Actions start with `requireRequestContext()`; no
+  logging; no caching; no send capability).
+- Settings: "Download my data" (JSON export, audited) and "Delete my account" (typed confirmation,
+  workspace hidden at once, global sign-out, `/account-deleted`).
+- Model evaluation harness: synthetic dataset (7 threads, 5 questions), scorer, runner,
+  `npm run eval` (needs a key; cost-capped); proven in CI with fake models.
+- `docs/ACCEPTANCE.md` written; `SECURITY.md` §5/§7a/§15, `EVALUATION.md`, `DATABASE.md` §2.5 updated.
+- Tests: unit 113, pgTAP 232, integration 22, Playwright 22. CI gates raised (pgTAP 232, E2E 22).
+- Tracked (not built): permanent erasure runner and `restore_*` functions (retention decision);
+  "claimed sender" labelling (L1); per-user time zone.
+- Not verified: real Anthropic calls (no key here) — the real-model evaluation is the first gate.
+
+---
+
 ## Session 17 — M5 Commitments, Tasks and Dashboard (2026-11-18)
 
 - Migration 0013: `commitments`, `tasks` (read-only to the API), commitment citations,

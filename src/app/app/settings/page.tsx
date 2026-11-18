@@ -9,6 +9,7 @@ import { getAiSettings } from "@/lib/services/studio";
 
 import { LoadingState, ProtectedPage } from "../protected-page";
 
+import { AccountDataSection } from "./account-section";
 import { AiConsentToggle, StyleForm } from "./ai-settings";
 
 async function AiSettingsSection({ ctx }: { ctx: RequestContext }) {
@@ -61,6 +62,7 @@ export default function SettingsPage() {
               </form>
             </div>
           </section>
+          <AccountDataSection />
         </div>
       )}
     </ProtectedPage>

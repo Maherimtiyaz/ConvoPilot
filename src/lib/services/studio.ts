@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import type { RequestContext } from "@/lib/auth/context";
 import { DEFAULT_BUDGETS } from "@/lib/ai/budget";
-import { analyzeThread, type StoredAnalysis } from "@/lib/ai/workflows/analyze-thread";
+import { analyzeThread, storedAnalysisSchema, type StoredAnalysis } from "@/lib/ai/workflows/analyze-thread";
 import { draftReply, type DraftOptions, type WritingStyle } from "@/lib/ai/workflows/draft-reply";
 import type { ThreadMessage } from "@/lib/ai/workflows/thread-input";
 import { parseFile, parsePastedText, type ParseError, type ParsedThread } from "@/lib/conversations/parse";
@@ -78,6 +78,13 @@ export interface ConversationDetail {
   drafts: DraftView[];
 }
 
+/** A stored analysis that no longer matches its schema is treated as absent (never cast blindly). */
+function storedAnalysis(row: z.infer<typeof analysisRow> | null): ConversationDetail["analysis"] {
+  if (!row) return null;
+  const parsed = storedAnalysisSchema.safeParse(row.analysis);
+  return parsed.success ? { id: row.id, data: parsed.data, model: row.ai_model, promptVersion: row.prompt_version, createdAt: row.created_at } : null;
+}
+
 export async function getConversation(ctx: RequestContext, id: string, context: SupabaseServerContext = "server-component"): Promise<ConversationDetail> {
   const supabase = await db(context);
   const [c, m, a, d] = await Promise.all([
@@ -101,9 +108,7 @@ export async function getConversation(ctx: RequestContext, id: string, context: 
       sentAt: r.sent_at,
       body: r.body_text,
     })),
-    analysis: analysis
-      ? { id: analysis.id, data: analysis.analysis as StoredAnalysis, model: analysis.ai_model, promptVersion: analysis.prompt_version, createdAt: analysis.created_at }
-      : null,
+    analysis: storedAnalysis(analysis),
     drafts: z.array(draftRow).parse(d.data),
   };
 }

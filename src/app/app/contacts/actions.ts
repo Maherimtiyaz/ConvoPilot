@@ -43,6 +43,7 @@ export async function createContactAction(_prev: FormState, form: FormData): Pro
 /** "Save as contact" next to a sender in the Studio. */
 export async function saveSenderAction(name: string, email: string): Promise<{ error: string | null; contactId?: string }> {
   const ctx = await requireRequestContext();
+  if (typeof name !== "string" || typeof email !== "string") return { error: "That sender has no valid email address." };
   const parsed = contactInput.safeParse({ name: name.trim().slice(0, 200) || email, email: email.toLowerCase(), company: "", roleTitle: "" });
   if (!parsed.success || !parsed.data.email) return { error: "That sender has no valid email address." };
   try {

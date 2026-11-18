@@ -1,8 +1,8 @@
 # ConvoPilot — Evaluation and Test Plan
 
-Version: 0.4 · Status: Planned (only M1.2 env unit tests exist; database tests start in M1.3) · M1.3 correction pass applied · Last revised: 2026-11-16
+Version: 0.5 · Status: Implemented for v0.1 (coverage and results in `ACCEPTANCE.md`) · Last revised: 2026-11-18
 
-Evaluation is a core feature. We measure whether the product is secure and whether the agent is trustworthy with real conversations. Everything here is **planned**; nothing is implemented.
+Evaluation is a core feature. We measure whether the product is secure and whether the agent is trustworthy with real conversations. Scenario coverage and model-evaluation results are tracked in `ACCEPTANCE.md`.
 
 ## 1. Data policy
 
@@ -119,6 +119,15 @@ Each scenario must pass 100% before the related milestone is accepted.
 Datasets (synthetic, `tests/evaluation/datasets/`): feedback email with implied commitment; partnership offer thread; scheduling negotiation; unanswered question; ambiguous commitment ("let's talk next week"); adversarial instructions; HTML email with remote images.
 
 Results are recorded with provider, model, prompt version and date in `tests/evaluation/results/`.
+
+**Implemented (v0.1 acceptance):** dataset `tests/evaluation/datasets/threads.ts` (the seven cases
+above plus five history questions), scoring `tests/evaluation/score.ts`, runner
+`tests/evaluation/runner.ts` (real workflows, parser included, in-memory history source), entry
+`tests/evaluation/run.eval.ts`. Run with `ANTHROPIC_API_KEY=… npm run eval` (optional `AI_MODEL`,
+`EVAL_MAX_USD`, default $2); it writes a JSON and a Markdown report, including the drafts for the
+manual writing rubric. Matching is by keyword groups, so results are a strong signal, not a proof;
+"extra" commitments are listed for human review rather than counted as errors. CI runs the harness
+against fake models (`tests/unit/evaluation/harness.test.ts`) to prove the scoring works.
 
 ## 6. Operational metrics (post-MVP)
 

@@ -131,6 +131,22 @@ test.describe("sign-in and protected app", () => {
     expect(headers["x-content-type-options"]).toBe("nosniff");
     expect(headers["referrer-policy"]).toBe("no-referrer");
     expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
+    expect(headers["content-security-policy"]).toContain("default-src 'self'");
+    expect(headers["content-security-policy"]).toContain("img-src 'self' data: blob:");
+    expect(headers["content-security-policy"]).toContain("connect-src 'self'");
     expect(headers["x-powered-by"]).toBeUndefined();
+  });
+
+  test("public pages run under the content security policy without violations", async ({ page }) => {
+    const violations: string[] = [];
+    page.on("console", (m) => {
+      if (/Content Security Policy|Refused to (load|execute|connect|apply)/i.test(m.text())) violations.push(m.text());
+    });
+    for (const path of ["/", "/login", "/privacy"]) {
+      await page.goto(path);
+      await page.waitForLoadState("networkidle");
+    }
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    expect(violations).toEqual([]);
   });
 });

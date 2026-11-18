@@ -18,13 +18,17 @@ export interface ParsedThread {
   messages: ParsedMessage[]; // oldest first
 }
 
-export type ParseError = "empty" | "too_long" | "too_many_messages" | "unsupported_file" | "file_too_large";
+export type ParseError = "empty" | "too_long" | "too_many_messages" | "unsupported_file" | "file_too_large" | "invalid_text";
 
 export type ParseResult = { ok: true; thread: ParsedThread } | { ok: false; error: ParseError };
 
 // ---------------------------------------------------------------- entry points
+/** NUL bytes mean binary or corrupted content; reject it with a typed error (SECURITY §10.1). */
+const hasNul = (text: string) => text.includes("\u0000");
+
 export function parsePastedText(text: string): ParseResult {
   if (text.length > LIMITS.maxChars) return { ok: false, error: "too_long" };
+  if (hasNul(text)) return { ok: false, error: "invalid_text" };
   return finish(splitThread(normaliseNewlines(text)), null);
 }
 
@@ -35,6 +39,7 @@ export function parseFile(name: string, bytes: Uint8Array): ParseResult {
   if (ext === "eml") {
     const raw = decode(bytes, "utf-8");
     if (raw.length > LIMITS.maxChars * 2) return { ok: false, error: "too_long" };
+    if (hasNul(raw)) return { ok: false, error: "invalid_text" };
     return parseEml(raw);
   }
   return { ok: false, error: "unsupported_file" };
