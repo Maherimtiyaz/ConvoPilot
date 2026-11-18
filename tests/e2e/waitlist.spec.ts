@@ -38,7 +38,7 @@ test.describe("landing page and waitlist", () => {
     await page.goto("/#waitlist");
     await page.getByLabel("Work email").fill(email);
     await page.getByRole("button", { name: "Request early access" }).click();
-    await expect(page.getByRole("alert").filter({ hasText: /./ })).toContainText("Please check the highlighted fields.");
+    await expect(page.getByRole("alert").filter({ hasText: "Please check the highlighted fields." })).toBeVisible();
     await expect(page.getByText("Please tell us your name.")).toBeVisible();
     await expect(page.getByText("Please agree so we can contact you")).toBeVisible();
     expect(sql(`select count(*) from app_private.waitlist_entries where email_normalized = ${quote(email)}`)).toBe("0");

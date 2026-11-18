@@ -60,7 +60,7 @@ test.describe("sign-in and protected app", () => {
     const second = await other.newPage();
     await second.goto(link);
     await second.getByRole("button", { name: "Continue" }).click();
-    await expect(second.getByRole("alert").filter({ hasText: /./ })).toContainText("invalid or has expired");
+    await expect(second.getByRole("alert").filter({ hasText: "invalid or has expired" })).toBeVisible();
     await second.goto("/app");
     await expect(second).toHaveURL(/\/login$/);
     await other.close();
@@ -93,7 +93,7 @@ test.describe("sign-in and protected app", () => {
     await page.goto(`/invite#t=${token}`);
     await page.getByLabel(/email address this invitation was sent to/).fill(intruder);
     await page.getByRole("button", { name: "Create my account" }).click();
-    await expect(page.getByRole("alert").filter({ hasText: /./ })).toContainText("This invitation can't be used");
+    await expect(page.getByRole("alert").filter({ hasText: "This invitation can't be used" })).toBeVisible();
     expect(sql(`select count(*) from auth.users where email = ${quote(intruder)}`)).toBe("0");
   });
 
@@ -119,9 +119,9 @@ test.describe("sign-in and protected app", () => {
 
   test("an invitation link without a token explains what to do", async ({ page }) => {
     await page.goto("/invite");
-    await expect(page.getByRole("alert").filter({ hasText: /./ })).toContainText("This invitation link is incomplete");
+    await expect(page.getByRole("alert").filter({ hasText: "This invitation link is incomplete" })).toBeVisible();
     await page.goto("/auth/confirm");
-    await expect(page.getByRole("alert").filter({ hasText: /./ })).toContainText("invalid or has expired");
+    await expect(page.getByRole("alert").filter({ hasText: "invalid or has expired" })).toBeVisible();
   });
 
   test("responses carry security headers", async ({ request }) => {
