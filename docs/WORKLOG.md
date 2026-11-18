@@ -4,6 +4,27 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 17 — M5 Commitments, Tasks and Dashboard (2026-11-18)
+
+- Migration 0013: `commitments`, `tasks` (read-only to the API), commitment citations,
+  `store_commitment_proposals` (cited, same-conversation, quote re-checked in SQL, no duplicates),
+  `decide_proposal`, `approve_task` (atomic confirm + open), `create_task`, `set_task_status`
+  (done/dismiss/reopen), evidence trigger on message deletion. Deviations recorded in DATABASE.md §2.4.
+- AI: `extractCommitments` workflow (`extract-commitments@1`): structured output, citation validation,
+  no invented dates, tasks only for the user's own promises. Decision RPCs only in
+  `src/lib/services/proposals/decide.ts` (CI guard passes).
+- UI: Studio "Commitments" panel (Find commitments, clickable sources, Confirm and add task / Confirm
+  only / Not a commitment / Add task / No task needed); Tasks screen (waiting for approval, open with
+  overdue marking, done and dismissed with reopen, add a task); Dashboard with counts, next tasks and
+  recent conversations.
+- Tests: unit 107 (+2), pgTAP 201 (+34), integration 22, Playwright 20 (+1 full flow incl. evidence
+  dropping, no duplicates, approval from Tasks, audit count). CI gates raised (pgTAP 201, E2E 20).
+- Tracked (not built): edit a proposal before deciding; `revise_record`; user-authored commitments;
+  deleting tasks/commitments; per-user time zone (dates are UTC).
+- Not verified: real Anthropic calls (no key here).
+
+---
+
 ## Session 16 — M4 Contacts, Conversations and "ask your history" (2026-11-17)
 
 - Migration 0012: companies, contacts, contact_identifiers, conversation_participants; `save_contact`

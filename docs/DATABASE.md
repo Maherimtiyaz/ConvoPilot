@@ -66,6 +66,36 @@ Approved owner decisions reflected here (2026-11-16): private workspaces only (n
   ('simple')` over non-deleted messages of non-deleted conversations; returns at most 4,000
   characters of each body. Full-text only; embeddings remain deferred (§9).
 
+### 2.4 Implemented in M5 (migration `20261118001300_commitments_tasks.sql`)
+
+- Tables `commitments` and `tasks` as specified in §2.2/§5; `citations` gains the `commitment_id`
+  arc (check renamed `citations_one_subject`). The API can only SELECT these two tables (no INSERT,
+  UPDATE or DELETE grants), so status, origin, evidence and decision columns are unreachable directly.
+- `public.store_commitment_proposals(workspace, conversation, items, meta)` (definer, member check):
+  the only write path for AI proposals. Every stored item is `proposed` with `origin`
+  `extracted`/`inferred` and at least one citation to a non-deleted message **of that conversation
+  whose normalised text contains the quote** (defence in depth behind the app's validation); items
+  without one are counted as `unsupported` and dropped; an item whose normalised description already
+  exists in the conversation (any status) is not proposed again. Optional linked task (`proposed`).
+- `public.decide_proposal(kind, id, decision)`, `public.approve_task(task_id, confirm_commitment)`,
+  `public.create_task(...)`, `public.set_task_status(task_id, status)`: definer, membership checked,
+  one audit event per change, no content in audit metadata.
+- Trigger `app_private.refresh_commitment_evidence` (after a message's `deleted_at` changes) sets
+  `evidence_state` to `sources_hidden`/`supported`; it never touches `status`. A task whose commitment
+  is rejected or unsupported is shown as "needs review" (computed at read time).
+
+Deviations from §5, decided as engineering defaults (owner may override):
+
+- Decision functions return typed statuses (`ok`, `not_found`, `invalid_transition`, `unsupported`,
+  `commitment_not_confirmed`) instead of raising, like the M1.5 operator functions. All checks run
+  before any write, so a refusal changes nothing (the "no partial changes" requirement holds).
+- Confirming a commitment also requires `evidence_state = 'supported'`.
+- Rejecting a commitment rejects its still-`proposed` tasks in the same transaction (audited).
+- Added `done`/`dismissed` → `open` ("Reopen") for the user's own undo; §5.6 listed only
+  `open → done/dismissed`.
+- Not yet built (tracked in WORKLOG): editing a proposal's text before deciding, `revise_record` for
+  confirmed records, user-authored (`user_stated`) commitments, deleting tasks/commitments.
+
 Changes from earlier drafts (justified):
 
 - `users.workspace_id` replaced by `profiles` + `workspace_members` (membership, roles, invited users).

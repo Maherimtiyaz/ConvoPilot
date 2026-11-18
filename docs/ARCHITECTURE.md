@@ -336,7 +336,7 @@ See `EVALUATION.md`. Summary: unit (Vitest) for schemas, policy and citation val
 | M2 | AI core: provider interface (P4), test provider, structured output helper, policy layer, tool registry, injection harness | Done 2026-11-17 (`src/lib/ai/`; no vendor SDK; P4 deferred to the first adapter in M3) |
 | M3 | Communication Studio | Done 2026-11-17 |
 | M4 | Contacts, Conversations, keyword retrieval, cited Q&A | Done 2026-11-17 |
-| M5 | Commitments & Tasks with approval queue | Not started |
+| M5 | Commitments & Tasks with approval queue | Done 2026-11-18 |
 | — | **v0.1 acceptance** (`PRD.md` §5) | — |
 | M6 | Daily briefing | Post-v0.1 |
 | M7 | Gmail/Calendar, read-only first | Post-v0.1 |

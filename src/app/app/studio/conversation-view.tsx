@@ -3,8 +3,10 @@
 import { useState, useTransition } from "react";
 
 import type { StoredPoint } from "@/lib/ai/workflows/analyze-thread";
+import type { CommitmentView } from "@/lib/services/commitments";
 import type { ConversationDetail } from "@/lib/services/studio";
 
+import { CommitmentsPanel } from "./commitments-panel";
 import { SenderContact } from "./sender-contact";
 import { analyzeAction, deleteConversationAction, deleteDraftAction, draftAction, saveDraftAction, setAiConsentAction } from "./actions";
 
@@ -46,7 +48,7 @@ function Citations({ point, onFocus }: { point: StoredPoint; onFocus: (position:
   );
 }
 
-export function ConversationView({ detail, ai, createdLabel, contacts }: { detail: ConversationDetail; ai: AiState; createdLabel: string; contacts: Record<string, string> }) {
+export function ConversationView({ detail, ai, createdLabel, contacts, commitments }: { detail: ConversationDetail; ai: AiState; createdLabel: string; contacts: Record<string, string>; commitments: CommitmentView[] }) {
   const { conversation, messages, analysis, drafts } = detail;
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState<"analyze" | "draft" | null>(null);
@@ -220,6 +222,8 @@ export function ConversationView({ detail, ai, createdLabel, contacts }: { detai
               </div>
             )}
           </section>
+
+          <CommitmentsPanel conversationId={conversation.id} commitments={commitments} aiReady={aiReady} onFocus={focusMessage} />
 
           <section aria-labelledby="draft-heading" className="rounded-[10px] border border-ink-200 bg-white p-5">
             <h3 id="draft-heading" className="font-display text-2xl font-medium">

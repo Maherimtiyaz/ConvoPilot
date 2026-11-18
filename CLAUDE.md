@@ -156,8 +156,8 @@ cost** and **email deliverability**, not the database.
 | M2 | AI core: provider interface, structured outputs, citations, budgets, tool registry + policy, bounded loop, injection harness | ✅ built and tested (`src/lib/ai/`; test provider only) |
 | M3 | Communication Studio: import (paste/.txt/.md/.eml), cited analysis, drafts in your style, edit/save/copy/delete | ✅ built and tested (mock AI in tests; real key needed to use) |
 | M4 | Contacts, Conversations, keyword search, "what did I discuss with X?" with citations | ✅ built and tested (mock AI in tests) |
-| M5 | Commitments/Tasks proposed by AI, approved by the user | ⬜ |
-| — | v0.1 acceptance → early access for ~1,000 users | ⬜ |
+| M5 | Commitments/Tasks proposed by AI, approved by the user; Dashboard | ✅ built and tested (mock AI in tests) |
+| — | v0.1 acceptance (all features built; needs real-AI evaluation, security review, hosted setup) → early access for ~1,000 users | 🟡 next |
 | M6–M8 | Briefing, Gmail/Calendar, production hardening & scale | ⬜ |
 
 ## 10. M1.4 — login experience and protected shell

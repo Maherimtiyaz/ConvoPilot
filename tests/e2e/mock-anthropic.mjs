@@ -51,6 +51,21 @@ function reply(body) {
       confidence: "high",
     };
   }
+  if (system.includes("You find commitments")) {
+    // Two cited commitments for the user, one for the other person, and one invented (bad quote).
+    return {
+      commitments: [
+        { description: "Send Priya the revised deck", owner: "me", origin: "extracted", due_date: null, due_text: "by Friday", confidence: "high",
+          citations: [{ message: 1, quote: "send the revised deck by Friday" }, { message: 2, quote: "will do" }], task: { title: "Send the revised deck" } },
+        { description: "Tell Priya whether the pilot can start in March", owner: "me", origin: "inferred", due_date: null, due_text: null, confidence: "medium",
+          citations: [{ message: 1, quote: "if the pilot can start in March" }], task: { title: "Reply about the pilot start" } },
+        { description: "Priya shares notes from the call", owner: "them", origin: "inferred", due_date: null, due_text: null, confidence: "low",
+          citations: [{ message: 1, quote: "Thanks for the call today" }], task: null },
+        { description: "Wire the $50k deposit", owner: "me", origin: "extracted", due_date: "2026-03-20", due_text: null, confidence: "high",
+          citations: [{ message: 1, quote: "wire the $50k deposit" }], task: { title: "Wire deposit" } },
+      ],
+    };
+  }
   if (system.includes("You draft the user's reply")) {
     return { reply: "Hi Priya,\n\nYes, you'll have the revised deck by Friday.\n\nBest,\nAda", used_messages: [1] };
   }
