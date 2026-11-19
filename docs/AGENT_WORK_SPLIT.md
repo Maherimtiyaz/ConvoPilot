@@ -49,9 +49,46 @@ Completed as part of commit `fbadcfc` (see Milestone 0). If OpenCode was also gi
 
 ---
 
-## Milestone P3 — Communication Studio — ⬜ Not started
+## Milestone P3 — Communication Studio — ✅ Mistral (Vibe Code)
 
-Planned split: **OpenCode** implements per Prompt P3; **Mistral** reviews the PR, runs checks, and fills gaps. Assign explicitly before starting.
+Branch: `vibe/studio-p3-5bccb6` · PR: stacked on PR #1
+
+| Task | Owner | Files |
+| --- | --- | --- |
+| Thread parser (heuristic, direction detection) | Mistral | `src/lib/email/parse-thread.ts` |
+| Zod schemas (analysis, import, draft) | Mistral | `src/lib/schemas/communication.ts` |
+| Versioned prompts + untrusted-data delimiting | Mistral | `src/lib/ai/prompts/analyze-email.ts`, `draft-reply.ts` |
+| Orchestrator (analyzeEmail, generateReply) | Mistral | `src/lib/ai/orchestrator/communication.ts` |
+| Repositories (contacts, conversations, messages, classifications, drafts) | Mistral | `src/lib/database/repositories/index.ts`, `src/types/database.ts` |
+| API routes (import, analyze, drafts, draft edit) | Mistral | `src/app/api/conversations/**`, `src/app/api/drafts/[id]/route.ts` |
+| Studio UI full flow | Mistral | `src/components/email/studio-workspace.tsx`, `src/app/(app)/studio/page.tsx` |
+| 17 unit tests (parser, orchestrator, injection delimiting) | Mistral | `tests/unit/parse-thread.test.ts`, `communication-orchestrator.test.ts` |
+| Review P3 against docs, report gaps | OpenCode | ⬜ pending |
+
+---
+
+## Milestone P4 — Tasks & commitments — ✅ Mistral (Vibe Code)
+
+Branch: `vibe/studio-p3-5bccb6` (same stacked PR as P3)
+
+| Task | Owner | Files |
+| --- | --- | --- |
+| Migration 0002 (commitments.source_excerpt) | Mistral | `supabase/migrations/0002_commitment_source_excerpt.sql` |
+| Productivity schemas (ambiguous-date refinement) | Mistral | `src/lib/schemas/productivity.ts` |
+| extract-commitments@1 prompt | Mistral | `src/lib/ai/prompts/extract-commitments.ts` |
+| extractCommitments orchestrator | Mistral | `src/lib/ai/orchestrator/productivity.ts` |
+| Commitment/task repositories + audit logging | Mistral | `src/lib/database/repositories/index.ts` |
+| API routes (tasks, commitments approval, extraction, conversations list) | Mistral | `src/app/api/tasks/**`, `src/app/api/commitments/[id]/route.ts`, `src/app/api/conversations/**` |
+| Tasks UI (approval queue, two-way view, overdue) | Mistral | `src/components/tasks/tasks-workspace.tsx`, `src/app/(app)/tasks/page.tsx` |
+| Conversations list UI + extract action | Mistral | `src/components/conversations/conversations-list.tsx`, `src/app/(app)/conversations/page.tsx` |
+| 10 unit tests (extraction, ambiguity contract, schemas) | Mistral | `tests/unit/productivity-orchestrator.test.ts` |
+| Review P3+P4 against docs, report gaps | OpenCode | ⬜ pending |
+
+---
+
+## Milestone P5 — Daily briefing — ⬜ Not started
+
+Planned: **Mistral** implements (dashboard counts + briefing generation); **OpenCode** reviews.
 
 ---
 

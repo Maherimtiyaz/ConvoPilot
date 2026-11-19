@@ -1,19 +1,39 @@
-import { EmptyState } from "@/components/ui/empty-state";
+import { requireUser } from "@/lib/auth";
+import { createClient } from "@/lib/database/supabase-server";
+import { getWorkspaceId, listTasks, listCommitments } from "@/lib/database/repositories";
+import { TasksWorkspace } from "@/components/tasks/tasks-workspace";
 
-export default function TasksPage() {
+export default async function TasksPage() {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const initialData = supabase
+    ? await (async () => {
+        const workspaceId = await getWorkspaceId(supabase, user.id);
+        const [tasks, proposed, waitingOn] = await Promise.all([
+          listTasks(supabase, workspaceId),
+          listCommitments(supabase, workspaceId, ["proposed"]),
+          listCommitments(supabase, workspaceId, ["active"]),
+        ]);
+        return {
+          tasks,
+          proposedCommitments: proposed.filter((c) => c.owner === "me"),
+          waitingOnOthers: waitingOn.filter((c) => c.owner === "them"),
+        };
+      })()
+    : { tasks: [], proposedCommitments: [], waitingOnOthers: [] };
+
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-4xl space-y-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Tasks & Follow-ups</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Commitments, follow-ups, and action items — including proposals from the agent awaiting your approval.
+          Commitments and follow-ups. Agent-proposed commitments wait in the approval queue — nothing becomes a task
+          without you.
         </p>
       </header>
 
-      <EmptyState
-        title="No tasks yet"
-        description="Create tasks manually in Phase 4, or let ConvoPilot propose them from imported conversations."
-      />
+      <TasksWorkspace initialData={initialData} />
     </div>
   );
 }

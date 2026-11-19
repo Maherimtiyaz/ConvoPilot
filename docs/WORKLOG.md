@@ -4,6 +4,75 @@ Session-by-session report of what was worked on. Newest first. See also `docs/AG
 
 ---
 
+## Session 4 — Phase P4 Tasks & Commitments (Mistral/Vibe)
+
+**Scope:** FR-4 per `docs/PRD.md` — task management, commitment extraction with human approval queue, two-way commitment view.
+
+> Note: the sandbox was rolled back mid-session; the P3 branch was restored from the remote (`a7f7cbb`) and P4 was built on top. No work was lost.
+
+### What was built
+
+1. **Migration `0002`**: `commitments.source_excerpt` column — evidence text shown in the approval queue without loading full messages.
+2. **Schemas** (`src/lib/schemas/productivity.ts`): commitment proposals (owner me/them, description, dueDate, dueDateAmbiguous, confidence, sourceExcerpt) with a refinement **forcing dueDate to null when ambiguous** — an ambiguous timeframe can never become a hard deadline. Task create/update schemas, commitment action schema (approve/dismiss/complete only).
+3. **Versioned prompt** `extract-commitments@1` (`src/lib/ai/prompts/extract-commitments.ts`): strict extraction rules (only stated commitments, greetings/thanks excluded, ambiguous dates null + flagged, verbatim source excerpts), untrusted-data delimiting, and conversation-date context to resolve relative dates.
+4. **Orchestrator** (`src/lib/ai/orchestrator/productivity.ts`): `extractCommitments` — JSON mode, Zod-validated, one retry, typed failure. Proposals always start `proposed`; nothing is auto-confirmed.
+5. **Repositories extended**: commitments (create proposal, list by status, get, update status), tasks (list, create, update), conversation listing with contact name + message count, and `logAudit` (audit failures logged loudly, never silent).
+6. **API routes**: `GET/POST /api/tasks`, `PATCH /api/tasks/[id]`, `POST /api/conversations/[id]/commitments` (extraction → proposals), `PATCH /api/commitments/[id]` (approve → active + linked task for owner="me"; dismiss; complete — with 409 guards on invalid transitions), `GET /api/conversations/list`. Approval/dismissal/creation actions are recorded in `audit_logs`.
+7. **Tasks UI** (`tasks-workspace.tsx`): add-task form, approval queue with evidence quotes + confidence badges, open tasks with overdue highlighting, "Waiting on others" section (commitments made *to* you) with mark-received, completed list with reopen.
+8. **Conversations UI**: server-rendered list (subject, contact, message count, import date) with per-conversation "Extract commitments" action and result notice.
+9. **Architecture improvement**: Tasks and Conversations pages now fetch initial data in server components (Next 16 idiom); client components only refetch after mutations. This also removed mount-effect setState (React 19 lint rule).
+10. **Tests**: 10 new (43 total) — extraction validation (happy path, empty list, ambiguous-date contract, invalid owner, non-JSON failure), delimiting in extraction prompt, schema invariants (ISO dates, action whitelist, defaults).
+
+### Checks run
+
+- `npm test` — 43/43 pass. `npx tsc --noEmit` — pass. `npm run lint` — pass. `npm run build` — pass.
+
+### Known limitations
+
+- Extraction links evidence to the first inbound message of the thread (per-message source matching deferred to semantic search phase).
+- Approval flow untested against live DB (needs Supabase project); state-transition guards are unit-tested at schema level and enforced in the route.
+- Accepting a Next 16 change: `export const dynamic = "force-dynamic"` was removed in Next 16; pages using `cookies()` are dynamic automatically.
+
+### Next
+
+- P5 Daily briefing (dashboard counts + briefing generation from stored data).
+- P6 Gmail integration after that.
+
+---
+
+## Session 3 — Phase P3 Communication Studio (Mistral/Vibe, parallel with OpenCode's P2 review)
+
+**Scope:** FR-1 Communication Studio per `docs/PRD.md` — import, analyze, draft, edit, save. No sending.
+
+### What was built
+
+1. **Thread parser** (`src/lib/email/parse-thread.ts`): heuristic split on `From:` boundaries, sender/email/date extraction, quote-marker stripping, direction detection via the signed-in user's email. Documented limitation: a body line starting with `From:` splits incorrectly (acceptable for MVP manual import).
+2. **Schemas** (`src/lib/schemas/communication.ts`): Zod schemas for email analysis (intent/urgency/summary/mainPoints/senderAsk/expectedResponse/confidence), import input, draft requests (tone/length), draft saves.
+3. **Versioned prompts** (`src/lib/ai/prompts/`): `analyze-email@1` and `draft-reply@1`, both with explicit untrusted-data delimiting (`<untrusted_message>`) and anti-injection system rules; draft prompt enforces grounding ("never invent facts") and bans corporate filler.
+4. **Orchestrator** (`src/lib/ai/orchestrator/communication.ts`): `analyzeEmail` — JSON-mode call, Zod-validated, one retry on invalid output, then typed `ai_provider_error`; `generateReply` — tone/length controls, contact context, style profile hook. Model metadata (provider/model/prompt version) returned for persistence.
+5. **Repositories** (`src/lib/database/repositories/index.ts`): the only Supabase table access layer — contacts, conversations, messages, classifications, drafts; every query workspace-scoped.
+6. **API routes** (all `requireUserApi` + Zod validation + error envelopes): `POST /api/conversations` (import thread, optional contact save with dedupe by email), `POST /api/conversations/[id]/analyze` (persist classification), `POST /api/conversations/[id]/drafts` (generate + persist draft with contact context), `PATCH /api/drafts/[id]` (edit/save).
+7. **Studio UI** (`src/components/email/studio-workspace.tsx`): full flow — paste thread → import & analyze → analysis panel (intent, urgency badge, main points, sender ask, confidence) → reply controls (intended outcome, tone, length) → editable draft with save + copy-to-clipboard → start over. Loading/error/success states throughout.
+8. **Tests**: 17 new unit tests (33 total) — thread parsing (splitting, direction, dates, quote stripping, fallbacks), orchestrator (validated happy path, non-JSON retry-then-fail, schema-invalid intent rejection, empty draft failure), and untrusted-input delimiting + grounding instructions in both prompts.
+
+### Checks run
+
+- `npm test` — 33/33 pass.
+- `npx tsc --noEmit` — pass. `npm run lint` — pass. `npm run build` — pass.
+
+### Known limitations
+
+- End-to-end flow needs a live Supabase + a real AI provider key; unit-tested with FakeProvider until then.
+- Thread parser is heuristic (see above).
+- Analysis is stored per first inbound message; per-message classifications deferred.
+
+### Next
+
+- OpenCode: P2 review + live auth verification (prompt in `docs/OPENCODE_PROMPTS.md`).
+- P4 (tasks & commitments + approval queue) is the next implementation milestone.
+
+---
+
 ## Session 2 — Phase P2 Foundation (Mistral/Vibe, in parallel with OpenCode's P1 run)
 
 **Scope:** Implement the P2 foundation while the owner runs OpenCode on Prompt 1. Per `docs/AGENT_WORK_SPLIT.md`, OpenCode should review this work and fill gaps rather than rebuild.
