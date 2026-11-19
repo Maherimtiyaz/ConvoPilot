@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import type { RequestContext } from "@/lib/auth/context";
-import { listTasks, utcDays } from "@/lib/services/commitments";
+import { getTimeZone, listTasks, localDays } from "@/lib/services/commitments";
 
 import { EmptyState, LoadingState, ProtectedPage } from "../protected-page";
 
@@ -23,8 +23,8 @@ export default function TasksPage() {
 }
 
 async function Tasks({ ctx }: { ctx: RequestContext }) {
-  const tasks = await listTasks(ctx);
-  const { today } = utcDays();
+  const [tasks, timeZone] = await Promise.all([listTasks(ctx), getTimeZone(ctx)]);
+  const { today } = localDays(timeZone);
   const proposed = tasks.filter((t) => t.status === "proposed");
   const open = tasks.filter((t) => t.status === "open");
   const closed = tasks.filter((t) => t.status === "done" || t.status === "dismissed").sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? "")).slice(0, 30);

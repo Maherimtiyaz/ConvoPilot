@@ -158,6 +158,7 @@ cost** and **email deliverability**, not the database.
 | M4 | Contacts, Conversations, keyword search, "what did I discuss with X?" with citations | ✅ built and tested (mock AI in tests) |
 | M5 | Commitments/Tasks proposed by AI, approved by the user; Dashboard | ✅ built and tested (mock AI in tests) |
 | — | v0.1 acceptance: security review + fixes, scenario coverage, account export/deletion, evaluation harness (`docs/ACCEPTANCE.md`) | 🟡 done locally; gates left: real-AI eval (key), hosted setup, privacy review → early access for ~1,000 users |
+| P1 | Pre-launch: 30-day retention, restore (Recently deleted), permanent erasure job, operator account restore, time zone | ✅ built and tested |
 | M6–M8 | Briefing, Gmail/Calendar, production hardening & scale | ⬜ |
 
 ## 10. M1.4 — login experience and protected shell
@@ -227,8 +228,9 @@ local stack does not enforce email rate limits (must be checked on hosted dev).
 
 Domain for the name ConvoPilot (`convopilot.com` and `.ai` are already registered by others — check trademark) · Vercel and Supabase accounts (dev + prod) · email-sending service
 and domain · privacy/legal review of `/privacy` · countries of users (privacy law) · brand
-assets · retention periods for deleted data · invitation lifetime (default 7 days) · whether to
-add 6-digit codes later.
+assets · audit-log retention · invitation lifetime (default 7 days) · whether to add 6-digit codes
+later. **Decided 2026-11-18:** deleted data kept 30 days then erased; users restore conversations
+and contacts; accounts restored only by the operator on request.
 
 ## 14. Commands
 

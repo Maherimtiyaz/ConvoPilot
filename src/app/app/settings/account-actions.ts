@@ -1,9 +1,11 @@
 "use server";
 
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireRequestContext } from "@/lib/auth/context";
-import { deleteAccount, exportWorkspaceData } from "@/lib/services/account";
+import { deleteAccount, exportWorkspaceData, restoreItem, setTimeZone } from "@/lib/services/account";
+import { uuidSchema } from "@/lib/validation/studio";
 
 export async function exportDataAction(): Promise<{ error: string | null; json?: string; fileName?: string }> {
   const ctx = await requireRequestContext();
@@ -28,4 +30,31 @@ export async function deleteAccountAction(confirmation: string): Promise<{ error
     return { error: "Something went wrong. Your account was not deleted. Please try again." };
   }
   redirect("/account-deleted");
+}
+
+/** Restores one of the user's own recently deleted conversations or contacts. */
+export async function restoreItemAction(kind: "conversation" | "contact", id: string): Promise<{ error: string | null; note?: string }> {
+  await requireRequestContext();
+  if ((kind !== "conversation" && kind !== "contact") || !uuidSchema.safeParse(id).success) return { error: "That item can't be restored." };
+  try {
+    const r = await restoreItem(kind, id);
+    if (r.status === "duplicate") return { error: "You imported this conversation again after deleting it, so the copy you have now is kept." };
+    if (r.status === "not_found") return { error: "That item can no longer be restored." };
+    refresh();
+    return { error: null, note: r.emailsSkipped > 0 ? "Restored. Its email now belongs to another contact, so it was left there." : undefined };
+  } catch {
+    return { error: "Something went wrong. Please try again." };
+  }
+}
+
+export async function setTimeZoneAction(timeZone: string): Promise<{ error: string | null }> {
+  const ctx = await requireRequestContext();
+  if (typeof timeZone !== "string") return { error: "Choose a time zone from the list." };
+  try {
+    if ((await setTimeZone(ctx, timeZone)) === "invalid") return { error: "Choose a time zone from the list." };
+    refresh();
+    return { error: null };
+  } catch {
+    return { error: "Something went wrong. Please try again." };
+  }
 }

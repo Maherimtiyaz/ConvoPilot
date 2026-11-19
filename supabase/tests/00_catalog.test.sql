@@ -31,8 +31,8 @@ select is(
       and has_function_privilege('authenticated', p.oid, 'execute')),
   array['approve_task', 'create_invitation', 'create_task', 'current_user_is_operator', 'decide_proposal',
         'import_conversation', 'invite_waitlist_entries',
-        'is_workspace_member', 'is_workspace_owner', 'join_waitlist', 'list_invitations', 'list_waitlist', 'log_event',
-        'record_ai_usage', 'request_account_deletion', 'reserve_ai_usage', 'revoke_invitation', 'save_contact', 'search_messages',
+        'is_workspace_member', 'is_workspace_owner', 'join_waitlist', 'list_invitations', 'list_recently_deleted', 'list_waitlist', 'log_event',
+        'record_ai_usage', 'request_account_deletion', 'reserve_ai_usage', 'restore_contact', 'restore_conversation', 'revoke_invitation', 'save_contact', 'search_messages',
         'set_task_status', 'set_waitlist_entry_status', 'soft_delete_contact', 'soft_delete_conversation', 'soft_delete_draft',
         'store_commitment_proposals', 'verify_invitation'],
   'authenticated can execute only the allow-listed functions');

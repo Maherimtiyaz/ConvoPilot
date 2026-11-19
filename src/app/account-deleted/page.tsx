@@ -9,7 +9,7 @@ export default function AccountDeletedPage() {
   return (
     <AuthCard title="Your account is being deleted">
       <p>Your workspace and everything in it are no longer accessible, and you&apos;ve been signed out on every device.</p>
-      <p>Your data is then permanently erased after the retention period described in our privacy notice.</p>
+      <p>Your data is permanently erased after 30 days. Changed your mind? Contact the ConvoPilot team within those 30 days and we can restore your account.</p>
       <p className="text-sm">
         <Link href="/" className="font-medium text-route underline">
           Back to the homepage

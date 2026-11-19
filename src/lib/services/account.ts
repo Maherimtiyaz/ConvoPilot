@@ -1,9 +1,12 @@
 import "server-only";
 
+import { z } from "zod";
+
 import type { RequestContext } from "@/lib/auth/context";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { signOut } from "./auth";
+import { isTimeZone } from "./commitments";
 import { StudioError } from "./studio";
 
 /**
@@ -55,4 +58,42 @@ export async function deleteAccount(): Promise<void> {
   const { error } = await supabase.rpc("request_account_deletion");
   if (error) throw new StudioError("failed");
   await signOut("global").catch(() => signOut("local"));
+}
+
+// ---------------------------------------------------------------- recently deleted (30-day window)
+const deletedItem = z.object({
+  kind: z.enum(["conversation", "contact"]),
+  id: z.uuid(),
+  title: z.string(),
+  deleted_at: z.string(),
+  erase_at: z.string(),
+});
+export type DeletedItem = z.infer<typeof deletedItem>;
+
+export async function listRecentlyDeleted(): Promise<DeletedItem[]> {
+  const supabase = await createSupabaseServerClient("server-component");
+  const { data, error } = await supabase.rpc("list_recently_deleted");
+  if (error) throw new StudioError("failed");
+  return z.object({ items: z.array(deletedItem) }).parse(data).items;
+}
+
+export type RestoreStatus = "restored" | "not_found" | "duplicate";
+
+/** Restores the caller's own deleted conversation or contact (membership checked in the database). */
+export async function restoreItem(kind: "conversation" | "contact", id: string): Promise<{ status: RestoreStatus; emailsSkipped: number }> {
+  const supabase = await createSupabaseServerClient("server-action");
+  const { data, error } =
+    kind === "conversation" ? await supabase.rpc("restore_conversation", { p_conversation_id: id }) : await supabase.rpc("restore_contact", { p_contact_id: id });
+  if (error) throw new StudioError("failed");
+  const r = z.object({ status: z.enum(["restored", "not_found", "duplicate"]), emails_skipped: z.number().optional() }).parse(data);
+  return { status: r.status, emailsSkipped: r.emails_skipped ?? 0 };
+}
+
+// ---------------------------------------------------------------- time zone
+export async function setTimeZone(ctx: RequestContext, timeZone: string): Promise<"saved" | "invalid"> {
+  if (!isTimeZone(timeZone)) return "invalid";
+  const supabase = await createSupabaseServerClient("server-action");
+  const { error } = await supabase.from("workspace_settings").update({ time_zone: timeZone }).eq("workspace_id", ctx.workspaceId);
+  if (error) throw new StudioError("failed");
+  return "saved";
 }

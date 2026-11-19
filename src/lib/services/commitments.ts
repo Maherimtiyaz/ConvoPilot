@@ -196,7 +196,29 @@ export async function setTaskStatus(_ctx: RequestContext, taskId: string, status
   return r === "ok" || r === "not_found" ? r : "invalid_transition";
 }
 
-/** Today and the date a week ahead, as UTC calendar dates (v0.1 has no per-user time zone yet). */
-export function utcDays(now: Date = new Date()): { today: string; inAWeek: string } {
-  return { today: now.toISOString().slice(0, 10), inAWeek: new Date(now.getTime() + 7 * 86_400_000).toISOString().slice(0, 10) };
+/** A valid IANA time zone name (or UTC). */
+export function isTimeZone(tz: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return /^[A-Za-z0-9_+/-]{1,64}$/.test(tz);
+  } catch {
+    return false;
+  }
+}
+
+/** Today and the date a week ahead as calendar dates (YYYY-MM-DD) in the user's time zone. */
+export function localDays(timeZone: string, now: Date = new Date()): { today: string; inAWeek: string } {
+  const tz = isTimeZone(timeZone) ? timeZone : "UTC";
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  const inAWeek = new Date(Date.parse(`${today}T00:00:00Z`) + 7 * 86_400_000).toISOString().slice(0, 10);
+  return { today, inAWeek };
+}
+
+/** The workspace's time zone (Settings), UTC by default. */
+export async function getTimeZone(ctx: RequestContext): Promise<string> {
+  const supabase = await db("server-component");
+  const { data, error } = await supabase.from("workspace_settings").select("time_zone").eq("workspace_id", ctx.workspaceId).single();
+  if (error) throw new StudioError("failed");
+  const tz = z.object({ time_zone: z.string() }).parse(data).time_zone;
+  return isTimeZone(tz) ? tz : "UTC";
 }
