@@ -4,6 +4,10 @@
  *
  *   ANTHROPIC_API_KEY=… npm run eval            # optional: AI_MODEL=…, EVAL_MAX_USD=2
  *
+ * The generic ANTHROPIC_BASE_URL is deliberately ignored: some environments (e.g. Claude Code in the
+ * cloud) set it for their own use, and the key must go to the real Anthropic API. Use
+ * EVAL_ANTHROPIC_BASE_URL only to point the run at a local mock.
+ *
  * Synthetic data only. Writing quality is judged by a person from the saved drafts (rubric 1–5).
  */
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -26,7 +30,7 @@ const maxUsd = Number(process.env.EVAL_MAX_USD || "2");
 
 describe.skipIf(!key)("v0.1 model evaluation", () => {
   it("meets the v0.1 targets on the synthetic dataset", async () => {
-    const provider = createAnthropicProvider({ apiKey: key!, model, baseURL: process.env.ANTHROPIC_BASE_URL || undefined });
+    const provider = createAnthropicProvider({ apiKey: key!, model, baseURL: process.env.EVAL_ANTHROPIC_BASE_URL || undefined });
     const run = await runEvaluation(provider, CASES, RETRIEVAL, {
       stopWhen: (u) => costMicroUsd(model, u.inputTokens, u.outputTokens) >= maxUsd * 1_000_000,
       log: (line) => process.stdout.write(`  · ${line}\n`),
