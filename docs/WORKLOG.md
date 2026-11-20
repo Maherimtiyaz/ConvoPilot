@@ -4,6 +4,19 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 20 — Visual walkthrough and phone fixes (2026-11-20)
+
+- Walked every screen with synthetic data (local mock AI) at desktop (1440×900) and phone (iPhone
+  13) sizes; screenshots shared with the owner; no horizontal overflow on any screen at phone width.
+- Fixed: phone menu hid Conversations/Tasks/Settings off-screen (now wraps); Dashboard "Next up"
+  card overflowed on phones with a long task (grid items `min-w-0`); "Unknown sender" for the
+  header-less top message of a paste now reads "Sender not shown in the pasted text".
+- Eval: ignores the environment's generic ANTHROPIC_BASE_URL (cloud sessions set it); the
+  owner's key was not yet visible to this session, so the real-model run is still pending.
+- Checks: unit 116, Playwright 23, guards.
+
+---
+
 ## Session 19 — P1 pre-launch: retention, restore, erasure, time zone (2026-11-18)
 
 - Owner merged PR #3 (at M4) and PR #4 (M5 + acceptance); `main` CI green. Fixed a flaky e2e

@@ -138,7 +138,7 @@ export function ConversationView({ detail, ai, createdLabel, contacts, commitmen
                 <p className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
                   <span>
                     <span className="mr-2 font-mono text-xs text-ink-500">[{m.position}]</span>
-                    <span className="font-semibold">{m.senderName ?? m.senderEmail ?? "Unknown sender"}</span>
+                    <span className="font-semibold">{m.senderName ?? m.senderEmail ?? "Sender not shown in the pasted text"}</span>
                     {m.senderName && m.senderEmail && <span className="text-ink-500"> · {m.senderEmail}</span>}
                     {m.direction === "outbound" && <span className="ml-2 rounded-full bg-ink-100 px-2 py-0.5 font-mono text-[11px] text-ink-700">you</span>}
                     {m.direction !== "outbound" && m.senderEmail && <SenderContact name={m.senderName} email={m.senderEmail} contactId={contacts[m.senderEmail.toLowerCase()]} />}
