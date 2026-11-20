@@ -49,7 +49,7 @@ function ActiveNavItem({ href, label }: { href: string; label: string }) {
 /** Main navigation. `extra` holds items that depend on the signed-in user (e.g. Operator). */
 export function NavLinks({ extra }: { extra?: ReactNode }) {
   return (
-    <nav aria-label="Main" className="flex gap-1 overflow-x-auto md:flex-col">
+    <nav aria-label="Main" className="flex flex-wrap gap-1 md:flex-col md:flex-nowrap">
       {APP_NAV.map((item) => (
         <NavItem key={item.href} href={item.href} label={item.label} />
       ))}

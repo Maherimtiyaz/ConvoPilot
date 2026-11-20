@@ -119,7 +119,7 @@ async function Dashboard({ ctx }: { ctx: RequestContext }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <section
           aria-labelledby="next-heading"
-          className="rounded-[10px] border border-ink-200 bg-white p-5"
+          className="min-w-0 rounded-[10px] border border-ink-200 bg-white p-5"
         >
           <h2 id="next-heading" className="font-semibold">
             Next up
@@ -154,7 +154,7 @@ async function Dashboard({ ctx }: { ctx: RequestContext }) {
         </section>
         <section
           aria-labelledby="recent-heading"
-          className="rounded-[10px] border border-ink-200 bg-white p-5"
+          className="min-w-0 rounded-[10px] border border-ink-200 bg-white p-5"
         >
           <h2 id="recent-heading" className="font-semibold">
             Recent conversations
