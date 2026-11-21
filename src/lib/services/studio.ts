@@ -8,6 +8,7 @@ import { analyzeThread, storedAnalysisSchema, type StoredAnalysis } from "@/lib/
 import { draftReply, type DraftOptions, type WritingStyle } from "@/lib/ai/workflows/draft-reply";
 import type { ThreadMessage } from "@/lib/ai/workflows/thread-input";
 import { parseFile, parsePastedText, type ParseError, type ParsedThread } from "@/lib/conversations/parse";
+import { wallTimeToUtc } from "@/lib/conversations/whatsapp";
 import { getAiEnv } from "@/lib/env/ai";
 import { createSupabaseServerClient, type SupabaseServerContext } from "@/lib/supabase/server";
 import { writingStyleSchema } from "@/lib/validation/studio";
@@ -145,9 +146,18 @@ export async function getAiSettings(ctx: RequestContext, context: SupabaseServer
 
 // ---------------------------------------------------------------- import and delete
 export type ImportResult =
-  | { status: "created" | "duplicate"; conversationId: string }
+  | { status: "created" | "duplicate"; conversationId: string; omittedOlder: number }
   | { status: "parse_error"; error: ParseError }
   | { status: "invalid" };
+
+/** The workspace time zone from Settings; UTC if unset or invalid. */
+async function workspaceTimeZone(ctx: RequestContext): Promise<string> {
+  const supabase = await db("server-action");
+  const { data, error } = await supabase.from("workspace_settings").select("time_zone").eq("workspace_id", ctx.workspaceId).single();
+  if (error) throw new StudioError("failed");
+  const tz = z.object({ time_zone: z.string() }).parse(data).time_zone;
+  return /^[A-Za-z0-9_+/-]{1,64}$/.test(tz) ? tz : "UTC";
+}
 
 export async function importConversation(
   ctx: RequestContext,
@@ -156,6 +166,9 @@ export async function importConversation(
   const parsed = input.kind === "paste" ? parsePastedText(input.text) : parseFile(input.name, input.bytes);
   if (!parsed.ok) return { status: "parse_error", error: parsed.error };
   const thread: ParsedThread = parsed.thread;
+  // WhatsApp times are the phone's local time: read them in the workspace time zone (Settings).
+  const timeZone = thread.localTimes ? await workspaceTimeZone(ctx) : null;
+  const sentAt = (value: string | null) => (value && timeZone ? wallTimeToUtc(value, timeZone) : value);
   const me = ctx.email?.toLowerCase() ?? null;
   const subject =
     input.subject?.trim() ||
@@ -171,7 +184,7 @@ export async function importConversation(
     p_messages: thread.messages.map((m) => ({
       sender_name: m.senderName,
       sender_email: m.senderEmail,
-      sent_at: m.sentAt,
+      sent_at: sentAt(m.sentAt),
       body: m.body,
       direction: m.senderEmail ? (m.senderEmail === me ? "outbound" : "inbound") : "unknown",
     })),
@@ -179,7 +192,7 @@ export async function importConversation(
   if (error) throw new StudioError("failed");
   const result = z.object({ status: z.enum(["created", "duplicate", "invalid"]), conversation_id: z.uuid().optional() }).parse(data);
   if (result.status === "invalid" || !result.conversation_id) return { status: "invalid" };
-  return { status: result.status, conversationId: result.conversation_id };
+  return { status: result.status, conversationId: result.conversation_id, omittedOlder: thread.omittedOlder ?? 0 };
 }
 
 export async function deleteConversation(id: string): Promise<boolean> {

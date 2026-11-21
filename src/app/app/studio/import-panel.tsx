@@ -16,7 +16,7 @@ export function ImportPanel() {
     <section className="cp-glass rounded-3xl p-6">
       <h2 className="font-display text-2xl font-medium">Import a conversation</h2>
       <p className="mt-1 text-[15px] text-ink-700">
-        Paste an email thread or upload a .txt, .md or .eml file. It stays in your private workspace. Nothing is sent anywhere until you ask for an analysis or a draft.
+        Paste an email thread or a WhatsApp chat, or upload a .txt, .md or .eml file. It stays in your private workspace. Nothing is sent anywhere until you ask for an analysis or a draft.
       </p>
       <div role="tablist" aria-label="Import method" className="mt-5 inline-flex rounded-xl border border-ink-200 p-1">
         {(["paste", "file"] as const).map((m) => (
@@ -64,6 +64,21 @@ export function ImportPanel() {
             <p className="text-xs text-ink-500">Up to 750 KB. Attachments in .eml files are ignored.</p>
           </div>
         )}
+        <details className="rounded-xl border border-ink-200 px-4 py-3 text-sm text-ink-700">
+          <summary className="cursor-pointer font-medium text-ink">Importing a WhatsApp chat</summary>
+          <ol className="mt-2 list-decimal space-y-1 pl-5">
+            <li>In WhatsApp, open the chat.</li>
+            <li>
+              iPhone: tap the contact or group name → <b>Export chat</b>. Android: tap <b>⋮</b> → <b>More</b> → <b>Export chat</b>.
+            </li>
+            <li>
+              Choose <b>Without media</b>, save the .txt file (unzip it on iPhone) and upload it here, or paste its text.
+            </li>
+          </ol>
+          <p className="mt-2 text-xs text-ink-500">
+            Times are read in your time zone from Settings. Long chats keep the latest 50 messages. Photos and voice notes are not imported.
+          </p>
+        </details>
         <button type="submit" disabled={pending} className={`${buttonClass} sm:w-auto sm:px-6`}>
           {pending ? "Importing…" : "Import conversation"}
         </button>

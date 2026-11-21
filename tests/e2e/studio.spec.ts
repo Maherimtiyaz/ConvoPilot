@@ -104,6 +104,31 @@ test.describe("Communication Studio", () => {
     await page.getByRole("tab", { name: "Upload file" }).click();
     await page.getByLabel("File").setInputFiles({ name: "deck.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4") });
     await page.getByRole("button", { name: "Import conversation" }).click();
-    await expect(page.getByRole("alert").filter({ hasText: "Choose a .txt, .md or .eml file." })).toBeVisible();
+    await expect(page.getByRole("alert").filter({ hasText: "Choose a .txt, .md or .eml file" })).toBeVisible();
+  });
+
+  test("imports a WhatsApp chat export: latest messages, local times, no media", async ({ page }) => {
+    const email = testEmail("studio-whatsapp");
+    await completeLink(page, await acceptInvitation(page, email));
+    const ws = `(select workspace_id from public.workspace_members m join auth.users u on u.id = m.user_id where u.email = ${quote(email)})`;
+    sql(`update public.workspace_settings set time_zone = 'Asia/Kolkata' where workspace_id = ${ws}`);
+
+    // Synthetic Android export: an encryption notice, 54 messages (one is media) → newest 50 kept.
+    const lines = ["12/03/2026, 09:00 - Messages and calls are end-to-end encrypted. No one outside of this chat can read them."];
+    for (let i = 1; i <= 52; i++) lines.push(`12/03/2026, 09:${String(i).padStart(2, "0")} - ${i % 2 ? "Priya Shah" : "Ada Example"}: Update ${i}`);
+    lines.push("12/03/2026, 10:00 - Priya Shah: <Media omitted>");
+    lines.push("12/03/2026, 10:01 - Priya Shah: Could you send the revised deck by Friday?", "It's for the board.");
+    await page.goto("/app/studio");
+    await page.getByRole("tab", { name: "Upload file" }).click();
+    await page.getByLabel("File").setInputFiles({ name: "WhatsApp Chat with Priya Shah.txt", mimeType: "text/plain", buffer: Buffer.from(lines.join("\n")) });
+    await page.getByRole("button", { name: "Import conversation" }).click();
+
+    await expect(page.getByRole("heading", { level: 2, name: "WhatsApp chat with Priya Shah" })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "we imported the latest 50 messages. 3 older messages were left out." })).toBeVisible();
+    await expect(page.locator("#message-50")).toContainText("Could you send the revised deck by Friday?\nIt's for the board.", { useInnerText: true });
+    await expect(page.getByText("Media omitted")).toHaveCount(0);
+    expect(sql(`select count(*) from public.messages where workspace_id = ${ws}`)).toBe("50");
+    // 10:01 in India (UTC+5:30) is 04:31 UTC.
+    expect(sql(`select to_char(max(sent_at) at time zone 'UTC', 'YYYY-MM-DD HH24:MI') from public.messages where workspace_id = ${ws}`)).toBe("2026-03-12 04:31");
   });
 });
