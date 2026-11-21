@@ -62,7 +62,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
           () => setDone(false),
         );
       }}
-      className="h-9 shrink-0 rounded-md border border-ink-300 bg-white px-3 text-sm font-medium hover:bg-ink-100"
+      className="h-9 shrink-0 rounded-xl border border-ink-300 bg-white px-3 text-sm font-medium hover:bg-ink-100"
     >
       {done ? "Copied" : label}
     </button>
@@ -98,7 +98,7 @@ export function OperatorConsole({ view, statusFilter, counts, entries, invitatio
     <Link
       href={v === "waitlist" ? "/app/operator" : "/app/operator?view=invitations"}
       aria-current={view === v ? "page" : undefined}
-      className={`rounded-md px-3.5 py-2 text-sm font-medium ${view === v ? "bg-ink text-white" : "text-ink-700 hover:bg-ink-100"}`}
+      className={`rounded-xl px-3.5 py-2 text-sm font-medium ${view === v ? "bg-ink text-white" : "text-ink-700 hover:bg-ink-100"}`}
     >
       {label}
     </Link>
@@ -112,13 +112,13 @@ export function OperatorConsole({ view, statusFilter, counts, entries, invitatio
       </div>
 
       {error && (
-        <p role="alert" className="rounded-md border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
+        <p role="alert" className="rounded-xl border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
           {error}
         </p>
       )}
 
       {result?.ok && (
-        <section aria-live="polite" className="rounded-[10px] border border-ink-200 bg-white p-5">
+        <section aria-live="polite" className="cp-glass rounded-3xl p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="font-display text-2xl font-medium">
@@ -160,13 +160,13 @@ export function OperatorConsole({ view, statusFilter, counts, entries, invitatio
         </section>
       )}
       {result && !result.ok && (
-        <p role="alert" className="rounded-md border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
+        <p role="alert" className="rounded-xl border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
           {result.error}
         </p>
       )}
 
       {view === "waitlist" ? (
-        <section className="rounded-[10px] border border-ink-200 bg-white">
+        <section className="cp-glass rounded-3xl">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-200 p-4">
             <nav aria-label="Filter by status" className="flex flex-wrap gap-1.5">
               {(["pending", "invited", "declined", "all"] as const).map((s) => (
@@ -184,7 +184,7 @@ export function OperatorConsole({ view, statusFilter, counts, entries, invitatio
               type="button"
               onClick={invite}
               disabled={selected.length === 0 || pending}
-              className="h-10 rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-ink-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-10 rounded-xl bg-ink px-4 text-sm font-semibold text-white transition hover:bg-ink-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {pending ? "Working…" : `Invite selected (${selected.length})`}
             </button>
@@ -265,7 +265,7 @@ export function OperatorConsole({ view, statusFilter, counts, entries, invitatio
           )}
         </section>
       ) : (
-        <section className="rounded-[10px] border border-ink-200 bg-white">
+        <section className="cp-glass rounded-3xl">
           {invitations.length === 0 ? (
             <p className="p-10 text-center text-[15px] text-ink-700">No invitations yet. Invite people from the waitlist.</p>
           ) : (

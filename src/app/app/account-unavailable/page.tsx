@@ -25,7 +25,7 @@ async function Content() {
   if (result.status === "unauthenticated") redirect("/login");
   if (result.status === "authenticated") redirect("/app");
   return (
-    <section className="rounded-[10px] border border-ink-200 bg-white p-8">
+    <section className="cp-glass rounded-3xl p-8">
       <h1 className="font-display text-3xl font-medium tracking-tight text-ink">Your account isn&apos;t available</h1>
       <p className="mt-2 text-sm text-ink-700">
         This account has no active workspace — for example because its deletion was requested. Contact the ConvoPilot
@@ -33,7 +33,7 @@ async function Content() {
       </p>
       <form action={signOutAction} className="mt-6">
         <input type="hidden" name="scope" value="local" />
-        <button type="submit" className="rounded-md border border-ink-300 px-4 py-2 text-sm font-medium">
+        <button type="submit" className="rounded-xl border border-ink-300 px-4 py-2 text-sm font-medium">
           Sign out
         </button>
       </form>

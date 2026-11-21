@@ -1,30 +1,41 @@
 @import "tailwindcss";
 
-/* ConvoPilot brand v1.0 (docs/BRAND.md, docs/brand/tokens.css). */
+/*
+ * ConvoPilot brand v2.0 — "Aurora" (owner decision 2026-11-21; docs/BRAND.md §17).
+ * Soft moving light behind clean glass. The token NAMES are kept from v1 so every screen
+ * picks up the new palette: ink = text, paper = page, marker = the highlight, route = links.
+ */
 @theme {
-  --color-ink: #0E1B2C;
-  --color-ink-700: #2B3A4E;
-  --color-ink-500: #5B6B80;
-  --color-ink-300: #C5CDD8;
-  --color-ink-200: #DDE3EA;
-  --color-ink-100: #EDF0F4;
-  --color-paper: #F3F5F7;
-  --color-marker: #FFD23F;
-  --color-marker-100: #FFF1B8;
-  --color-route: #2450D3;
-  --color-route-50: #E8EEFC;
-  --color-success: #0F7B4A;
-  --color-success-50: #F0FAF4;
+  --color-ink: #17151F;
+  --color-ink-700: #3B3851;
+  --color-ink-500: #635F7C;
+  --color-ink-300: #D5D1E5;
+  --color-ink-200: #E7E4F1;
+  --color-ink-100: #F3F1F9;
+  --color-paper: #FBFAFE;
+  --color-marker: #E2D6FF;
+  --color-marker-100: #F1ECFF;
+  --color-route: #5B3FE0;
+  --color-route-50: #F1EDFF;
+  --color-success: #0E7A4A;
+  --color-success-50: #EEFAF3;
   --color-warning: #9A5B00;
-  --color-warning-50: #FFF8E6;
+  --color-warning-50: #FFF7E6;
   --color-error: #B42318;
   --color-error-50: #FDF3F2;
 
+  --color-aurora-lilac: #C9B6FF;
+  --color-aurora-peach: #FFC6A8;
+  --color-aurora-sky: #A9D4FF;
+  --color-aurora-mint: #B8F0D8;
+
   --font-sans: var(--font-instrument-sans), Inter, system-ui, sans-serif;
-  --font-display: var(--font-newsreader), "Source Serif 4", Georgia, serif;
+  --font-display: var(--font-instrument-sans), Inter, system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), Georgia, serif;
   --font-mono: var(--font-plex-mono), "JetBrains Mono", ui-monospace, monospace;
 
   --ease-brand: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 html {
@@ -41,46 +52,250 @@ body {
   outline-offset: 2px;
 }
 
-/* The Highlight: chisel-cut marker behind 1–3 key words. One per composition. */
+::selection {
+  background: var(--color-marker);
+}
+
+/* Display headings: Aurora uses tight, confident sans type. */
+.font-display {
+  letter-spacing: -0.035em;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ aurora light */
+/* A fixed field of soft, slowly drifting light behind the page. Purely decorative. */
+.cp-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--color-paper);
+}
+.cp-aurora > span {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: 0.55;
+  will-change: transform;
+}
+.cp-aurora > span:nth-child(1) {
+  width: 46vw; height: 46vw; left: -8vw; top: -14vw;
+  background: radial-gradient(circle at 30% 30%, var(--color-aurora-lilac), transparent 70%);
+  animation: cp-drift-a 26s ease-in-out infinite alternate;
+}
+.cp-aurora > span:nth-child(2) {
+  width: 40vw; height: 40vw; right: -10vw; top: -6vw;
+  background: radial-gradient(circle at 60% 40%, var(--color-aurora-peach), transparent 70%);
+  animation: cp-drift-b 30s ease-in-out infinite alternate;
+}
+.cp-aurora > span:nth-child(3) {
+  width: 38vw; height: 38vw; left: 28vw; top: 22vw;
+  background: radial-gradient(circle at 50% 50%, var(--color-aurora-sky), transparent 70%);
+  animation: cp-drift-c 34s ease-in-out infinite alternate;
+  opacity: 0.4;
+}
+.cp-aurora > span:nth-child(4) {
+  width: 30vw; height: 30vw; right: 6vw; top: 44vw;
+  background: radial-gradient(circle at 50% 50%, var(--color-aurora-mint), transparent 70%);
+  animation: cp-drift-a 38s ease-in-out infinite alternate-reverse;
+  opacity: 0.35;
+}
+/* Quieter inside the product, where the work is the focus. */
+.cp-aurora-quiet > span { opacity: 0.28; }
+
+@keyframes cp-drift-a { to { transform: translate3d(8vw, 6vw, 0) scale(1.12); } }
+@keyframes cp-drift-b { to { transform: translate3d(-10vw, 8vw, 0) scale(0.92); } }
+@keyframes cp-drift-c { to { transform: translate3d(-6vw, -8vw, 0) scale(1.18); } }
+
+/* Gradient text for one or two words per screen. */
+.cp-aurora-text {
+  background: linear-gradient(100deg, #7B5CFF 0%, #C064E8 45%, #FF8A65 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ------------------------------------------------------------------ glass */
+.cp-glass {
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 0 0 1px rgba(40, 30, 90, 0.05),
+    0 18px 40px -24px rgba(40, 30, 90, 0.28);
+}
+.cp-glass-strong {
+  background: rgba(255, 255, 255, 0.86);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 0 0 1px rgba(40, 30, 90, 0.06),
+    0 30px 60px -30px rgba(40, 30, 90, 0.35);
+}
+.cp-lift {
+  transition: transform 220ms var(--ease-brand), box-shadow 220ms var(--ease-brand);
+}
+.cp-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px rgba(40, 30, 90, 0.06), 0 24px 44px -24px rgba(40, 30, 90, 0.35);
+}
+
+/* ------------------------------------------------------------------ the highlight */
+/* The brand's gesture: the line that matters, highlighted (now in aurora light). */
 .cp-highlight {
   position: relative;
   z-index: 0;
   white-space: nowrap;
-  color: var(--color-ink);
 }
 .cp-highlight::before {
   content: "";
   position: absolute;
   z-index: -1;
-  inset: 0.42em -0.16em 0.04em -0.12em;
-  background: var(--color-marker);
+  inset: 0.5em -0.14em 0.06em -0.1em;
+  border-radius: 0.2em;
+  background: linear-gradient(90deg, var(--color-aurora-lilac), var(--color-aurora-peach));
+  opacity: 0.85;
   transform: skewX(-20deg) scaleX(var(--cp-hl, 1));
   transform-origin: left center;
-  transition: transform 480ms var(--ease-brand);
 }
 .cp-highlight-sweep::before {
-  animation: cp-sweep 700ms var(--ease-brand) 300ms both;
+  animation: cp-sweep 900ms var(--ease-brand) 500ms both;
 }
 @keyframes cp-sweep {
   from { transform: skewX(-20deg) scaleX(0); }
   to { transform: skewX(-20deg) scaleX(1); }
 }
 
-/* Small skewed marker chip (bullet / status mark). */
+/* Small skewed chip (bullet / status mark), same angle as the logo. */
 .cp-chisel {
   display: inline-block;
   width: 0.9em;
   height: 0.7em;
-  background: var(--color-marker);
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--color-aurora-lilac), var(--color-aurora-peach));
   transform: skewX(-20deg);
 }
+
+/* ------------------------------------------------------------------ motion */
+/* Entrances: content rises softly into place; .cp-d1…d6 stagger siblings. */
+@keyframes cp-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.cp-rise { animation: cp-rise 700ms var(--ease-brand) both; }
+.cp-d1 { animation-delay: 60ms; }
+.cp-d2 { animation-delay: 140ms; }
+.cp-d3 { animation-delay: 220ms; }
+.cp-d4 { animation-delay: 300ms; }
+.cp-d5 { animation-delay: 380ms; }
+.cp-d6 { animation-delay: 460ms; }
+
+/* Gentle hover for the hero preview. */
+@keyframes cp-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.cp-float { animation: cp-float 7s ease-in-out infinite; }
+
+/* AI is thinking: a light sweep across a placeholder, and three breathing dots. */
+@keyframes cp-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+.cp-shimmer {
+  background: linear-gradient(90deg, var(--color-ink-100) 0%, var(--color-marker-100) 40%, #fff 50%, var(--color-marker-100) 60%, var(--color-ink-100) 100%);
+  background-size: 200% 100%;
+  animation: cp-shimmer 1.6s linear infinite;
+}
+@keyframes cp-breathe {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; }
+  40% { transform: scale(1); opacity: 1; }
+}
+.cp-dots { display: inline-flex; gap: 4px; align-items: center; }
+.cp-dots > i {
+  width: 6px; height: 6px; border-radius: 9999px;
+  background: linear-gradient(90deg, #7B5CFF, #FF8A65);
+  animation: cp-breathe 1.2s ease-in-out infinite;
+}
+.cp-dots > i:nth-child(2) { animation-delay: 0.15s; }
+.cp-dots > i:nth-child(3) { animation-delay: 0.3s; }
+
+/* Something was confirmed: a springy pop and a check mark that draws itself. */
+@keyframes cp-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.cp-pop { animation: cp-pop 520ms var(--ease-spring) both; }
+@keyframes cp-draw { from { stroke-dashoffset: 30; } to { stroke-dashoffset: 0; } }
+.cp-check path {
+  stroke-dasharray: 30;
+  animation: cp-draw 520ms var(--ease-brand) 120ms both;
+}
+
+/* A task is done: the line strikes through from left to right. */
+@keyframes cp-strike { from { background-size: 0% 1.5px; } to { background-size: 100% 1.5px; } }
+.cp-strike {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: left 55%;
+  background-size: 100% 1.5px;
+  animation: cp-strike 450ms var(--ease-brand) both;
+}
+
+/* Messages slide in from above. */
+@keyframes cp-toast {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+.cp-toast { animation: cp-toast 320ms var(--ease-brand) both; }
+
+/* A small burst of light for big moments (joined the waitlist, first approval). */
+@keyframes cp-spark {
+  0% { transform: translate(0, 0) scale(0.4); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(var(--x), var(--y)) scale(1); opacity: 0; }
+}
+.cp-sparks { position: absolute; inset: 0; pointer-events: none; }
+.cp-sparks > i {
+  position: absolute; left: 50%; top: 50%;
+  width: 7px; height: 7px; border-radius: 2px;
+  animation: cp-spark 900ms var(--ease-brand) both;
+}
+
+/* Sign-up progress: the bar fills to the current step and finished steps tick. */
+@keyframes cp-fill { from { width: 0; } }
+.cp-progress-bar { width: var(--to); animation: cp-fill 900ms var(--ease-brand) 350ms both; }
+
+/* The check-your-email envelope: the letter rises out and settles. */
+@keyframes cp-letter {
+  0% { transform: translateY(12px); opacity: 0; }
+  60% { transform: translateY(-10px); opacity: 1; }
+  100% { transform: translateY(-6px); }
+}
+.cp-letter { animation: cp-letter 1100ms var(--ease-spring) 300ms both; }
+@keyframes cp-ring {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.cp-ring { animation: cp-ring 2.4s ease-out infinite; }
+
+/* Buttons nudge their arrow on hover. */
+.cp-arrow { transition: transform 200ms var(--ease-brand); }
+a:hover .cp-arrow, button:hover .cp-arrow { transform: translateX(3px); }
+
+/* FAQ disclosure. */
+details > summary { list-style: none; cursor: pointer; }
+details > summary::-webkit-details-marker { display: none; }
+details .cp-plus { transition: transform 260ms var(--ease-brand); }
+details[open] .cp-plus { transform: rotate(45deg); }
+details[open] .cp-answer { animation: cp-toast 320ms var(--ease-brand) both; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
-}
-
-@keyframes cp-rise {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
-  to { opacity: 1; transform: none; }
+  .cp-highlight::before { transform: skewX(-20deg); }
 }

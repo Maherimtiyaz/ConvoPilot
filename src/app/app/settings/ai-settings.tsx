@@ -6,13 +6,13 @@ import type { WritingStyle } from "@/lib/ai/workflows/draft-reply";
 
 import { saveStyleAction, setAiConsentAction, type ActionState } from "../studio/actions";
 
-const field = "block w-full rounded-md border border-ink-300 bg-white px-3 py-2 text-[15px]";
+const field = "block w-full rounded-xl border border-ink-300 bg-white px-3 py-2 text-[15px]";
 const initial: ActionState = { error: null };
 
 export function AiConsentToggle({ optIn, configured }: { optIn: boolean; configured: boolean }) {
   const [pending, start] = useTransition();
   return (
-    <section className="rounded-[10px] border border-ink-200 bg-white p-6">
+    <section className="cp-glass rounded-3xl p-6">
       <h2 className="text-base font-semibold text-ink">AI processing</h2>
       <p className="mt-1 text-sm leading-relaxed text-ink-700">
         When on, the conversations you choose to analyse or reply to are sent to Anthropic (Claude) for processing, only when you press Analyse or Draft. Turning it off stops all AI processing; your conversations stay saved.
@@ -24,7 +24,7 @@ export function AiConsentToggle({ optIn, configured }: { optIn: boolean; configu
           type="button"
           disabled={pending}
           onClick={() => start(async () => void (await setAiConsentAction(!optIn)))}
-          className="h-10 rounded-md border border-ink-300 bg-white px-4 font-medium hover:bg-ink-100"
+          className="h-10 rounded-xl border border-ink-300 bg-white px-4 font-medium hover:bg-ink-100"
         >
           {optIn ? "Turn off AI processing" : "Allow AI processing"}
         </button>
@@ -36,7 +36,7 @@ export function AiConsentToggle({ optIn, configured }: { optIn: boolean; configu
 export function StyleForm({ style }: { style: WritingStyle }) {
   const [state, formAction, pending] = useActionState(saveStyleAction, initial);
   return (
-    <section className="rounded-[10px] border border-ink-200 bg-white p-6">
+    <section className="cp-glass rounded-3xl p-6">
       <h2 className="text-base font-semibold text-ink">Your writing style</h2>
       <p className="mt-1 text-sm text-ink-700">Drafts follow these preferences. Only what you write here is used.</p>
       <form action={formAction} className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -65,7 +65,7 @@ export function StyleForm({ style }: { style: WritingStyle }) {
           <textarea name="sample" defaultValue={style.sample} maxLength={3000} rows={4} className={field} />
         </label>
         <div className="flex items-center gap-3 sm:col-span-2">
-          <button type="submit" disabled={pending} className="h-10 rounded-md bg-ink px-4 text-sm font-semibold text-white hover:bg-ink-700">
+          <button type="submit" disabled={pending} className="h-10 rounded-xl bg-ink px-4 text-sm font-semibold text-white hover:bg-ink-700">
             {pending ? "Saving…" : "Save style"}
           </button>
           {state.saved && <span role="status" className="text-sm text-success">Saved</span>}

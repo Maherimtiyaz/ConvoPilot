@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { confirmEmailLinkAction, type FormMessage } from "@/app/auth/actions";
-import { buttonClass, ErrorNotice } from "@/components/ui";
+import { ErrorNotice, Thinking, buttonClass } from "@/components/ui";
 import { useFragmentToken } from "@/components/use-fragment-token";
 
 const initial: FormMessage = { error: null };
@@ -31,7 +31,7 @@ export function ConfirmForm() {
       <input type="hidden" name="tokenHash" value={link.token} />
       <p>Press continue to finish signing in on this device.</p>
       <button type="submit" disabled={pending} className={buttonClass}>
-        {pending ? "Signing in…" : "Continue"}
+        {pending ? <Thinking label="Signing in…" /> : <>Continue <span className="cp-arrow" aria-hidden="true">→</span></>}
       </button>
     </form>
   );

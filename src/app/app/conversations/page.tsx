@@ -42,7 +42,7 @@ async function Conversations({ ctx, searchParams }: { ctx: RequestContext; searc
   return (
     <div className="space-y-6">
       <AskHistory />
-      <section aria-labelledby="search-heading" className="rounded-[10px] border border-ink-200 bg-white p-5">
+      <section aria-labelledby="search-heading" className="cp-glass rounded-3xl p-5">
         <h2 id="search-heading" className="font-semibold">
           Search messages
         </h2>
@@ -50,8 +50,8 @@ async function Conversations({ ctx, searchParams }: { ctx: RequestContext; searc
           <label htmlFor="message-search" className="sr-only">
             Search messages
           </label>
-          <input id="message-search" name="q" defaultValue={q} maxLength={200} placeholder="Keywords, e.g. deck Friday" className="h-10 min-w-0 flex-1 rounded-md border border-ink-300 px-3" />
-          <button type="submit" className="h-10 rounded-md border border-ink-300 bg-white px-4 text-sm font-medium hover:bg-ink-100">
+          <input id="message-search" name="q" defaultValue={q} maxLength={200} placeholder="Keywords, e.g. deck Friday" className="h-10 min-w-0 flex-1 rounded-xl border border-ink-300 px-3" />
+          <button type="submit" className="h-10 rounded-xl border border-ink-300 bg-white px-4 text-sm font-medium hover:bg-ink-100">
             Search
           </button>
         </form>
@@ -81,7 +81,7 @@ async function Conversations({ ctx, searchParams }: { ctx: RequestContext; searc
       {conversations.length === 0 ? (
         <EmptyState heading="No conversations yet" body="Import a thread in Communication Studio and it will appear here." milestone="Paste or upload .txt, .md or .eml" />
       ) : (
-        <section aria-labelledby="all-heading" className="rounded-[10px] border border-ink-200 bg-white p-5">
+        <section aria-labelledby="all-heading" className="cp-glass rounded-3xl p-5">
           <h2 id="all-heading" className="font-semibold">
             All conversations
           </h2>

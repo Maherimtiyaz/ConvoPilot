@@ -12,7 +12,7 @@ export function AskHistory({ defaultQuestion = "", heading = "Ask your history" 
   const [pending, start] = useTransition();
 
   return (
-    <section aria-labelledby="ask-heading" className="rounded-[10px] border border-ink-200 bg-white p-5">
+    <section aria-labelledby="ask-heading" className="cp-glass rounded-3xl p-5">
       <h2 id="ask-heading" className="font-display text-2xl font-medium">
         {heading}
       </h2>
@@ -33,9 +33,9 @@ export function AskHistory({ defaultQuestion = "", heading = "Ask your history" 
           onChange={(e) => setQuestion(e.target.value)}
           maxLength={500}
           placeholder="e.g. What did I discuss with Priya?"
-          className="h-11 min-w-0 flex-1 rounded-md border border-ink-300 px-3 text-[15px]"
+          className="h-11 min-w-0 flex-1 rounded-xl border border-ink-300 px-3 text-[15px]"
         />
-        <button type="submit" disabled={pending || question.trim().length < 3} className="h-11 rounded-md bg-ink px-5 text-sm font-semibold text-white hover:bg-ink-700 disabled:opacity-50">
+        <button type="submit" disabled={pending || question.trim().length < 3} className="h-11 rounded-xl bg-ink px-5 text-sm font-semibold text-white hover:bg-ink-700 disabled:opacity-50">
           {pending ? "Looking…" : "Ask"}
         </button>
       </form>
@@ -45,7 +45,7 @@ export function AskHistory({ defaultQuestion = "", heading = "Ask your history" 
             <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{result.answer}</p>
             <ul className="space-y-2">
               {result.citations.map((c, i) => (
-                <li key={i} className="rounded-[2px] bg-ink-100 px-3 py-2 text-sm">
+                <li key={i} className="rounded-md bg-ink-100 px-3 py-2 text-sm">
                   <Link href={`/app/studio?c=${c.conversationId}#message-${c.position}`} className="font-medium text-route hover:underline">
                     {c.subject} · message [{c.position}]
                   </Link>
@@ -62,7 +62,7 @@ export function AskHistory({ defaultQuestion = "", heading = "Ask your history" 
         {result?.status === "no_record" && <p className="text-[15px] text-ink-700">No record of that in your conversations.</p>}
         {result?.status === "incomplete" && <p className="text-[15px] text-ink-700">That needed more digging than one question allows. Try asking something more specific.</p>}
         {result?.status === "error" && (
-          <p role="alert" className="rounded-md border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
+          <p role="alert" className="rounded-xl border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
             {result.message}
           </p>
         )}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
 
-import { buttonClass, ErrorNotice, inputClass } from "@/components/ui";
+import { buttonClass, ErrorNotice, inputClass, Sparks, Thinking } from "@/components/ui";
 import { WAITLIST_COMPANY_SIZES, WAITLIST_ROLES } from "@/lib/validation/waitlist";
 
 import { joinWaitlistAction, type WaitlistState } from "./waitlist-actions";
@@ -27,9 +27,17 @@ export function WaitlistForm() {
 
   if (state.status === "joined") {
     return (
-      <div role="status" className="rounded-2xl border border-success/30 bg-success-50 p-6 text-ink">
-        <h3 className="font-semibold">You&apos;re on the list.</h3>
-        <p className="mt-1 text-sm">
+      <div role="status" className="cp-toast relative py-6 text-center text-ink">
+        <span className="relative mx-auto grid h-16 w-16 place-items-center">
+          <Sparks />
+          <span className="cp-pop grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-[#7B5CFF] to-[#FF8A65] text-white shadow-[0_14px_30px_-12px_rgba(91,63,224,0.7)]">
+            <svg viewBox="0 0 16 16" width="28" height="28" className="cp-check" aria-hidden="true">
+              <path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        </span>
+        <h3 className="mt-6 font-display text-2xl">You&apos;re on the list.</h3>
+        <p className="mx-auto mt-2 max-w-sm text-[15px] leading-relaxed text-ink-700">
           Thanks! We&apos;re inviting people in small groups. If you&apos;re picked, you&apos;ll get a personal invitation
           link by email.
         </p>
@@ -118,7 +126,7 @@ export function WaitlistForm() {
         <FieldError id="consent-error" message={errors.consent} />
       </div>
       <button type="submit" disabled={pending} className={buttonClass}>
-        {pending ? "Joining…" : "Request early access"}
+        {pending ? <Thinking label="Joining…" /> : <>Request early access <span className="cp-arrow" aria-hidden="true">→</span></>}
       </button>
     </form>
   );

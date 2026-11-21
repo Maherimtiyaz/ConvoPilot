@@ -27,7 +27,7 @@ export default function OperatorPage({ searchParams }: PageProps<"/app/operator"
 async function Console({ searchParams }: { searchParams: PageProps<"/app/operator">["searchParams"] }) {
   if (!(await isOperator())) {
     return (
-      <section className="rounded-[10px] border border-ink-200 bg-white p-8">
+      <section className="cp-glass rounded-3xl p-8">
         <h2 className="font-display text-2xl font-medium">Operators only</h2>
         <p className="mt-2 text-[15px] text-ink-700">This area is for the ConvoPilot team. Your account doesn&apos;t have access.</p>
       </section>

@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Sign in" };
 
 export default function LoginPage() {
   return (
-    <AuthCard title="Sign in to ConvoPilot">
+    <AuthCard title="Sign in to ConvoPilot" step={1}>
       <p>We&apos;ll email you a secure sign-in link. No password needed.</p>
       <LoginForm />
       <p className="text-xs text-ink-500">

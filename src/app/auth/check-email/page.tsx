@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { AuthCard } from "@/components/ui";
+import { AuthCard, EnvelopeArt } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Check your email" };
 
 export default function CheckEmailPage() {
   return (
-    <AuthCard title="Check your email">
+    <AuthCard title="Check your email" step={2} art={<EnvelopeArt />}>
       <p>If that address can sign in to ConvoPilot, we&apos;ve sent it a link. It works once and expires in 30 minutes.</p>
       <p>Open the link on any device and press <strong>Continue</strong> to sign in.</p>
       <p className="text-xs text-ink-500">

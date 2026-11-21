@@ -19,11 +19,13 @@ export function ProtectedPage({ title, description, children, wide = false }: Pr
   return (
     <div className={`mx-auto ${wide ? "max-w-7xl" : "max-w-4xl"}`}>
       <header className="mb-8">
-        <h1 className="font-display text-4xl font-medium tracking-tight text-ink">{title}</h1>
-        <p className="mt-1 text-sm text-ink-700">{description}</p>
+        <h1 className="cp-rise font-display text-4xl text-ink sm:text-[2.75rem]">{title}</h1>
+        <p className="cp-rise cp-d1 mt-2 text-[15px] text-ink-700">{description}</p>
       </header>
       <Suspense fallback={<LoadingState />}>
-        <Verified>{children}</Verified>
+        <div className="cp-rise cp-d2">
+          <Verified>{children}</Verified>
+        </div>
       </Suspense>
     </div>
   );
@@ -36,20 +38,24 @@ async function Verified({ children }: { children: (context: RequestContext) => R
 
 export function LoadingState() {
   return (
-    <div role="status" aria-live="polite" className="animate-pulse rounded-[10px] border border-ink-200 bg-white p-8 text-sm text-ink-500">
-      Loading…
+    <div role="status" aria-live="polite" className="cp-glass space-y-4 rounded-3xl p-8">
+      <span className="sr-only">Loading…</span>
+      <div className="cp-shimmer h-5 w-1/3 rounded-full" aria-hidden="true" />
+      <div className="cp-shimmer h-4 w-full rounded-full" aria-hidden="true" />
+      <div className="cp-shimmer h-4 w-5/6 rounded-full" aria-hidden="true" />
+      <div className="cp-shimmer h-4 w-2/3 rounded-full" aria-hidden="true" />
     </div>
   );
 }
 
 export function EmptyState({ heading, body, milestone }: { heading: string; body: string; milestone: string }) {
   return (
-    <section className="rounded-2xl border border-dashed border-ink-300 bg-white px-6 py-12 text-center">
+    <section className="cp-glass rounded-3xl px-6 py-14 text-center">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/brand/pattern-quotes-ink.svg" alt="" width={60} height={40} className="mx-auto h-8 w-auto opacity-20" />
-      <h2 className="mt-4 font-display text-2xl font-medium text-ink">{heading}</h2>
+      <h2 className="mt-4 font-display text-2xl text-ink">{heading}</h2>
       <p className="mx-auto mt-2 max-w-md text-[15px] leading-relaxed text-ink-700">{body}</p>
-      <p className="mt-5 inline-flex items-center gap-2 rounded-[2px] bg-ink-100 px-2.5 py-1 font-mono text-xs text-ink-700">
+      <p className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/80 px-3.5 py-1.5 text-xs font-medium text-ink-700">
         <span className="cp-chisel" aria-hidden="true" />
         {milestone}
       </p>

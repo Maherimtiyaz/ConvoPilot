@@ -21,8 +21,8 @@ from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont
 
-INK = "#0E1B2C"
-MARKER = "#FFD23F"
+INK = "#17151F"  # v2 Aurora (was #0E1B2C)
+MARKER = "url(#cpAurora)"  # v2 Aurora gradient; build output is post-processed with the <defs> (see docs/BRAND.md §17)
 PAPER = "#F3F5F7"
 WHITE = "#FFFFFF"
 LEAN = 0.36  # brand angle: horizontal offset per unit of height (~20 degrees)

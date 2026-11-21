@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 
 import { requestLoginLinkAction, type FormMessage } from "@/app/auth/actions";
-import { buttonClass, ErrorNotice, inputClass } from "@/components/ui";
+import { ErrorNotice, Thinking, buttonClass, inputClass } from "@/components/ui";
 
 const initial: FormMessage = { error: null };
 
@@ -19,7 +19,7 @@ export function LoginForm() {
         <input id="email" name="email" type="email" autoComplete="email" required maxLength={320} className={inputClass} />
       </div>
       <button type="submit" disabled={pending} className={buttonClass}>
-        {pending ? "Sending…" : "Email me a sign-in link"}
+        {pending ? <Thinking label="Sending…" /> : <>Email me a sign-in link <span className="cp-arrow" aria-hidden="true">→</span></>}
       </button>
     </form>
   );

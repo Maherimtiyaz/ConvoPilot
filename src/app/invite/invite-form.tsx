@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { requestInvitationSignupAction, type FormMessage } from "@/app/auth/actions";
-import { buttonClass, ErrorNotice, inputClass } from "@/components/ui";
+import { ErrorNotice, Thinking, buttonClass, inputClass } from "@/components/ui";
 import { useFragmentToken } from "@/components/use-fragment-token";
 
 const initial: FormMessage = { error: null };
@@ -38,7 +38,7 @@ export function InviteForm() {
         <input id="email" name="email" type="email" autoComplete="email" required maxLength={320} className={inputClass} />
       </div>
       <button type="submit" disabled={pending} className={buttonClass}>
-        {pending ? "Sending…" : "Create my account"}
+        {pending ? <Thinking label="Sending…" /> : <>Create my account <span className="cp-arrow" aria-hidden="true">→</span></>}
       </button>
     </form>
   );

@@ -1,5 +1,8 @@
 # ConvoPilot — Brand Identity System v1.0
 
+> **v2.0 "Aurora" is current (owner decision 2026-11-21).** It replaces the v1.0 colour, type and motion choices below; the name, logo shape, voice and messaging are unchanged. See §17. v1.0 sections are kept for history.
+
+
 > **Status:** v1.0 **approved by the owner** (2026-11-17), name ConvoPilot. Applied to the app. The visual version is the
 > "ConvoPilot Brand Bible" canvas (claude.ai artifact, owner-private). Vector logo files:
 > `public/brand/` (built by `scripts/brand/build_logo.py`). Tokens: `docs/brand/tokens.json` and
@@ -392,3 +395,46 @@ Calm and purposeful: things are underlined, quoted and connected. Ease `cubic-be
 160 ms for controls, 280 ms for cards, 480 ms for highlights. No bounce, spin or parallax. Every
 animation is decorative-only, has a complete resting state, and is disabled under
 `prefers-reduced-motion`; anything that loops longer than 5 s can be paused.
+
+
+## 17. v2.0 "Aurora" (current — owner decision 2026-11-21)
+
+The owner asked for a far more striking, minimal, animated UI (references named: Anthropic, Wispr
+Flow), rejected three static directions, then chose **Aurora glow** and **keep the logo shape,
+recolor it**. Inspired by those products' calm and polish; no layout, asset or styling copied.
+
+**Idea.** Soft, slowly moving light behind clean frosted glass: calm, airy, quietly alive.
+
+**Palette** (tokens in `src/app/globals.css`; v1 token names kept so every screen follows):
+
+| Token | Value | Use |
+| --- | --- | --- |
+| ink | `#17151F` (700 `#3B3851`, 500 `#635F7C`, 300 `#D5D1E5`, 200 `#E7E4F1`, 100 `#F3F1F9`) | Text, primary buttons |
+| paper | `#FBFAFE` | Page |
+| marker / marker-100 | `#E2D6FF` / `#F1ECFF` | Highlights, selection |
+| route | `#5B3FE0` | Links, focus ring |
+| aurora lilac · peach · sky · mint | `#C9B6FF` · `#FFC6A8` · `#A9D4FF` · `#B8F0D8` | Moving light, gradients |
+| gradient text | `#7B5CFF → #C064E8 → #FF8A65` | One or two words per screen ("slips.") |
+
+**Logo.** Same geometry; the parallelogram is now a lilac→peach gradient (`#B9A2FF → #E6A6E8 →
+#FFB892`), quotes in ink `#17151F`. All files in `public/brand/` and `src/app/icon.svg` updated.
+
+**Type.** Instrument Sans for everything, headings 600 with tight tracking (−0.035em); IBM Plex
+Mono for small labels; Newsreader kept as `font-serif` for occasional editorial use.
+
+**Surfaces.** `cp-glass` / `cp-glass-strong` (translucent white, blur, hairline, soft violet
+shadow), large radii (24–28 px cards, pill buttons), `cp-lift` hover.
+
+**Motion catalogue** (all CSS; all off under `prefers-reduced-motion`):
+- Aurora light drifts (26–38 s loops); hero preview floats; content rises in with blur (`cp-rise`,
+  staggered `cp-d1…d6`) on every page.
+- Sign-up: 4-step progress ("Your email → Check inbox → Continue → You're in") that fills and ticks;
+  envelope with a rising letter on "Check your email"; thinking dots on every pending button; a
+  welcome moment with a light burst and three getting-started cards on the first Dashboard visit.
+- Waitlist success: drawn check in a gradient circle with a burst of light.
+- Product: shimmer placeholders while loading; breathing dots while the AI works; "Confirmed"
+  pops with a drawn check; finished tasks strike through left to right; messages slide in; FAQ
+  answers ease open; buttons lift on hover and press in on click; arrows nudge.
+
+**Not yet updated to v2:** `docs/brand/tokens.json` / `tokens.css` and the brand-bible artifact
+(tracked in WORKLOG).
