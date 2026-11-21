@@ -106,7 +106,7 @@ Append-only `audit_events` (DATABASE §10):
 
 ### 10.1 Mandatory controls (Required)
 
-- Accepted formats: pasted text, `.txt`, `.md`, `.eml`. Everything else is rejected.
+- Accepted formats: pasted text, `.txt`, `.md`, `.eml`. Everything else is rejected. WhatsApp chat exports are `.txt` (or pasted text) and go through the same checks; sender names come from the file and are untrusted text like any other content.
 - Validation: the extension must be in the allow-list; the browser-supplied MIME type is untrusted and used only to reject obvious mismatches; content must decode as text (UTF-8 or the declared charset), contain no NUL bytes, and `.eml` must parse as an RFC 5322 message. Failures return a typed error.
 - Size limits are enforced server-side before parsing (values in §10.2), for both uploads and pasted text.
 - `.eml`: MIME parsed server-side; use the `text/plain` part, else convert `text/html` to plain text. Original HTML is not stored.

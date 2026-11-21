@@ -37,13 +37,13 @@ small-startup operators.
 **v0.1 scope — five screens + Settings shell:** Dashboard · Communication Studio (paste/import a
 thread, analysis, reply in the user's style, drafts) · Contacts · Conversations · Tasks.
 
-**v0.1 acceptance criteria:** paste/import a thread (`.txt`/`.md`/`.eml`); intent, main points and
+**v0.1 acceptance criteria:** paste/import a thread (`.txt`/`.md`/`.eml`, plus WhatsApp chat exports); intent, main points and
 expected response with cited messages; reply drafts in the user's confirmed style; edit/save/copy
 drafts; save sender as contact; retrieve conversations; ask “what did I discuss with X?” with cited
 answers or “no record”; propose commitments/tasks that need approval; never invent commitments;
 no send capability; other users cannot see or change my data.
 
-**Not in v0.1:** daily briefing (M6), Gmail/Calendar (M7), meetings, Slack/Discord, voice, desktop,
+**Not in v0.1:** daily briefing (M6), Gmail/Calendar (M7), WhatsApp assistant (M7W), meetings, Slack/Discord, voice, desktop,
 networking, billing, any sending of messages.
 
 **Product decisions (locked/approved):** local-first development; provider-agnostic AI; manual
@@ -158,6 +158,8 @@ cost** and **email deliverability**, not the database.
 | M5 | Commitments/Tasks proposed by AI, approved by the user; Dashboard | ✅ built and tested (mock AI in tests) |
 | — | v0.1 acceptance: security review + fixes, scenario coverage, account export/deletion, evaluation harness (`docs/ACCEPTANCE.md`) | 🟡 done locally; gates left: real-AI eval (key), hosted setup, privacy review → early access for ~1,000 users |
 | P1 | Pre-launch: 30-day retention, restore (Recently deleted), permanent erasure job, operator account restore, time zone | ✅ built and tested |
+| W2 | WhatsApp chat import (Export chat `.txt`, pasted or uploaded) | ✅ built and tested |
+| M7W | WhatsApp assistant on its own number (`docs/WHATSAPP.md`) | ⬜ after early access; needs owner approval + Meta Business account |
 | M6–M8 | Briefing, Gmail/Calendar, production hardening & scale | ⬜ |
 
 ## 10. M1.4 — login experience and protected shell

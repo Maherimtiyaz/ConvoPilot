@@ -86,6 +86,12 @@ async function Studio({ ctx, searchParams }: { ctx: RequestContext; searchParams
             You&apos;d already imported this conversation, so we opened the existing copy.
           </p>
         )}
+        {detail && typeof params.older === "string" && /^[1-9]\d{0,5}$/.test(params.older) && (
+          <p role="status" className="mb-4 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700">
+            This chat is long, so we imported the latest {detail.messages.length} messages. {params.older} older{" "}
+            {params.older === "1" ? "message was" : "messages were"} left out.
+          </p>
+        )}
         {detail ? (
           <ConversationView
             key={detail.conversation.id}

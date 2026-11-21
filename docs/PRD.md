@@ -40,11 +40,11 @@ Five screens (plus a Settings shell):
 4. **Conversations** — stored threads, searchable, linked to contacts.
 5. **Tasks** — tasks and commitments, including AI proposals awaiting approval.
 
-Out of scope for v0.1: daily briefing (planned for M6, after v0.1 acceptance), Gmail/Calendar sync, meetings and meeting preparation, Slack/Discord/Outlook, voice, desktop app, networking, investor CRM, team collaboration features, billing, any sending of messages.
+Out of scope for v0.1: daily briefing (planned for M6, after v0.1 acceptance), the WhatsApp assistant (`docs/WHATSAPP.md`, after early access), Gmail/Calendar sync, meetings and meeting preparation, Slack/Discord/Outlook, voice, desktop app, networking, investor CRM, team collaboration features, billing, any sending of messages.
 
 ## 5. Acceptance criteria (v0.1)
 
-- [ ] I can paste a complete email thread (or import a `.txt`/`.md`/`.eml` file).
+- [ ] I can paste a complete email thread (or import a `.txt`/`.md`/`.eml` file). WhatsApp "Export chat" text is also accepted (owner decision 2026-11-21).
 - [ ] The system identifies the thread's intent, main points and expected response, citing the messages it relied on.
 - [ ] It produces a reply draft in my style (using only style preferences I confirmed).
 - [ ] I can edit and save that reply as a draft, and copy it.
@@ -60,6 +60,7 @@ Out of scope for v0.1: daily briefing (planned for M6, after v0.1 acceptance), G
 
 ### FR-1 Communication Studio
 - Paste an email or full thread, or upload a file (formats and limits: `SECURITY.md` §10); optional "intended outcome" field.
+- WhatsApp chats: the user exports a chat from WhatsApp ("Export chat → Without media") and uploads or pastes the `.txt`. Recognised automatically; times read in the workspace time zone; long chats keep the newest 50 messages and say how many were left out; media placeholders and system notices are dropped. WhatsApp offers no API to read a person's own chats, so manual export is the only supported route.
 - Structured analysis: intent, main points, expected response, urgency, risks, with citations.
 - Reply generation with tone (direct/warm/formal) and length controls.
 - Draft persistence with revisions; copy to clipboard. No sending.

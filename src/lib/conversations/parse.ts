@@ -1,5 +1,8 @@
+import { isWhatsAppExport, parseWhatsAppText, whatsAppSubject } from "./whatsapp";
+
 /**
  * Turns pasted text or an uploaded .txt / .md / .eml file into an ordered list of messages.
+ * WhatsApp "Export chat" text (pasted or as .txt) is recognised automatically (./whatsapp.ts).
  * Pure and dependency-free. Imported content is untrusted DATA: it is never executed, rendered as
  * HTML or followed as instructions. Limits (engineering defaults, ARCHITECTURE pending item):
  * 200,000 characters per import, 50 messages, 50,000 characters per message, 750 KB per file.
@@ -16,6 +19,10 @@ export interface ParsedMessage {
 export interface ParsedThread {
   subject: string | null;
   messages: ParsedMessage[]; // oldest first
+  /** WhatsApp exports: `sentAt` is the phone's wall-clock time without a zone (convert before storing). */
+  localTimes?: boolean;
+  /** WhatsApp exports keep the newest messages; this many older ones were left out. */
+  omittedOlder?: number;
 }
 
 export type ParseError = "empty" | "too_long" | "too_many_messages" | "unsupported_file" | "file_too_large" | "invalid_text";
@@ -29,13 +36,20 @@ const hasNul = (text: string) => text.includes("\u0000");
 export function parsePastedText(text: string): ParseResult {
   if (text.length > LIMITS.maxChars) return { ok: false, error: "too_long" };
   if (hasNul(text)) return { ok: false, error: "invalid_text" };
-  return finish(splitThread(normaliseNewlines(text)), null);
+  const normalised = normaliseNewlines(text);
+  if (isWhatsAppExport(normalised)) return finishWhatsApp(parseWhatsAppText(normalised), null);
+  return finish(splitThread(normalised), null);
 }
 
 export function parseFile(name: string, bytes: Uint8Array): ParseResult {
   if (bytes.byteLength > LIMITS.maxFileBytes) return { ok: false, error: "file_too_large" };
   const ext = name.toLowerCase().split(".").pop();
-  if (ext === "txt" || ext === "md") return parsePastedText(decode(bytes, "utf-8"));
+  if (ext === "txt" || ext === "md") {
+    const text = normaliseNewlines(decode(bytes, "utf-8"));
+    // WhatsApp exports are often longer than a pasted thread; the 750 KB file limit still applies.
+    if (!hasNul(text) && isWhatsAppExport(text)) return finishWhatsApp(parseWhatsAppText(text), whatsAppSubject(name));
+    return parsePastedText(text);
+  }
   if (ext === "eml") {
     const raw = decode(bytes, "utf-8");
     if (raw.length > LIMITS.maxChars * 2) return { ok: false, error: "too_long" };
@@ -68,6 +82,18 @@ function finish(messages: ParsedMessage[], subject: string | null): ParseResult 
   if (cleaned.length > LIMITS.maxMessages) return { ok: false, error: "too_many_messages" };
   if (cleaned.some((m) => m.body.length > LIMITS.maxMessageChars)) return { ok: false, error: "too_long" };
   return { ok: true, thread: { subject, messages: cleaned } };
+}
+
+/** Keeps the newest messages of a long chat, then applies the usual size limits. */
+function finishWhatsApp(messages: ParsedMessage[], subject: string | null): ParseResult {
+  if (messages.length === 0) return { ok: false, error: "empty" };
+  const kept = messages.slice(-LIMITS.maxMessages);
+  if (kept.some((m) => m.body.length > LIMITS.maxMessageChars)) return { ok: false, error: "too_long" };
+  if (kept.reduce((n, m) => n + m.body.length, 0) > LIMITS.maxChars) return { ok: false, error: "too_long" };
+  // iPhone exports are named "_chat.txt", so fall back to the people in the chat.
+  const people = [...new Set(kept.map((m) => m.senderName).filter((n): n is string => Boolean(n)))];
+  const fallback = people.length ? `WhatsApp chat: ${people.slice(0, 3).join(", ")}${people.length > 3 ? "…" : ""}` : "WhatsApp chat";
+  return { ok: true, thread: { subject: subject ?? fallback.slice(0, 300), messages: kept, localTimes: true, omittedOlder: messages.length - kept.length } };
 }
 
 // ---------------------------------------------------------------- thread splitting
