@@ -438,3 +438,40 @@ shadow), large radii (24–28 px cards, pill buttons), `cp-lift` hover.
 
 **Not yet updated to v2:** `docs/brand/tokens.json` / `tokens.css` and the brand-bible artifact
 (tracked in WORKLOG).
+
+## 18. v2.1 light "Orbit" / dark "Signal" + Showcase sections (owner decision 2026-11-21)
+
+From a second round of ideas based on the owner's reference images, the owner chose **Idea 1
+"Orbit" for light mode, Idea 2 "Signal" for dark mode, and Idea 3 "Showcase" inside the landing
+page**. Aurora (§17) stays the base. Inspired by the references' mood; no layout or asset copied.
+
+**Theme switch.** A `dark` class on `<html>` (Tailwind `dark:` variant). A tiny script in
+`<head>` applies the saved choice, or the device setting when nothing is saved, before the first
+paint (no flash). The switch (moon/sun button) sits in the landing header and the app sidebar;
+the choice is kept in this browser only (`localStorage` key `cp-theme`). Sign-in pages follow it.
+
+**Dark palette** (same token names, overridden under `.dark`, so every screen follows):
+
+| Token | Dark value |
+| --- | --- |
+| ink (700 · 500 · 300 · 200 · 100) | `#F4F2FA` (`#CFC8E6` · `#A29CBD` · `#3A3550` · `#2A2640` · `#1B1828`) |
+| paper | `#08070C` |
+| white (surfaces) | `#15121F` — so light cards become dark glass and ink buttons become light pills |
+| marker / marker-100 | `#3E2F75` / `#241C40` |
+| route | `#C9B6FF` |
+| success · warning · error | `#5FD39A` · `#F2B35C` · `#FF8A80` (with dark tinted backgrounds) |
+
+**Landing heroes** (`src/app/landing-heroes.tsx`; both in the page, CSS shows one):
+- *Orbit (light):* "Nothing important *slips.*" (sans + italic serif gradient), a thread card at the
+  centre of a slowly turning dotted orbit, tilted floating side cards, chips ("Cited", "Draft in
+  your voice", "Added to your tasks"), a rotating text badge.
+- *Signal (dark):* "Every conversation, *followed through.*", a drifting beam of light, the mark
+  drawn in glowing dots, "They asked → You promised" with dots flowing between, five step icons.
+
+**Showcase sections** (both themes): "Your promises, kept in view" carousel with a glowing centre
+card (previous/next buttons, nothing auto-advances); a moving wall of sample conversations
+(pauses on hover); "Join the waitlist" closing display with a rotating badge beside the form;
+bento footer. All product content on the landing page is labelled or obvious sample content.
+
+**Motion added:** `cp-spin`, `cp-dash`, `cp-tilt-l/r`, `cp-glow`, `cp-beam`, `cp-flow`,
+`cp-twinkle`, `cp-marquee-l/r` — all off under `prefers-reduced-motion`.

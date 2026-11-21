@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Dark mode follows a `dark` class on <html> (set before paint by the theme script in layout.tsx). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /*
  * ConvoPilot brand v2.0 — "Aurora" (owner decision 2026-11-21; docs/BRAND.md §17).
  * Soft moving light behind clean glass. The token NAMES are kept from v1 so every screen
@@ -293,6 +296,87 @@ details > summary::-webkit-details-marker { display: none; }
 details .cp-plus { transition: transform 260ms var(--ease-brand); }
 details[open] .cp-plus { transform: rotate(45deg); }
 details[open] .cp-answer { animation: cp-toast 320ms var(--ease-brand) both; }
+
+/* ================================================================== dark mode — "Signal" */
+/*
+ * The same token names flip to the Signal palette, so every screen follows. `--color-white`
+ * becomes the dark surface: white cards turn into dark glass and white text on ink buttons
+ * becomes dark text on light buttons, automatically.
+ */
+.dark {
+  color-scheme: dark;
+  --color-ink: #F4F2FA;
+  --color-ink-700: #CFC8E6;
+  --color-ink-500: #A29CBD;
+  --color-ink-300: #3A3550;
+  --color-ink-200: #2A2640;
+  --color-ink-100: #1B1828;
+  --color-paper: #08070C;
+  --color-white: #15121F;
+  --color-marker: #3E2F75;
+  --color-marker-100: #241C40;
+  --color-route: #C9B6FF;
+  --color-route-50: #231C3D;
+  --color-success: #5FD39A;
+  --color-success-50: #0F2A1D;
+  --color-warning: #F2B35C;
+  --color-warning-50: #2B2010;
+  --color-error: #FF8A80;
+  --color-error-50: #2C1214;
+}
+.dark body { background: var(--color-paper); }
+.dark .cp-glass {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 24px 50px -28px rgba(0, 0, 0, 0.8);
+}
+.dark .cp-glass-strong {
+  background: rgba(21, 18, 31, 0.78);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25), 0 40px 80px -40px rgba(0, 0, 0, 0.9);
+}
+.dark .cp-lift:hover { box-shadow: 0 0 0 1px rgba(201, 182, 255, 0.2), 0 30px 60px -30px rgba(123, 92, 255, 0.45); }
+.dark .cp-aurora { background: var(--color-paper); }
+.dark .cp-aurora > span { opacity: 0.16; }
+.dark .cp-aurora-quiet > span { opacity: 0.1; }
+.dark .cp-aurora-text { background-image: linear-gradient(100deg, #C9B6FF 0%, #E6A6E8 45%, #FFC6A8 100%); }
+.dark .cp-shimmer {
+  background-image: linear-gradient(90deg, #1B1828 0%, #241C40 40%, #2E2550 50%, #241C40 60%, #1B1828 100%);
+}
+.dark .cp-highlight::before { opacity: 0.45; }
+.dark ::selection { background: #3E2F75; }
+
+/* ================================================================== landing motion */
+/* Orbit (light): a turning dotted orbit, floating cards, a rotating badge. */
+@keyframes cp-spin { to { transform: rotate(360deg); } }
+.cp-spin { animation: cp-spin 24s linear infinite; }
+@keyframes cp-dash { to { stroke-dashoffset: -240; } }
+.cp-dash { animation: cp-dash 30s linear infinite; }
+@keyframes cp-tilt-l { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-12px) rotate(-3deg); } }
+@keyframes cp-tilt-r { 0%, 100% { transform: translateY(0) rotate(3deg); } 50% { transform: translateY(-9px) rotate(3deg); } }
+.cp-tilt-l { animation: cp-tilt-l 8s ease-in-out infinite; }
+.cp-tilt-r { animation: cp-tilt-r 9s ease-in-out infinite; }
+@keyframes cp-glow { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.06); } }
+.cp-glow { animation: cp-glow 6s ease-in-out infinite; }
+
+/* Signal (dark): a drifting beam of light, a pulsing dotted mark, dots flowing along a path. */
+@keyframes cp-beam { 0%, 100% { opacity: 0.5; transform: rotate(-18deg) translateX(0); } 50% { opacity: 0.85; transform: rotate(-18deg) translateX(40px); } }
+.cp-beam { animation: cp-beam 12s ease-in-out infinite; }
+@keyframes cp-flow { to { stroke-dashoffset: -60; } }
+.cp-flow { animation: cp-flow 2.4s linear infinite; }
+@keyframes cp-twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+.cp-twinkle { animation: cp-twinkle 3.5s ease-in-out infinite; }
+
+/* Showcase: a moving wall of conversations (pauses on hover). */
+@keyframes cp-marquee-l { to { transform: translateX(-50%); } }
+@keyframes cp-marquee-r { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+.cp-marquee-l { animation: cp-marquee-l 55s linear infinite; }
+.cp-marquee-r { animation: cp-marquee-r 65s linear infinite; }
+.cp-marquee:hover .cp-marquee-l, .cp-marquee:hover .cp-marquee-r { animation-play-state: paused; }
+.cp-fade-edges {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

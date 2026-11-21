@@ -4,6 +4,21 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 22 — Light "Orbit" / dark "Signal" themes and Showcase sections (2026-11-21)
+
+- Owner reviewed round-2 ideas (design canvas) and chose Orbit for light mode, Signal for dark
+  mode, Showcase sections inside the landing page (docs/BRAND.md §18).
+- Dark mode for the whole product: token overrides under `.dark`, no-flash theme script in the root
+  layout, theme switch in the landing header and app sidebar (choice kept in this browser only).
+- Landing rebuilt: two heroes (one per theme), commitments carousel, moving conversation wall,
+  closing "Join the waitlist" display beside the form, bento footer. No new dependency.
+- Found and fixed during testing: a theme switch inside the shared sign-in card stopped the
+  sign-in pages from becoming interactive after an in-tab navigation (root cause not fully
+  isolated; the switch was removed from that card; sign-in pages still follow the saved theme).
+- Checks: see the session report (lint, typegen, typecheck, unit, build, guards, Playwright).
+
+---
+
 ## Session 21 — v2.0 "Aurora" redesign with micro-animations (2026-11-21)
 
 - Owner rejected the existing UI and three static directions (design canvas), then chose "Aurora

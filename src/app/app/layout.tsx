@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { ThemeToggle } from "@/components/theme";
 import { AuroraBackground, Logo } from "@/components/ui";
 
 import { NavLinks } from "./nav-links";
@@ -19,8 +20,9 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
       <AuroraBackground quiet />
       <aside className="p-3 md:sticky md:top-0 md:h-screen md:w-72 md:p-4">
         <div className="cp-glass flex h-full flex-col rounded-3xl p-3 md:p-4">
-          <div className="mb-2 px-2 pt-1 md:mb-8">
+          <div className="mb-2 flex items-center justify-between gap-2 pl-2 pt-1 md:mb-8">
             <Logo className="h-6 w-auto" />
+            <ThemeToggle />
           </div>
           <NavLinks
             extra={

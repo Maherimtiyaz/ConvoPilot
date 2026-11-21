@@ -55,7 +55,7 @@ the user approves everything that becomes a fact or leaves the system.
 recolored lilac→peach): soft moving aurora light behind frosted glass, Instrument Sans, pill
 buttons, small animations on every step (sign-up progress, envelope, thinking dots, approve pop,
 task strike, light bursts), all off under reduced motion. Details `docs/BRAND.md` §17; tokens in
-`src/app/globals.css`; logos in `public/brand/`. (v1.0 "The Highlighted Quote" kept for history.)
+`src/app/globals.css`; logos in `public/brand/`. v2.1 (2026-11-21): light mode "Orbit", dark mode "Signal", Showcase sections on the landing page, theme switch (`docs/BRAND.md` §18). (v1.0 "The Highlighted Quote" kept for history.)
 
 ## 3. Architecture (detail: `docs/ARCHITECTURE.md`)
 
