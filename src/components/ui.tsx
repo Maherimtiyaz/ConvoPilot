@@ -1,14 +1,20 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
-/** Brand logo from public/brand (docs/BRAND.md §5.4, recolored in v2 Aurora). `tone="dark"` for dark backgrounds. */
-export function Logo({ tone = "light", className = "h-7 w-auto" }: { tone?: "light" | "dark"; className?: string }) {
-  const src = tone === "dark" ? "/brand/logo-horizontal-on-dark.svg" : "/brand/logo-horizontal.svg";
+/**
+ * Brand logo from public/brand (docs/BRAND.md §5.4, recolored in v2 Aurora). By default it follows
+ * the theme (dark-background version in dark mode); `tone` forces one version.
+ */
+export function Logo({ tone = "auto", className = "h-7 w-auto" }: { tone?: "auto" | "light" | "dark"; className?: string }) {
+  const img = (src: string, extra: string) => (
+    // Plain <img>: a static SVG needs no optimisation.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="ConvoPilot" width={656} height={107} className={`${className} ${extra}`} />
+  );
   return (
     <Link href="/" className="inline-flex shrink-0 transition-opacity hover:opacity-80" aria-label="ConvoPilot home">
-      {/* Plain <img>: a static SVG needs no optimisation. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="ConvoPilot" width={656} height={107} className={className} />
+      {tone !== "dark" && img("/brand/logo-horizontal.svg", tone === "auto" ? "dark:hidden" : "")}
+      {tone !== "light" && img("/brand/logo-horizontal-on-dark.svg", tone === "auto" ? "hidden dark:block" : "")}
     </Link>
   );
 }
@@ -109,7 +115,7 @@ export function EnvelopeArt() {
           </linearGradient>
         </defs>
         <g className="cp-letter">
-          <rect x="30" y="20" width="52" height="44" rx="6" fill="#fff" stroke="#E7E4F1" />
+          <rect x="30" y="20" width="52" height="44" rx="6" fill="var(--color-white)" stroke="var(--color-ink-200)" />
           <rect x="38" y="30" width="28" height="4" rx="2" fill="#D5D1E5" />
           <rect x="38" y="39" width="36" height="4" rx="2" fill="#E7E4F1" />
           <rect x="38" y="48" width="22" height="4" rx="2" fill="url(#cp-env)" />

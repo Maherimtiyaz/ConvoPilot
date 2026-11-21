@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Instrument_Sans, Newsreader } from "next/font/google";
+import { THEME_SCRIPT } from "@/components/theme";
+
 import "./globals.css";
 
 // Brand typefaces (docs/BRAND.md §7), self-hosted by next/font at build time.
@@ -14,7 +16,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${instrumentSans.variable} ${newsreader.variable} ${plexMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${instrumentSans.variable} ${newsreader.variable} ${plexMono.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        {/* Applies the saved or device theme before the first paint (no flash). Static, no user data. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col font-sans">{children}</body>
     </html>
   );
