@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 
+import { Thinking } from "@/components/ui";
 import type { StoredPoint } from "@/lib/ai/workflows/analyze-thread";
 import type { CommitmentView } from "@/lib/services/commitments";
 import type { ConversationDetail } from "@/lib/services/studio";
@@ -17,13 +18,13 @@ interface AiState {
   capUsd: number;
 }
 
-const secondary = "inline-flex h-10 items-center justify-center rounded-md border border-ink-300 bg-white px-4 text-sm font-medium text-ink hover:bg-ink-100 disabled:opacity-50";
-const primary = "inline-flex h-10 items-center justify-center rounded-md bg-ink px-4 text-sm font-semibold text-white hover:bg-ink-700 disabled:cursor-not-allowed disabled:opacity-50";
+const secondary = "inline-flex h-10 items-center justify-center gap-2 rounded-full border border-ink-200 bg-white/80 px-4 text-sm font-medium text-ink transition duration-200 ease-brand hover:-translate-y-px hover:bg-white active:scale-[0.97] disabled:opacity-50";
+const primary = "inline-flex h-10 items-center justify-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-white shadow-[0_10px_22px_-12px_rgba(23,21,31,0.6)] transition duration-200 ease-brand hover:-translate-y-px hover:bg-ink-700 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50";
 
 function Alert({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <p role="alert" className="rounded-md border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
+    <p role="alert" className="rounded-xl border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
       {message}
     </p>
   );
@@ -39,7 +40,7 @@ function Citations({ point, onFocus }: { point: StoredPoint; onFocus: (position:
           onClick={() => onFocus(c.position)}
           title={c.quote ? `“${c.quote}”` : `Message ${c.position}`}
           aria-label={`Source: message ${c.position}${c.quote ? `, quote: ${c.quote}` : ""}`}
-          className="rounded-[2px] bg-ink-100 px-1.5 font-mono text-[11px] text-route hover:bg-route-50"
+          className="rounded-md bg-ink-100 px-1.5 font-mono text-[11px] text-route hover:bg-route-50"
         >
           [{c.position}]
         </button>
@@ -88,10 +89,10 @@ export function ConversationView({ detail, ai, createdLabel, contacts, commitmen
         {confirmDelete ? (
           <span className="flex items-center gap-2 text-sm">
             <span>Delete this conversation, its analysis and drafts?</span>
-            <button type="button" disabled={pending} onClick={() => run(null, () => deleteConversationAction(conversation.id))} className="h-9 rounded-md bg-error px-3 font-semibold text-white">
+            <button type="button" disabled={pending} onClick={() => run(null, () => deleteConversationAction(conversation.id))} className="h-9 rounded-xl bg-error px-3 font-semibold text-white">
               Delete
             </button>
-            <button type="button" onClick={() => setConfirmDelete(false)} className="h-9 rounded-md border border-ink-300 px-3">
+            <button type="button" onClick={() => setConfirmDelete(false)} className="h-9 rounded-xl border border-ink-300 px-3">
               Cancel
             </button>
           </span>
@@ -110,7 +111,7 @@ export function ConversationView({ detail, ai, createdLabel, contacts, commitmen
         </p>
       )}
       {ai.configured && !ai.optIn && (
-        <section aria-labelledby="consent-heading" className="rounded-[10px] border border-ink-200 bg-white p-5">
+        <section aria-labelledby="consent-heading" className="cp-glass rounded-3xl p-5">
           <h3 id="consent-heading" className="font-semibold">
             Allow AI processing
           </h3>
@@ -153,13 +154,13 @@ export function ConversationView({ detail, ai, createdLabel, contacts, commitmen
         </section>
 
         <div className="min-w-0 space-y-6">
-          <section aria-labelledby="analysis-heading" className="rounded-[10px] border border-ink-200 bg-white p-5">
+          <section aria-labelledby="analysis-heading" className="cp-glass rounded-3xl p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 id="analysis-heading" className="font-display text-2xl font-medium">
                 Analysis
               </h3>
               <button type="button" disabled={!aiReady || pending} onClick={() => run("analyze", () => analyzeAction(conversation.id))} className={a ? secondary : primary}>
-                {busy === "analyze" ? "Analysing…" : a ? "Analyse again" : "Analyse"}
+                {busy === "analyze" ? <Thinking label="Analysing…" /> : a ? "Analyse again" : "Analyse"}
               </button>
             </div>
             {!a ? (
@@ -193,7 +194,7 @@ export function ConversationView({ detail, ai, createdLabel, contacts, commitmen
                 <div>
                   <p className="font-mono text-xs uppercase tracking-wider text-ink-500">What they expect from you</p>
                   {a.expectedResponse ? (
-                    <p className="mt-1 rounded-[2px] bg-marker-100 px-2 py-1">
+                    <p className="mt-1 rounded-md bg-marker-100 px-2 py-1">
                       {a.expectedResponse.text}
                       <Citations point={a.expectedResponse} onFocus={focusMessage} />
                     </p>
@@ -225,7 +226,7 @@ export function ConversationView({ detail, ai, createdLabel, contacts, commitmen
 
           <CommitmentsPanel conversationId={conversation.id} commitments={commitments} aiReady={aiReady} onFocus={focusMessage} />
 
-          <section aria-labelledby="draft-heading" className="rounded-[10px] border border-ink-200 bg-white p-5">
+          <section aria-labelledby="draft-heading" className="cp-glass rounded-3xl p-5">
             <h3 id="draft-heading" className="font-display text-2xl font-medium">
               Draft a reply
             </h3>
@@ -233,7 +234,7 @@ export function ConversationView({ detail, ai, createdLabel, contacts, commitmen
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="space-y-1 text-sm font-medium">
                 <span>Tone</span>
-                <select value={tone} onChange={(e) => setTone(e.target.value as typeof tone)} className="block h-10 w-full rounded-md border border-ink-300 bg-white px-2">
+                <select value={tone} onChange={(e) => setTone(e.target.value as typeof tone)} className="block h-10 w-full rounded-xl border border-ink-300 bg-white px-2">
                   <option value="warm">Warm</option>
                   <option value="neutral">Neutral</option>
                   <option value="formal">Formal</option>
@@ -241,7 +242,7 @@ export function ConversationView({ detail, ai, createdLabel, contacts, commitmen
               </label>
               <label className="space-y-1 text-sm font-medium">
                 <span>Length</span>
-                <select value={length} onChange={(e) => setLength(e.target.value as typeof length)} className="block h-10 w-full rounded-md border border-ink-300 bg-white px-2">
+                <select value={length} onChange={(e) => setLength(e.target.value as typeof length)} className="block h-10 w-full rounded-xl border border-ink-300 bg-white px-2">
                   <option value="short">Short</option>
                   <option value="medium">Medium</option>
                   <option value="long">Long</option>
@@ -258,7 +259,7 @@ export function ConversationView({ detail, ai, createdLabel, contacts, commitmen
                 maxLength={500}
                 rows={2}
                 placeholder="e.g. Yes to Friday; ask whether April also works"
-                className="block w-full rounded-md border border-ink-300 px-3 py-2 font-normal"
+                className="block w-full rounded-xl border border-ink-300 px-3 py-2 font-normal"
               />
             </label>
             <button
@@ -267,7 +268,7 @@ export function ConversationView({ detail, ai, createdLabel, contacts, commitmen
               onClick={() => run("draft", () => draftAction(conversation.id, { tone, length, instructions: instructions.trim() || undefined }))}
               className={`${primary} mt-4`}
             >
-              {busy === "draft" ? "Drafting…" : "Draft reply"}
+              {busy === "draft" ? <Thinking label="Drafting…" /> : "Draft reply"}
             </button>
 
             {drafts.length > 0 && (
@@ -308,7 +309,7 @@ function DraftEditor({
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="block w-full rounded-md border border-ink-200 px-3 py-2 text-left text-sm text-ink-700 hover:bg-ink-100">
+      <button type="button" onClick={() => setOpen(true)} className="block w-full rounded-xl border border-ink-200 px-3 py-2 text-left text-sm text-ink-700 hover:bg-ink-100">
         Earlier draft · {draft.tone}, {draft.length} · {draft.created_at.slice(0, 16).replace("T", " ")} UTC
       </button>
     );
@@ -322,7 +323,7 @@ function DraftEditor({
         </span>
         <span>Not sent</span>
       </label>
-      <textarea id={id} value={content} onChange={(e) => setContent(e.target.value)} rows={8} maxLength={20000} className="block w-full rounded-md border border-ink-300 px-3 py-2 text-[15px] leading-relaxed" />
+      <textarea id={id} value={content} onChange={(e) => setContent(e.target.value)} rows={8} maxLength={20000} className="block w-full rounded-xl border border-ink-300 px-3 py-2 text-[15px] leading-relaxed" />
       <div className="flex flex-wrap gap-2">
         <button
           type="button"

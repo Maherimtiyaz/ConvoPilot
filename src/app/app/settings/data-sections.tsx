@@ -6,7 +6,7 @@ import type { DeletedItem } from "@/lib/services/account";
 
 import { restoreItemAction, setTimeZoneAction } from "./account-actions";
 
-const secondary = "rounded-md border border-ink-300 bg-white px-3 py-1.5 text-sm font-medium text-ink hover:bg-paper disabled:opacity-50";
+const secondary = "rounded-xl border border-ink-300 bg-white px-3 py-1.5 text-sm font-medium text-ink hover:bg-white/60 disabled:opacity-50";
 const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
 
 const noop = () => () => undefined;
@@ -33,7 +33,7 @@ export function TimeZoneSection({ current, zones }: { current: string; zones: st
     });
 
   return (
-    <section aria-labelledby="tz-heading" className="rounded-[10px] border border-ink-200 bg-white p-6">
+    <section aria-labelledby="tz-heading" className="cp-glass rounded-3xl p-6">
       <h2 id="tz-heading" className="text-base font-semibold text-ink">
         Time zone
       </h2>
@@ -41,7 +41,7 @@ export function TimeZoneSection({ current, zones }: { current: string; zones: st
       <div className="mt-4 flex flex-wrap items-end gap-3">
         <label className="space-y-1 text-sm font-medium">
           <span className="block">Your time zone</span>
-          <select value={value} onChange={(e) => setValue(e.target.value)} className="h-10 rounded-md border border-ink-300 bg-white px-3">
+          <select value={value} onChange={(e) => setValue(e.target.value)} className="h-10 rounded-xl border border-ink-300 bg-white px-3">
             {zones.map((z) => (
               <option key={z} value={z}>
                 {z.replaceAll("_", " ")}
@@ -73,7 +73,7 @@ export function RecentlyDeletedSection({ items }: { items: DeletedItem[] }) {
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   return (
-    <section aria-labelledby="deleted-heading" className="rounded-[10px] border border-ink-200 bg-white p-6">
+    <section aria-labelledby="deleted-heading" className="cp-glass rounded-3xl p-6">
       <h2 id="deleted-heading" className="text-base font-semibold text-ink">
         Recently deleted
       </h2>

@@ -4,6 +4,25 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 21 — v2.0 "Aurora" redesign with micro-animations (2026-11-21)
+
+- Owner rejected the existing UI and three static directions (design canvas), then chose "Aurora
+  glow" and "keep the logo shape, recolor it", asking for small animated details on every step.
+- Theme: new palette on the existing token names (whole app follows), aurora light background,
+  glass surfaces, Instrument Sans display, pill buttons; logo SVGs recolored to a lilac→peach
+  gradient. Landing rebuilt (glass pill nav, gradient "slips.", floating preview, restyled demo,
+  glass trust cards, glass waitlist, animated FAQ).
+- Animations (CSS only, no new dependency, all disabled under reduced motion): sign-up progress
+  steps + envelope + thinking dots + first-visit welcome with three getting-started cards;
+  waitlist success burst; page rise-in; shimmer loading; approve pop with drawn check; task strike;
+  toasts; hover lift.
+- Phone: compact menu with a short "Studio" label; no horizontal overflow on any checked screen.
+- Tests: one e2e (time zone) made robust to the page becoming interactive after it animates in.
+  unit 116, pgTAP 264, integration 22, Playwright 23. Screenshots + a 26 s recording shared.
+- Tracked: update `docs/brand/tokens.*` and the brand-bible artifact to v2.
+
+---
+
 ## Session 20 — Visual walkthrough and phone fixes (2026-11-20)
 
 - Walked every screen with synthetic data (local mock AI) at desktop (1440×900) and phone (iPhone

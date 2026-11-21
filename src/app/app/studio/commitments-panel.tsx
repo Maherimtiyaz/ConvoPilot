@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
+import { Thinking } from "@/components/ui";
 import type { CommitmentView } from "@/lib/services/commitments";
 
 import { approveTaskAction, decideCommitmentAction, extractCommitmentsAction, rejectTaskAction, type Result } from "../tasks/actions";
 
-const small = "inline-flex h-8 items-center rounded-md px-3 text-xs font-semibold disabled:opacity-50";
+const small = "inline-flex h-9 items-center rounded-full px-3.5 text-xs font-semibold transition duration-200 ease-brand hover:-translate-y-px active:scale-[0.96] disabled:opacity-50";
 
 function due(c: { dueDate: string | null; dueText: string | null }) {
   return c.dueDate ?? c.dueText;
@@ -30,7 +31,7 @@ export function CommitmentsPanel({ conversationId, commitments, aiReady, onFocus
   const rejected = commitments.length - visible.length;
 
   return (
-    <section aria-labelledby="commitments-heading" className="rounded-[10px] border border-ink-200 bg-white p-5">
+    <section aria-labelledby="commitments-heading" className="cp-glass rounded-3xl p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 id="commitments-heading" className="font-display text-2xl font-medium">
           Commitments
@@ -53,16 +54,16 @@ export function CommitmentsPanel({ conversationId, commitments, aiReady, onFocus
               }
             })
           }
-          className="inline-flex h-10 items-center justify-center rounded-md border border-ink-300 bg-white px-4 text-sm font-medium text-ink hover:bg-ink-100 disabled:opacity-50"
+          className="inline-flex h-10 items-center justify-center rounded-xl border border-ink-300 bg-white px-4 text-sm font-medium text-ink hover:bg-ink-100 disabled:opacity-50"
         >
-          {pending ? "Working…" : "Find commitments"}
+          {pending ? <Thinking label="Finding commitments…" /> : "Find commitments"}
         </button>
       </div>
       <p className="mt-1 text-sm text-ink-700">Promises made in this thread. Suggestions stay unconfirmed until you decide; nothing becomes a task without your approval.</p>
 
       <div aria-live="polite">
         {error && (
-          <p role="alert" className="mt-3 rounded-md border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
+          <p role="alert" className="mt-3 rounded-xl border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
             {error}
           </p>
         )}
@@ -78,11 +79,16 @@ export function CommitmentsPanel({ conversationId, commitments, aiReady, onFocus
       ) : (
         <ul className="mt-4 space-y-3">
           {visible.map((c) => (
-            <li key={c.id} data-testid="commitment" className={`rounded-md border p-3 ${c.status === "proposed" ? "border-dashed border-ink-300 bg-paper" : "border-ink-200"}`}>
+            <li key={c.id} data-testid="commitment" className={`cp-rise rounded-2xl border p-4 ${c.status === "proposed" ? "border-dashed border-ink-300 bg-white/60" : "border-ink-200"}`}>
               <p className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-ink-500">
                 <span>{c.owner === "me" ? "You promised" : "They promised"}</span>
                 {c.status === "proposed" && <span className="rounded-full bg-marker-100 px-2 py-0.5 text-ink">Suggested · not confirmed</span>}
-                {c.status === "confirmed" && <span className="rounded-full bg-success-50 px-2 py-0.5 text-success">Confirmed</span>}
+                {c.status === "confirmed" && (
+                  <span className="cp-pop inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-success">
+                    <svg viewBox="0 0 16 16" width="11" height="11" className="cp-check" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    Confirmed
+                  </span>
+                )}
                 {c.origin === "inferred" && <span>implied</span>}
                 {!c.supported && <span className="text-warning">source deleted</span>}
               </p>
@@ -96,7 +102,7 @@ export function CommitmentsPanel({ conversationId, commitments, aiReady, onFocus
                     onClick={() => onFocus(cite.position)}
                     title={cite.quote ? `“${cite.quote}”` : undefined}
                     aria-label={`Source: message ${cite.position}${cite.quote ? `, quote: ${cite.quote}` : ""}`}
-                    className="ml-1 rounded-[2px] bg-ink-100 px-1.5 align-baseline font-mono text-[11px] text-route hover:bg-route-50"
+                    className="ml-1 rounded-md bg-ink-100 px-1.5 align-baseline font-mono text-[11px] text-route hover:bg-route-50"
                   >
                     [{cite.position}]
                   </button>

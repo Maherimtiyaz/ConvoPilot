@@ -51,12 +51,11 @@ import first; private workspace per user (no shared workspaces in MVP); invite-o
 only by a platform operator; passwordless email login (magic link); the AI drafts and proposes,
 the user approves everything that becomes a fact or leaves the system.
 
-**Brand:** identity system v1.0 **approved by the owner** (name ConvoPilot) — "The Highlighted Quote" — `docs/BRAND.md`, tokens in
-`docs/brand/`, vector logos in `public/brand/` (built by `scripts/brand/build_logo.py`), visual
-animated brand bible page (claude.ai artifact, owner-private; source `docs/brand/brand-bible/`).
-Ink `#0E1B2C`, Marker `#FFD23F`, Paper `#F3F5F7`; Newsreader / Instrument Sans / IBM Plex Mono.
-Applied to the app (theme in `src/app/globals.css`, fonts via `next/font`, animated product demo
-`src/app/product-demo.tsx`; motion respects reduced-motion and can be paused).
+**Brand:** v2.0 **"Aurora"** approved by the owner 2026-11-21 (name ConvoPilot; logo shape kept,
+recolored lilac→peach): soft moving aurora light behind frosted glass, Instrument Sans, pill
+buttons, small animations on every step (sign-up progress, envelope, thinking dots, approve pop,
+task strike, light bursts), all off under reduced motion. Details `docs/BRAND.md` §17; tokens in
+`src/app/globals.css`; logos in `public/brand/`. (v1.0 "The Highlighted Quote" kept for history.)
 
 ## 3. Architecture (detail: `docs/ARCHITECTURE.md`)
 

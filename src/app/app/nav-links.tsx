@@ -14,9 +14,22 @@ export const APP_NAV = [
 ] as const;
 
 const linkClass = (active: boolean) =>
-  `whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium ${
-    active ? "bg-ink-100 font-semibold text-ink shadow-[inset_3px_0_0_var(--color-ink)]" : "text-ink-700 hover:bg-ink-100 hover:text-ink"
+  `relative flex items-center gap-2.5 whitespace-nowrap rounded-xl px-3 py-2 text-sm md:py-2.5 font-medium transition duration-200 ease-brand ${
+    active
+      ? "bg-white font-semibold text-ink shadow-[0_0_0_1px_rgba(40,30,90,0.06),0_8px_20px_-12px_rgba(40,30,90,0.35)] before:absolute before:left-1 before:top-1/2 before:h-4 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-gradient-to-b before:from-[#7B5CFF] before:to-[#FF8A65]"
+      : "text-ink-700 hover:bg-white/60 hover:text-ink"
   }`;
+
+/** "Communication Studio" is long for a phone menu: show "Studio" below the md breakpoint. */
+function Label({ label }: { label: string }) {
+  if (label !== "Communication Studio") return <>{label}</>;
+  return (
+    <>
+      <span className="md:hidden">Studio</span>
+      <span className="hidden md:inline">{label}</span>
+    </>
+  );
+}
 
 /**
  * The path is unknown while prerendering routes with request-time params (e.g. /app/contacts/[id]),
@@ -27,7 +40,7 @@ export function NavItem({ href, label }: { href: string; label: string }) {
     <Suspense
       fallback={
         <Link href={href} className={linkClass(false)}>
-          {label}
+          <Label label={label} />
         </Link>
       }
     >
@@ -41,7 +54,7 @@ function ActiveNavItem({ href, label }: { href: string; label: string }) {
   const active = href === "/app" ? pathname === "/app" : pathname.startsWith(href);
   return (
     <Link href={href} aria-current={active ? "page" : undefined} className={linkClass(active)}>
-      {label}
+      <Label label={label} />
     </Link>
   );
 }
@@ -49,7 +62,7 @@ function ActiveNavItem({ href, label }: { href: string; label: string }) {
 /** Main navigation. `extra` holds items that depend on the signed-in user (e.g. Operator). */
 export function NavLinks({ extra }: { extra?: ReactNode }) {
   return (
-    <nav aria-label="Main" className="flex flex-wrap gap-1 md:flex-col md:flex-nowrap">
+    <nav aria-label="Main" className="flex flex-wrap gap-x-0.5 gap-y-1 md:flex-col md:flex-nowrap md:gap-1">
       {APP_NAV.map((item) => (
         <NavItem key={item.href} href={item.href} label={item.label} />
       ))}

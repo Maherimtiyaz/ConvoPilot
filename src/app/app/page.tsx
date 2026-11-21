@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { SignupSteps, Sparks } from "@/components/ui";
 import type { RequestContext } from "@/lib/auth/context";
 import { getTimeZone, listTasks, localDays } from "@/lib/services/commitments";
 import { listConversations } from "@/lib/services/studio";
@@ -46,9 +47,10 @@ function Stat({
   return (
     <Link
       href={href}
-      className={`rounded-[10px] border bg-white p-4 hover:border-ink-300 ${emphasis && value > 0 ? "border-marker" : "border-ink-200"}`}
+      className={`cp-glass cp-lift relative overflow-hidden rounded-3xl p-5 ${emphasis && value > 0 ? "ring-2 ring-[#C9B6FF]" : ""}`}
     >
-      <span className="block font-display text-4xl font-medium">{value}</span>
+      {emphasis && value > 0 && <span aria-hidden="true" className="absolute right-4 top-4 h-2 w-2 rounded-full bg-gradient-to-br from-[#7B5CFF] to-[#FF8A65]" />}
+      <span className={`block font-display text-5xl ${emphasis && value > 0 ? "cp-aurora-text" : ""}`}>{value}</span>
       <span className="mt-1 block text-sm text-ink-700">{label}</span>
     </Link>
   );
@@ -78,22 +80,44 @@ async function Dashboard({ ctx }: { ctx: RequestContext }) {
     return (
       <div className="space-y-6">
         {signedIn}
-        <section className="rounded-[10px] border border-ink-200 bg-white p-6">
-          <h2 className="font-display text-2xl font-medium">
-            Start with one conversation
+        {/* First visit: the last step of getting started, then three things to try. */}
+        <section className="cp-glass-strong relative overflow-hidden rounded-[28px] p-8 text-center sm:p-10">
+          <span className="relative mx-auto grid h-16 w-16 place-items-center">
+            <Sparks />
+            <span className="cp-pop grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-[#7B5CFF] to-[#FF8A65] text-white shadow-[0_14px_30px_-12px_rgba(91,63,224,0.7)]">
+              <svg viewBox="0 0 16 16" width="28" height="28" className="cp-check" aria-hidden="true">
+                <path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          </span>
+          <h2 className="mt-6 font-display text-3xl">
+            You&apos;re in. Start with one conversation
           </h2>
-          <p className="mt-2 max-w-prose text-[15px] text-ink-700">
+          <p className="mx-auto mt-3 max-w-xl text-[15px] leading-relaxed text-ink-700">
             Paste an email thread into Communication Studio. ConvoPilot explains
             what they want, drafts a reply in your voice, and suggests the
             commitments to track. You approve everything.
           </p>
-          <Link
-            href="/app/studio"
-            className="mt-4 inline-flex h-10 items-center rounded-md bg-ink px-4 text-sm font-semibold text-white hover:bg-ink-700"
-          >
-            Open Communication Studio
-          </Link>
+          <div className="mt-6 flex justify-center">
+            <SignupSteps step={4} />
+          </div>
         </section>
+        <ol className="grid gap-4 sm:grid-cols-3">
+          {[
+            { n: "1", title: "Allow AI processing", body: "One switch in Settings, so ConvoPilot can read the threads you choose.", href: "/app/settings", cta: "Open Settings" },
+            { n: "2", title: "Paste your first thread", body: "See what they want and a reply drafted in your voice.", href: "/app/studio", cta: "Open Communication Studio" },
+            { n: "3", title: "Approve a commitment", body: "Confirm a promise and it lands on your task list.", href: "/app/tasks", cta: "See Tasks" },
+          ].map((s, i) => (
+            <li key={s.n} className={`cp-glass cp-lift cp-rise rounded-3xl p-6 cp-d${i + 2}`}>
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[#C9B6FF] to-[#FFC6A8] text-sm font-semibold">{s.n}</span>
+              <h3 className="mt-4 font-semibold">{s.title}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-ink-700">{s.body}</p>
+              <Link href={s.href} className="group mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-route">
+                {s.cta} <span className="cp-arrow" aria-hidden="true">→</span>
+              </Link>
+            </li>
+          ))}
+        </ol>
       </div>
     );
   }
@@ -119,7 +143,7 @@ async function Dashboard({ ctx }: { ctx: RequestContext }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <section
           aria-labelledby="next-heading"
-          className="min-w-0 rounded-[10px] border border-ink-200 bg-white p-5"
+          className="min-w-0 cp-glass rounded-3xl p-5"
         >
           <h2 id="next-heading" className="font-semibold">
             Next up
@@ -154,7 +178,7 @@ async function Dashboard({ ctx }: { ctx: RequestContext }) {
         </section>
         <section
           aria-labelledby="recent-heading"
-          className="min-w-0 rounded-[10px] border border-ink-200 bg-white p-5"
+          className="min-w-0 cp-glass rounded-3xl p-5"
         >
           <h2 id="recent-heading" className="font-semibold">
             Recent conversations

@@ -36,7 +36,7 @@ async function Contact({ ctx, params }: { ctx: RequestContext; params: PageProps
   } catch (error) {
     if (error instanceof StudioError && error.code === "not_found") {
       return (
-        <p role="alert" className="rounded-md border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
+        <p role="alert" className="rounded-xl border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
           That contact no longer exists. <Link href="/app/contacts" className="underline">Back to contacts</Link>
         </p>
       );
@@ -56,7 +56,7 @@ async function Contact({ ctx, params }: { ctx: RequestContext; params: PageProps
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-6">
           <AskHistory heading={`Ask about ${contact.name}`} defaultQuestion={`What did I discuss with ${contact.name}?`} />
-          <section className="rounded-[10px] border border-ink-200 bg-white p-5">
+          <section className="cp-glass rounded-3xl p-5">
             <h2 className="font-semibold">Conversations</h2>
             {contact.conversations.length === 0 ? (
               <p className="mt-2 text-sm text-ink-700">No conversations with {contact.name} yet. Conversations from their email address link here automatically.</p>

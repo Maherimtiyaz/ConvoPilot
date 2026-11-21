@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Finish signing in", referrer: "no-re
  */
 export default function ConfirmPage() {
   return (
-    <AuthCard title="Finish signing in">
+    <AuthCard title="Finish signing in" step={3}>
       <ConfirmForm />
     </AuthCard>
   );

@@ -51,7 +51,7 @@ async function Studio({ ctx, searchParams }: { ctx: RequestContext; searchParams
   return (
     <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
       <aside aria-label="Conversations" className="space-y-3">
-        <Link href="/app/studio" className="flex h-10 items-center justify-center rounded-md bg-ink px-4 text-sm font-semibold text-white hover:bg-ink-700">
+        <Link href="/app/studio" className="flex h-10 items-center justify-center rounded-xl bg-ink px-4 text-sm font-semibold text-white hover:bg-ink-700">
           New conversation
         </Link>
         {conversations.length === 0 ? (
@@ -63,7 +63,7 @@ async function Studio({ ctx, searchParams }: { ctx: RequestContext; searchParams
                 <Link
                   href={`/app/studio?c=${c.id}`}
                   aria-current={c.id === selected ? "page" : undefined}
-                  className={`block rounded-md px-3 py-2 text-sm ${c.id === selected ? "bg-white font-semibold text-ink shadow-[inset_3px_0_0_var(--color-ink)]" : "text-ink-700 hover:bg-white"}`}
+                  className={`block rounded-xl px-3 py-2 text-sm ${c.id === selected ? "bg-white font-semibold text-ink shadow-[inset_3px_0_0_var(--color-ink)]" : "text-ink-700 hover:bg-white"}`}
                 >
                   <span className="block truncate">{c.subject}</span>
                   <span className="font-mono text-xs text-ink-500">
@@ -77,12 +77,12 @@ async function Studio({ ctx, searchParams }: { ctx: RequestContext; searchParams
       </aside>
       <div className="min-w-0">
         {missing && (
-          <p role="alert" className="mb-4 rounded-md border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
+          <p role="alert" className="mb-4 rounded-xl border border-error/30 bg-error-50 px-3 py-2 text-sm text-error">
             That conversation no longer exists.
           </p>
         )}
         {params.dup === "1" && detail && (
-          <p role="status" className="mb-4 rounded-md border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700">
+          <p role="status" className="mb-4 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700">
             You&apos;d already imported this conversation, so we opened the existing copy.
           </p>
         )}

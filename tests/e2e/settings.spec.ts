@@ -13,8 +13,14 @@ test.describe("Settings: time zone and recently deleted", () => {
     // The section streams in after the page shell; act on it once it is shown.
     const zone = page.getByLabel("Your time zone");
     await expect(zone).toBeVisible();
-    await zone.selectOption("Asia/Kolkata");
-    await page.getByRole("button", { name: "Save time zone" }).click();
+    // The page animates in and becomes interactive a moment after it is visible; retry the choice
+    // until the app has registered it (the Save button enables only for a changed value).
+    const save = page.getByRole("button", { name: "Save time zone" });
+    await expect(async () => {
+      await zone.selectOption("Asia/Kolkata");
+      await expect(save).toBeEnabled({ timeout: 1000 });
+    }).toPass({ timeout: 15_000 });
+    await save.click();
     await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible();
     expect(sql(`select time_zone from public.workspace_settings where workspace_id = ${ws}`)).toBe("Asia/Kolkata");
     await expect(page.getByText("Nothing deleted in the last 30 days.")).toBeVisible();
