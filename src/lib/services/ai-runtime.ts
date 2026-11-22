@@ -37,7 +37,7 @@ async function ensureAiAllowed(ctx: RequestContext): Promise<{ capUsd: number }>
  * Reserves the run's worst case (its whole token budget priced as output) under a database row
  * lock, so concurrent requests cannot all slip under the daily cap (security review M1).
  */
-async function reserve(ctx: RequestContext, amountMicroUsd: number, capUsd: number): Promise<void> {
+async function reserve(ctx: RequestContext, amountMicroUsd: number, capUsd: number): Promise<string> {
   const supabase = await createSupabaseServerClient("server-action");
   const { data, error } = await supabase.rpc("reserve_ai_usage", {
     p_workspace_id: ctx.workspaceId,
@@ -45,19 +45,20 @@ async function reserve(ctx: RequestContext, amountMicroUsd: number, capUsd: numb
     p_cap_micro_usd: Math.round(capUsd * 1_000_000),
   });
   if (error) throw new StudioError("failed");
-  const status = z.object({ status: z.string() }).parse(data).status;
-  if (status === "over_cap") throw new AiError("daily_limit");
-  if (status !== "ok") throw new StudioError("failed");
+  const result = z.object({ status: z.string(), reservation_id: z.uuid().optional() }).parse(data);
+  if (result.status === "over_cap") throw new AiError("daily_limit");
+  if (result.status !== "ok" || !result.reservation_id) throw new StudioError("failed");
+  return result.reservation_id;
 }
 
-async function recordUsage(ctx: RequestContext, model: string, inputTokens: number, outputTokens: number, releaseMicroUsd: number): Promise<void> {
+async function recordUsage(ctx: RequestContext, model: string, inputTokens: number, outputTokens: number, reservationId: string): Promise<void> {
   const supabase = await createSupabaseServerClient("server-action");
   const { error } = await supabase.rpc("record_ai_usage", {
     p_workspace_id: ctx.workspaceId,
     p_input_tokens: inputTokens,
     p_output_tokens: outputTokens,
     p_cost_micro_usd: costMicroUsd(model, inputTokens, outputTokens),
-    p_release_micro_usd: releaseMicroUsd,
+    p_reservation_id: reservationId,
   });
   if (error) throw new StudioError("failed");
 }
@@ -67,16 +68,16 @@ export async function withAi<T extends { metadata: ModelMetadata }>(ctx: Request
   const { capUsd } = await ensureAiAllowed(ctx);
   const provider = providerFromEnv();
   const reserved = Math.min(100_000_000, costMicroUsd(getAiEnv().AI_MODEL, 0, budgetTokens));
-  await reserve(ctx, reserved, capUsd);
+  const reservationId = await reserve(ctx, reserved, capUsd);
   const budget = new TokenBudget(budgetTokens);
   try {
     const result = await run(provider, budget);
-    await recordUsage(ctx, result.metadata.model, result.metadata.usage.inputTokens, result.metadata.usage.outputTokens, reserved);
+    await recordUsage(ctx, result.metadata.model, result.metadata.usage.inputTokens, result.metadata.usage.outputTokens, reservationId);
     return result;
   } catch (error) {
     // Failed runs still cost money: record what was spent, priced conservatively as output tokens,
     // and always release the reservation.
-    await recordUsage(ctx, getAiEnv().AI_MODEL, 0, budget.spent, reserved).catch(() => undefined);
+    await recordUsage(ctx, getAiEnv().AI_MODEL, 0, budget.spent, reservationId).catch(() => undefined);
     throw error;
   }
 }

@@ -100,6 +100,8 @@ function finishWhatsApp(messages: ParsedMessage[], subject: string | null): Pars
 const GMAIL_QUOTE = /^On (.{3,200}?)(?:,| at) ?(.*?)\s*wrote:\s*$/;
 const ORIGINAL = /^-{2,}\s*(?:Original Message|Forwarded message)\s*-{2,}\s*$/i;
 const HEADER_LINE = /^(From|Sent|Date|To|Cc|Subject):\s*(.*)$/i;
+/** Longest line treated as a possible header. Longer lines are message text (ReDoS guard). */
+const MAX_HEADER_LINE = 500;
 
 /**
  * Splits an email body that contains replies into separate messages, oldest first.
@@ -110,7 +112,8 @@ export function splitThread(text: string): ParsedMessage[] {
   const blocks: { header: Record<string, string>; lines: string[] }[] = [{ header: {}, lines: [] }];
   for (let i = 0; i < lines.length; i++) {
     const line = stripQuote(lines[i]);
-    const gmail = GMAIL_QUOTE.exec(line.trim());
+    // Header lines are short; never run the pattern on long lines (keeps parsing linear-time).
+    const gmail = line.length <= MAX_HEADER_LINE ? GMAIL_QUOTE.exec(line.trim()) : null;
     if (gmail) {
       blocks.push({ header: { gmail: line.trim() }, lines: [] });
       continue;
@@ -250,10 +253,12 @@ export function htmlToText(html: string): string {
 }
 
 export function parseAddress(value: string): { name: string | null; email: string | null } {
-  const v = decodeHeader(value).trim();
-  const angle = /^(.*?)<\s*([^<>\s@]+@[^<>\s@]+)\s*>/.exec(v);
+  // Real address headers are short; cap the input before matching so crafted values cannot make
+  // the patterns backtrack for seconds (security review 2026-11-22, finding 1).
+  const v = decodeHeader(value.slice(0, MAX_HEADER_LINE)).trim().slice(0, MAX_HEADER_LINE);
+  const angle = /^([^<]*)<\s*([^<>\s@]+@[^<>\s@]+)\s*>/.exec(v);
   if (angle) return { name: angle[1].replace(/^["'\s]+|["'\s]+$/g, "") || null, email: angle[2].toLowerCase() };
-  const bare = /([^\s<>"]+@[^\s<>"]+\.[A-Za-z]{2,})/.exec(v);
+  const bare = /([^\s<>"@]+@[^\s<>"@]+\.[A-Za-z]{2,})/.exec(v);
   if (bare) return { name: v.replace(bare[1], "").replace(/^["'\s(]+|["'\s)]+$/g, "") || null, email: bare[1].toLowerCase() };
   return { name: v.replace(/^["'\s]+|["'\s]+$/g, "").slice(0, 200) || null, email: null };
 }

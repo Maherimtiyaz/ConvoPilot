@@ -123,7 +123,7 @@ Results are recorded with provider, model, prompt version and date in `tests/eva
 **Implemented (v0.1 acceptance):** dataset `tests/evaluation/datasets/threads.ts` (the seven cases
 above plus five history questions), scoring `tests/evaluation/score.ts`, runner
 `tests/evaluation/runner.ts` (real workflows, parser included, in-memory history source), entry
-`tests/evaluation/run.eval.ts`. Run with `ANTHROPIC_API_KEY=… npm run eval` (optional `AI_MODEL`,
+`tests/evaluation/run.eval.ts`. Run with `ANTHROPIC_API_KEY=… npm run eval` (in a Claude Code cloud session, set `CONVOPILOT_ANTHROPIC_API_KEY` as an environment variable instead; an `ANTHROPIC_API_KEY` saved there was not visible to commands when tried on 2026-11-22) (optional `AI_MODEL`,
 `EVAL_MAX_USD`, default $2); it writes a JSON and a Markdown report, including the drafts for the
 manual writing rubric. Matching is by keyword groups, so results are a strong signal, not a proof;
 "extra" commitments are listed for human review rather than counted as errors. CI runs the harness

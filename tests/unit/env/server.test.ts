@@ -52,6 +52,13 @@ describe("appEnvSchema", () => {
     }
   });
 
+  it("requires the public https address in production (no silent localhost invitation links)", () => {
+    expect(() => parseEnv("application", appEnvSchema, { NODE_ENV: "production" })).toThrow(EnvValidationError);
+    expect(() => parseEnv("application", appEnvSchema, { NODE_ENV: "production", NEXT_PUBLIC_APP_URL: "http://app.example.com" })).toThrow(EnvValidationError);
+    expect(() => parseEnv("application", appEnvSchema, { NODE_ENV: "production", NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3000" })).not.toThrow();
+    expect(() => parseEnv("application", appEnvSchema, { NODE_ENV: "development", NEXT_PUBLIC_APP_URL: "http://localhost:3000" })).not.toThrow();
+  });
+
   it("exposes no secret-looking variable through NEXT_PUBLIC_", () => {
     const publicKeys = Object.keys(appEnvSchema.shape).filter((key) =>
       key.startsWith("NEXT_PUBLIC_"),

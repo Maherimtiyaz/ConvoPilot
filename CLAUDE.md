@@ -244,4 +244,5 @@ npm run test:integration                 # Auth integration (local stack)
 npm run test:e2e                         # Playwright end-to-end (local stack + built app)
 node scripts/ci/app-guards.mjs && scripts/ci/ai-guards.sh   # architecture/security guards
 ANTHROPIC_API_KEY=… npm run eval         # model evaluation on synthetic data (manual; costs ≈ $1–2)
+# cloud session: set CONVOPILOT_ANTHROPIC_API_KEY in the environment settings instead (new session picks it up)
 ```

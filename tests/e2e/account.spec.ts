@@ -17,6 +17,10 @@ test.describe("Your data", () => {
     await page.getByRole("button", { name: "Import conversation" }).click();
     await expect(page.getByRole("heading", { level: 2, name: "Export check" })).toBeVisible();
 
+    // More rows than one API page (1,000): the export must still contain all of them.
+    sql(`insert into public.contacts (workspace_id, full_name, created_by)
+         select ${ws}, 'Synthetic contact ' || g, (select id from auth.users where email = ${quote(email)}) from generate_series(1, 1205) g`);
+
     await page.goto("/app/settings");
     const download = page.waitForEvent("download");
     await page.getByRole("button", { name: "Download my data" }).click();
@@ -27,6 +31,7 @@ test.describe("Your data", () => {
     expect(data.account_email).toBe(email);
     expect(data.conversations.map((c: { subject: string }) => c.subject)).toEqual(["Export check"]);
     expect(data.messages[0].body_text).toContain("Synthetic message for the export test.");
+    expect(data.contacts.filter((c: { full_name: string }) => c.full_name.startsWith("Synthetic contact "))).toHaveLength(1205);
     expect(sql(`select count(*) from public.audit_events where workspace_id = ${ws} and action = 'export.requested'`)).toBe("1");
 
     // Deleting needs a typed confirmation.

@@ -1,14 +1,48 @@
 <!doctype html>
-<html>
-  <body style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: #111827; line-height: 1.5;">
-    <h2 style="margin: 0 0 16px;">Sign in to ConvoPilot</h2>
-    <p>Use the button below to sign in.</p>
-    <p>
-      <a href="{{ .SiteURL }}/auth/confirm#th={{ .TokenHash }}"
-         style="display: inline-block; padding: 10px 18px; background: #111827; color: #ffffff; border-radius: 6px; text-decoration: none;">
-        Sign in
-      </a>
-    </p>
-    <p style="color: #6b7280; font-size: 13px;">This link works once and expires in 30 minutes. If you did not request it, you can ignore this email.</p>
+<html lang="en">
+  <!-- ConvoPilot v2.1 "Aurora" email (docs/BRAND.md §17–18). Email-safe: tables, inline styles,
+       no images or remote content. The token is in the URL fragment, so link scanners that open
+       the page cannot use it; only pressing Continue on the page signs in (CLAUDE.md §10). -->
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>Sign in to ConvoPilot</title>
+  </head>
+  <body style="margin:0; padding:0; background:#F4F1FB;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F1FB; background-image:linear-gradient(135deg,#EDE6FF 0%,#FBFAFE 50%,#FFEADF 100%);">
+      <tr>
+        <td align="center" style="padding:40px 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
+            <tr>
+              <td style="padding:0 8px 20px; font-family:'Instrument Sans',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:20px; font-weight:600; color:#17151F; letter-spacing:-0.01em;">
+                <span style="display:inline-block; width:22px; height:14px; margin-right:8px; vertical-align:-1px; background:#C9B6FF; background-image:linear-gradient(135deg,#B9A2FF,#E6A6E8 55%,#FFB892); border-radius:3px; transform:skewX(-20deg);"></span>convopilot
+              </td>
+            </tr>
+            <tr>
+              <td style="background:#FFFFFF; border:1px solid #ECE8F6; border-radius:24px; padding:36px 32px; font-family:'Instrument Sans',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; color:#17151F;">
+                <p style="margin:0 0 6px; font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:#5B3FE0;">Your sign-in link</p>
+                <h1 style="margin:0 0 14px; font-size:26px; line-height:1.2; font-weight:600; letter-spacing:-0.02em; color:#17151F;">Sign in to ConvoPilot</h1>
+                <p style="margin:0 0 26px; font-size:15px; line-height:1.6; color:#3B3851;">Here&rsquo;s your secure sign-in link. No password needed.</p>
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="border-radius:999px; background:#17151F;">
+                      <a href="{{ .SiteURL }}/auth/confirm#th={{ .TokenHash }}" style="display:inline-block; padding:14px 28px; border-radius:999px; font-size:15px; font-weight:600; color:#FFFFFF; text-decoration:none;">Sign in &rarr;</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:26px 0 0; font-size:13px; line-height:1.6; color:#635F7C;">This link works once and expires in 30 minutes. On the page that opens, press <strong>Continue</strong> to finish. If you didn&rsquo;t ask for this, you can ignore this email.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 8px 0; font-family:'Instrument Sans',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:12px; line-height:1.6; color:#635F7C;">
+                Private by design &middot; nothing is ever sent for you.<br>
+                You&rsquo;re receiving this because someone entered this address on ConvoPilot.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>
