@@ -436,8 +436,9 @@ shadow), large radii (24–28 px cards, pill buttons), `cp-lift` hover.
   pops with a drawn check; finished tasks strike through left to right; messages slide in; FAQ
   answers ease open; buttons lift on hover and press in on click; arrows nudge.
 
-**Not yet updated to v2:** `docs/brand/tokens.json` / `tokens.css` and the brand-bible artifact
-(tracked in WORKLOG).
+**Updated to v2.1 (2026-11-22):** `docs/brand/tokens.json` / `tokens.css` (light + dark, mirroring
+`globals.css`) and the sign-in emails (`supabase/templates/`: Aurora card, pill button, no images).
+**Not yet updated:** the brand-bible artifact (tracked in WORKLOG).
 
 ## 18. v2.1 light "Orbit" / dark "Signal" + Showcase sections (owner decision 2026-11-21)
 

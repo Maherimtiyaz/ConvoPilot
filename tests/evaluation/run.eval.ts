@@ -4,6 +4,10 @@
  *
  *   ANTHROPIC_API_KEY=… npm run eval            # optional: AI_MODEL=…, EVAL_MAX_USD=2
  *
+ * In a Claude Code cloud session, an ANTHROPIC_API_KEY saved in the environment settings was not
+ * visible to commands (observed 2026-11-22; Claude Code uses that name itself), so the run also
+ * reads CONVOPILOT_ANTHROPIC_API_KEY.
+ *
  * The generic ANTHROPIC_BASE_URL is deliberately ignored: some environments (e.g. Claude Code in the
  * cloud) set it for their own use, and the key must go to the real Anthropic API. Use
  * EVAL_ANTHROPIC_BASE_URL only to point the run at a local mock.
@@ -24,7 +28,7 @@ import { CASES, RETRIEVAL } from "./datasets/threads";
 import { runEvaluation } from "./runner";
 import { summarize } from "./score";
 
-const key = process.env.ANTHROPIC_API_KEY;
+const key = process.env.CONVOPILOT_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || undefined;
 const model = process.env.AI_MODEL || "claude-opus-5-5";
 const maxUsd = Number(process.env.EVAL_MAX_USD || "2");
 
@@ -80,7 +84,7 @@ describe.skipIf(!key)("v0.1 model evaluation", () => {
 });
 
 describe.skipIf(Boolean(key))("v0.1 model evaluation (skipped)", () => {
-  it("needs ANTHROPIC_API_KEY — set it in your shell or .env.local, never in the repository", () => {
+  it("needs ANTHROPIC_API_KEY (or CONVOPILOT_ANTHROPIC_API_KEY) — set it in your shell, .env.local or the environment settings, never in the repository", () => {
     expect(key).toBeUndefined();
   });
 });
