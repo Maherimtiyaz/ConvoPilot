@@ -4,6 +4,20 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 26 — Security and production-readiness review (2026-11-22)
+
+- Owner asked to check security and whether the code is production level. Two independent
+  reviewers (app layer, database) plus automated checks. Findings and outcomes: `ACCEPTANCE.md` §2a.
+- Fixed: parser ReDoS (high), AI reservation release (medium), export cut at 1,000 rows (medium),
+  production URL checks for the app address and the AI address, JSON size limits. Added 404,
+  global error page, robots.txt, link-preview image. Dev-only lint dependencies updated (`npm audit`
+  now 0).
+- Tracked: login CSRF binding (R7), per-workspace row quotas, Turnstile + per-IP limits, search
+  terms out of URLs, AI timeout retry accounting, brand-bible artifact.
+- Tests: unit 143, pgTAP 273 (CI minimum raised), e2e export of 1,205 rows.
+
+---
+
 ## Session 25 — Brand tokens, sign-in emails, eval key name (2026-11-22)
 
 - Owner: "continue next left thing". The remaining launch gates need the owner (real-AI eval key,

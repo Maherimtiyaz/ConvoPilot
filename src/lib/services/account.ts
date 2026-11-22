@@ -29,6 +29,15 @@ const EXPORT_TABLES = [
   ["ai_usage_daily", "day, requests, input_tokens, output_tokens, cost_micro_usd"],
 ] as const;
 
+const EXPORT_PAGE = 1000;
+const MAX_EXPORT_PAGES = 500;
+/** Stable sort keys for tables without an `id` column. */
+const EXPORT_ORDER: Partial<Record<(typeof EXPORT_TABLES)[number][0], string>> = {
+  contact_identifiers: "contact_id, kind, value_normalized",
+  workspace_settings: "workspace_id",
+  ai_usage_daily: "day",
+};
+
 /** Everything the user can see in their workspace, as plain JSON (deleted items are excluded). */
 export async function exportWorkspaceData(ctx: RequestContext): Promise<Record<string, unknown>> {
   const supabase = await createSupabaseServerClient("server-action");
@@ -37,10 +46,21 @@ export async function exportWorkspaceData(ctx: RequestContext): Promise<Record<s
     exported_at: new Date().toISOString(),
     account_email: ctx.email,
   };
+  // The API returns at most 1,000 rows per request (PostgREST max_rows), so read every table page
+  // by page in a stable order; a short page means the table is complete (review 2026-11-22).
   for (const [table, columns] of EXPORT_TABLES) {
-    const { data, error } = await supabase.from(table).select(columns).eq("workspace_id", ctx.workspaceId).limit(50_000);
-    if (error) throw new StudioError("failed");
-    out[table] = data;
+    const order = EXPORT_ORDER[table] ?? "id";
+    const rows: unknown[] = [];
+    for (let page = 0; ; page++) {
+      if (page >= MAX_EXPORT_PAGES) throw new StudioError("failed");
+      let query = supabase.from(table).select(columns).eq("workspace_id", ctx.workspaceId);
+      for (const key of order.split(",")) query = query.order(key.trim());
+      const { data, error } = await query.range(page * EXPORT_PAGE, page * EXPORT_PAGE + EXPORT_PAGE - 1);
+      if (error) throw new StudioError("failed");
+      rows.push(...(data ?? []));
+      if (!data || data.length < EXPORT_PAGE) break;
+    }
+    out[table] = rows;
   }
   // Audited without content (DATABASE.md §10).
   const { error } = await supabase.rpc("log_event", { p_action: "export.requested", p_target_type: "export", p_target_id: null, p_metadata: {} });

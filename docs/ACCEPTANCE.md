@@ -41,6 +41,31 @@ directly. **No critical or high findings.** Findings and outcomes:
 | §10.1 | — | NUL bytes in imports produced a generic database error | **Fixed**: typed `invalid_text` error with a clear message (unit test) |
 | §14 | — | No account deletion or export in the app | **Built**: Settings → "Download my data" (full JSON export, audited) and "Delete my account" (typed confirmation; workspace hidden at once; all sessions revoked). Test: `tests/e2e/account.spec.ts` |
 
+## 2a. Security and production review (two independent reviewers, 2026-11-22)
+
+One reviewer read the app layer (`src/`, headers, proxy), the other the database (all migrations,
+config). Both assumed an attacker with a valid account calling the API directly, plus outside
+senders crafting the content users paste. Each finding was re-checked before fixing.
+
+| ID | Severity | Finding | Outcome |
+| --- | --- | --- | --- |
+| R1 | High | A crafted pasted/uploaded email (huge fake address in a `From:` header) made the parser's regex backtrack for seconds to minutes, blocking the server | **Fixed**: header lines over 500 characters are never pattern-matched, address values are capped, `@` excluded from the bare-address pattern. Reproduced first (4,000 chars → 5 s); now < 0.5 s. Tests: 4 timing tests in `parse.test.ts` |
+| R2 | Medium | `record_ai_usage` released any amount the caller named, so a direct API caller could clear reservations and let parallel requests pass the $1/day cap | **Fixed**: migration `20261122000200` — each reservation is a private row; settling names its id and releases exactly that amount once. Tests: `70_acceptance` (+4) |
+| R3 | Medium | Data export silently stopped at 1,000 rows per table (API page limit) | **Fixed**: the export pages through every table. Test: `account.spec.ts` exports 1,205 contacts |
+| R4 | Low | The test-only `ANTHROPIC_BASE_URL` was accepted in production (could send conversations to another host) | **Fixed**: production allows only `https://api.anthropic.com` or the local test mock. Unit tests |
+| R5 | Low | A forgotten `NEXT_PUBLIC_APP_URL` in production would give invitation links to `localhost` | **Fixed**: production requires an https address (or 127.0.0.1 for local tests). Unit tests |
+| R6 | Low | User-writable JSON (`writing_style_profile`, `thread_analyses.analysis`) had no size limit | **Fixed**: size checks (20 KB / 200 KB). Row-count quotas per workspace: tracked for before ~1,000 users |
+| R7 | Low | Login CSRF: someone with an account could send a victim *their own* sign-in link, so the victim works inside the attacker's workspace | **Accepted for now, tracked**: the Dashboard shows the signed-in email. Planned fix: bind the link to the browser that requested it |
+| R8 | Low | The public waitlist's global flood limit can be jammed by a script | **Known**: bot check (Turnstile) and per-IP limits needed before sharing the link widely (owner account) |
+| R9 | Info | Search terms are in the URL (`?q=`), so they reach hosting logs and history; AI timeouts retried may be under-counted; conversations erased after 30 days take their confirmed commitments with them (documented decision) | **Tracked** |
+| — | — | Production basics missing | **Added**: branded 404 page, last-resort error page, `robots.txt` (app and auth pages not indexed), link-preview image and share metadata; the in-app error page now re-fetches from the server |
+
+Areas both reviewers found sound: auth checks on every page and action, no cross-workspace access,
+RLS on all 17 tables with narrow column grants, fail-closed function privileges, invitations and
+sign-up, audit log, soft delete and restore, operator console, no XSS sinks, no secrets or content
+in logs, AI tool loop limits and citation checks. Production dependencies: 0 known vulnerabilities
+(`npm audit`); 7 moderate ones in development-only lint tooling were updated away.
+
 ## 3. Security checklist (`SECURITY.md` §15)
 
 See the updated checklist in `SECURITY.md` §15: **all 19 items are met** (since 2026-11-18, when

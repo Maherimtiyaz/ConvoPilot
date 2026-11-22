@@ -115,3 +115,30 @@ describe("helpers", () => {
     expect(htmlToText("a&amp;b<br>c &lt;d&gt;")).toBe("a&b\nc <d>");
   });
 });
+
+describe("crafted input cannot stall the parser (security review 2026-11-22)", () => {
+  const timed = (fn: () => unknown) => {
+    const start = performance.now();
+    fn();
+    return performance.now() - start;
+  };
+
+  it("parses a huge fake address in an Outlook header quickly", () => {
+    expect(timed(() => parsePastedText(`hi\n\nFrom: ${"a@".repeat(50_000)}\nSent: x\n\nbody`))).toBeLessThan(500);
+  });
+
+  it("parses huge 'On … wrote:' lines quickly", () => {
+    expect(timed(() => parsePastedText(`hi\n\nOn ${"a, ".repeat(30_000)} wrote:\n> b`))).toBeLessThan(500);
+    expect(timed(() => parsePastedText(`hi\n\nOn ${"x".repeat(60_000)} at wrote:\n> b`))).toBeLessThan(500);
+  });
+
+  it("parses a huge .eml From header quickly", () => {
+    const eml = `From: ${"a@".repeat(100_000)}\r\nSubject: s\r\nContent-Type: text/plain\r\n\r\nhello`;
+    expect(timed(() => parseFile("x.eml", new TextEncoder().encode(eml)))).toBeLessThan(500);
+  });
+
+  it("still reads normal addresses", () => {
+    expect(parseAddress("Priya Shah <priya@example.com>")).toEqual({ name: "Priya Shah", email: "priya@example.com" });
+    expect(parseAddress("priya@example.com (Priya)")).toEqual({ name: "Priya", email: "priya@example.com" });
+  });
+});

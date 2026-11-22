@@ -2,7 +2,7 @@
 -- reservation (security review M1). Synthetic data only.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(31);
+select plan(35);
 
 create function pg_temp.as_user(p_id uuid) returns void
 language sql as $$
@@ -75,13 +75,28 @@ select is(public.decide_proposal('commitment', pg_temp.id('c2'), 'confirm') ->> 
 select is(public.set_task_status(pg_temp.id('t1'), 'proposed') ->> 'status', 'invalid', 'A22: an open task cannot go back to proposed');
 
 -- ---------------------------------------------------------------- M1: AI spend reservation
-select is(public.reserve_ai_usage(pg_temp.wsa(), 600000, 1000000) ->> 'status', 'ok', 'M1: a first request reserves its worst case');
+create temp table res (name text primary key, id uuid);
+grant all on res to authenticated;
+insert into res select 'r1', (public.reserve_ai_usage(pg_temp.wsa(), 600000, 1000000) ->> 'reservation_id')::uuid;
+select isnt((select id from res where name = 'r1'), null, 'M1: a first request reserves its worst case and gets a reservation id');
 select is(public.reserve_ai_usage(pg_temp.wsa(), 500000, 1000000) ->> 'status', 'over_cap', 'M1: a concurrent request that would pass the cap is refused');
-select public.record_ai_usage(pg_temp.wsa(), 1000, 500, 300000, 600000);
+-- Review 2026-11-22: a direct call cannot release reservations it does not own.
+select public.record_ai_usage(pg_temp.wsa(), 0, 0, 0, gen_random_uuid());
+select is((select reserved_micro_usd from public.ai_usage_daily where workspace_id = pg_temp.wsa()), 600000::bigint,
+  'settling with an unknown reservation id releases nothing');
+select public.record_ai_usage(pg_temp.wsa(), 0, 0, 0);
+select is((select reserved_micro_usd from public.ai_usage_daily where workspace_id = pg_temp.wsa()), 600000::bigint,
+  'recording usage without a reservation id releases nothing');
+select public.record_ai_usage(pg_temp.wsa(), 1000, 500, 300000, (select id from res where name = 'r1'));
 select is((select cost_micro_usd || '/' || reserved_micro_usd from public.ai_usage_daily where workspace_id = pg_temp.wsa()), '300000/0',
   'M1: settling records the real cost and releases the reservation');
-select is(public.reserve_ai_usage(pg_temp.wsa(), 900000, 1000000) ->> 'status', 'ok', 'M1: a lone request may start while under the cap');
-select public.record_ai_usage(pg_temp.wsa(), 1000, 500, 800000, 900000);
+insert into res select 'r2', (public.reserve_ai_usage(pg_temp.wsa(), 900000, 1000000) ->> 'reservation_id')::uuid;
+select public.record_ai_usage(pg_temp.wsa(), 0, 0, 0, (select id from res where name = 'r1'));
+select is((select reserved_micro_usd from public.ai_usage_daily where workspace_id = pg_temp.wsa()), 900000::bigint,
+  'a reservation can be released only once (settling r1 again frees nothing)');
+select isnt((select id from res where name = 'r2'), null, 'M1: a lone request may start while under the cap');
+select public.record_ai_usage(pg_temp.wsa(), 1000, 500, 800000, (select id from res where name = 'r2'));
+select throws_ok($$ select count(*) from app_private.ai_reservations $$, '42501', null, 'reservation rows are not readable by users');
 select is(public.reserve_ai_usage(pg_temp.wsa(), 1000, 1000000) ->> 'status', 'over_cap', 'M1: nothing starts once the cap is reached');
 select is(public.reserve_ai_usage(pg_temp.wsa(), 0, 1000000) ->> 'status', 'invalid', 'M1: amounts are validated');
 
