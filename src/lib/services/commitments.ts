@@ -8,7 +8,7 @@ import { extractCommitments } from "@/lib/ai/workflows/extract-commitments";
 import { createSupabaseServerClient, type SupabaseServerContext } from "@/lib/supabase/server";
 
 import { withAi } from "./ai-runtime";
-import { getConversation, StudioError } from "./studio";
+import { getConversation, ownerOf, StudioError } from "./studio";
 
 const db = (context: SupabaseServerContext) => createSupabaseServerClient(context);
 
@@ -159,7 +159,7 @@ const storeResult = z.object({
 export async function extractConversationCommitments(ctx: RequestContext, conversationId: string): Promise<ExtractSummary> {
   const detail = await getConversation(ctx, conversationId, "server-action");
   const result = await withAi(ctx, DEFAULT_BUDGETS.extractCommitments, (provider, budget) =>
-    extractCommitments(provider, { subject: detail.conversation.subject, messages: detail.messages, owner: { name: null, email: ctx.email } }, budget),
+    extractCommitments(provider, { subject: detail.conversation.subject, messages: detail.messages, owner: ownerOf(ctx, detail) }, budget),
   );
   if (result.proposals.length === 0) return { created: 0, tasks: 0, duplicates: 0, unsupported: result.droppedUnsupported };
   const supabase = await db("server-action");

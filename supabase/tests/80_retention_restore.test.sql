@@ -2,7 +2,7 @@
 -- account erasure (docs/DATABASE.md §8; owner decisions 2026-11-18). Synthetic data only.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(32);
+select plan(37);
 
 create function pg_temp.as_user(p_id uuid) returns void
 language sql as $$
@@ -48,6 +48,13 @@ insert into ids select 't_own', (public.create_task(pg_temp.wsa(), 'Book the ven
 -- ---------------------------------------------------------------- time zone setting
 select lives_ok($$ update public.workspace_settings set time_zone = 'Asia/Kolkata' where workspace_id = pg_temp.wsa() $$, 'the user can set their time zone');
 select throws_ok($$ update public.workspace_settings set time_zone = 'x; drop table' where workspace_id = pg_temp.wsa() $$, '23514', null, 'an invalid time zone name is refused');
+
+-- ---------------------------------------------------------------- names in chat exports
+select lives_ok($$ update public.workspace_settings set chat_names = array['Ada Example', 'Ada'] where workspace_id = pg_temp.wsa() $$, 'the user can list their chat names');
+select throws_ok($$ update public.workspace_settings set chat_names = array['a','b','c','d','e','f'] where workspace_id = pg_temp.wsa() $$, '23514', null, 'more than 5 chat names are refused');
+select throws_ok($$ update public.workspace_settings set chat_names = array[''] where workspace_id = pg_temp.wsa() $$, '23514', null, 'an empty chat name is refused');
+select lives_ok($$ update public.workspace_settings set writing_style_profile = '{"sign_off": "Best, Ada"}' where workspace_id = pg_temp.wsa() $$, 'other settings still save with the chat-name check in place');
+select throws_ok($$ update public.workspace_settings set chat_names = array[repeat('x', 101)] where workspace_id = pg_temp.wsa() $$, '23514', null, 'an over-long chat name is refused');
 
 -- ---------------------------------------------------------------- recently deleted + restore conversation
 select public.soft_delete_conversation(pg_temp.id('conv'));

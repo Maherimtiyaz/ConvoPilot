@@ -116,6 +116,9 @@ Deviations from §5, decided as engineering defaults (owner may override):
   through the API; returns counts only.
 - `workspace_settings.time_zone` (IANA name, default `UTC`; validated by the app and by a format
   check): "today", "overdue" and "due this week" use it.
+- `workspace_settings.chat_names` (text[], up to 5 names of 1–100 characters, no control
+  characters; plain CHECK expression): the names the user appears under in chat exports; messages
+  without an email from those names count as sent by the user (`docs/WHATSAPP.md` §1).
 
 Changes from earlier drafts (justified):
 

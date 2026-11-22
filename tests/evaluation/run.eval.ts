@@ -44,7 +44,7 @@ describe.skipIf(!key)("v0.1 model evaluation", () => {
       date: new Date().toISOString(),
       provider: "anthropic",
       model,
-      prompts: [`${analyzeEmailPrompt.id}@${analyzeEmailPrompt.version}`, `${extractCommitmentsPrompt.id}@${extractCommitmentsPrompt.version}`, "draft-reply@1", "ask-history@1"],
+      prompts: [`${analyzeEmailPrompt.id}@${analyzeEmailPrompt.version}`, `${extractCommitmentsPrompt.id}@${extractCommitmentsPrompt.version}`, "draft-reply@2", "ask-history@1"],
       usage: { ...run.usage, costUsd },
       metrics,
       cases: run.cases,

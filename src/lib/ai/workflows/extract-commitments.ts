@@ -38,7 +38,7 @@ interface ExtractInput {
 
 export const extractCommitmentsPrompt = definePrompt<ExtractInput, CommitmentsOutput>({
   id: "extract-commitments",
-  version: 1,
+  version: 2,
   maxOutputTokens: 6_000,
   output: commitmentsOutput,
   system: () =>

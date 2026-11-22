@@ -4,6 +4,21 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 24 — "Your names in chats" (2026-11-22)
+
+- Owner merged PR #9 (main CI green) and said continue: built the follow-up from session 23.
+- Settings → "Your names in chats" (up to 5, comma-separated; migration
+  `20261122000100_chat_names.sql`, column grant, database bounds). Messages without an email whose
+  sender name matches are shown as "you" and given to the AI as sent by the user (applies to
+  earlier imports too); prompts tell the AI the names (analyze-email, extract-commitments and
+  draft-reply prompts → version 2).
+- Caught in testing: a CHECK that calls a private helper function needs EXECUTE for every
+  user who updates the table, so all Settings saves failed. Rewrote it as a plain expression and
+  added a pgTAP regression test (other settings still save).
+- Tests: unit 135, pgTAP 269 (CI minimum raised), e2e WhatsApp test extended.
+
+---
+
 ## Session 23 — WhatsApp chat import; WhatsApp assistant planned (2026-11-21)
 
 - Owner asked for WhatsApp; agreed plan: (1) import WhatsApp "Export chat" text now, (2) a
@@ -14,7 +29,7 @@ Session-by-session report of what was worked on. Newest first.
   tells the user how many were left out. Studio explains how to export a chat. No migration, no
   new dependency. Sender names have no email, so messages are stored with direction "unknown".
 - Tracked: let the user say which WhatsApp name is theirs (so their own messages count as
-  outbound) — follow-up, not started.
+  outbound). Done in session 24.
 - Tests: unit +13 (129), new e2e for a WhatsApp upload (time zone, truncation, media dropped).
 
 ---

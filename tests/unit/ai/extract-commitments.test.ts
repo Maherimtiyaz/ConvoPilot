@@ -38,7 +38,7 @@ describe("extractCommitments", () => {
     });
     expect(r.proposals[1].task).toBeNull(); // tasks only for the user's own commitments
     expect(r.proposals[1].due_date).toBeNull(); // impossible calendar dates are discarded
-    expect(r.metadata).toMatchObject({ promptId: "extract-commitments", promptVersion: 1 });
+    expect(r.metadata).toMatchObject({ promptId: "extract-commitments", promptVersion: 2 });
     expect(p.requests[0].messages[1].content).toMatch(/<<<UNTRUSTED \S+ message 1/);
   });
 

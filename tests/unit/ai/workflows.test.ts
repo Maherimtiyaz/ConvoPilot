@@ -34,7 +34,7 @@ describe("analyzeThread", () => {
     expect(r.analysis.intent).toEqual({ text: "Priya wants the revised deck by Friday.", citations: [{ messageId: "m1", position: 1, quote: "send the revised deck by Friday" }] });
     expect(r.analysis.mainPoints.map((p) => p.text)).toEqual(["Deck due Friday."]);
     expect(r.analysis.droppedUnsupported).toBe(2);
-    expect(r.metadata).toMatchObject({ provider: "test", promptId: "analyze-email", promptVersion: 1 });
+    expect(r.metadata).toMatchObject({ provider: "test", promptId: "analyze-email", promptVersion: 2 });
 
     // The thread reaches the model only inside delimited untrusted blocks.
     const user = p.requests[0].messages[1].content;

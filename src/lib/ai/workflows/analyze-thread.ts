@@ -34,7 +34,7 @@ interface AnalyzeInput {
 
 export const analyzeEmailPrompt = definePrompt<AnalyzeInput, AnalysisOutput>({
   id: "analyze-email",
-  version: 1,
+  version: 2,
   maxOutputTokens: 8_000,
   output: analysisOutput,
   system: () =>

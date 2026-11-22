@@ -5,7 +5,7 @@ import { signOutAction } from "@/app/auth/actions";
 import { Suspense } from "react";
 
 import type { RequestContext } from "@/lib/auth/context";
-import { listRecentlyDeleted } from "@/lib/services/account";
+import { getChatNames, listRecentlyDeleted } from "@/lib/services/account";
 import { getTimeZone } from "@/lib/services/commitments";
 import { getAiSettings } from "@/lib/services/studio";
 
@@ -13,7 +13,7 @@ import { LoadingState, ProtectedPage } from "../protected-page";
 
 import { AccountDataSection } from "./account-section";
 import { AiConsentToggle, StyleForm } from "./ai-settings";
-import { RecentlyDeletedSection, TimeZoneSection } from "./data-sections";
+import { ChatNamesSection, RecentlyDeletedSection, TimeZoneSection } from "./data-sections";
 
 async function AiSettingsSection({ ctx }: { ctx: RequestContext }) {
   const settings = await getAiSettings(ctx);
@@ -48,10 +48,11 @@ function timeZones(current: string): string[] {
 }
 
 async function PreferencesSection({ ctx }: { ctx: RequestContext }) {
-  const [timeZone, deleted] = await Promise.all([getTimeZone(ctx), listRecentlyDeleted()]);
+  const [timeZone, deleted, chatNames] = await Promise.all([getTimeZone(ctx), listRecentlyDeleted(), getChatNames(ctx)]);
   return (
     <>
       <TimeZoneSection current={timeZone} zones={timeZones(timeZone)} />
+      <ChatNamesSection current={chatNames} />
       <RecentlyDeletedSection items={deleted} />
     </>
   );

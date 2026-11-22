@@ -15,6 +15,8 @@ export interface ThreadMessage {
 export interface ThreadOwner {
   name: string | null;
   email: string | null;
+  /** Names the user appears under in chat exports (Settings); untrusted user-entered text. */
+  chatNames?: string[];
 }
 
 /** Numbered, delimited thread text: the model cites messages as [n]. */
@@ -33,5 +35,16 @@ export function renderThread(subject: string, messages: ThreadMessage[], nonce: 
 }
 
 export function describeOwner(owner: ThreadOwner): string {
-  return owner.email ? `The user is ${owner.name ?? "the account owner"} <${owner.email}>.` : "The user is the account owner.";
+  const base = owner.email ? `The user is ${owner.name ?? "the account owner"} <${owner.email}>.` : "The user is the account owner.";
+  const names = (owner.chatNames ?? []).map((n) => JSON.stringify(n.replace(/[\r\n]+/g, " ").slice(0, 100))).slice(0, 5);
+  return names.length ? `${base} In chat exports the user appears as ${names.join(", ")}.` : base;
+}
+
+/** Messages with no email whose sender name is one of the user's chat names were sent by the user. */
+export function resolveDirections(messages: ThreadMessage[], chatNames: string[]): ThreadMessage[] {
+  const mine = new Set(chatNames.map((n) => n.trim().toLowerCase()).filter(Boolean));
+  if (mine.size === 0) return messages;
+  return messages.map((m) =>
+    m.direction === "unknown" && !m.senderEmail && m.senderName && mine.has(m.senderName.trim().toLowerCase()) ? { ...m, direction: "outbound" } : m,
+  );
 }
