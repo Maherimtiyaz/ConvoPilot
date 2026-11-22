@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireRequestContext } from "@/lib/auth/context";
-import { deleteAccount, exportWorkspaceData, restoreItem, setTimeZone } from "@/lib/services/account";
+import { deleteAccount, exportWorkspaceData, restoreItem, setChatNames, setTimeZone } from "@/lib/services/account";
 import { uuidSchema } from "@/lib/validation/studio";
 
 export async function exportDataAction(): Promise<{ error: string | null; json?: string; fileName?: string }> {
@@ -52,6 +52,19 @@ export async function setTimeZoneAction(timeZone: string): Promise<{ error: stri
   if (typeof timeZone !== "string") return { error: "Choose a time zone from the list." };
   try {
     if ((await setTimeZone(ctx, timeZone)) === "invalid") return { error: "Choose a time zone from the list." };
+    refresh();
+    return { error: null };
+  } catch {
+    return { error: "Something went wrong. Please try again." };
+  }
+}
+
+export async function setChatNamesAction(names: unknown): Promise<{ error: string | null }> {
+  const ctx = await requireRequestContext();
+  const invalid = "Use up to 5 names, each under 100 characters.";
+  if (!Array.isArray(names) || names.length > 20 || !names.every((n) => typeof n === "string" && n.length <= 200)) return { error: invalid };
+  try {
+    if ((await setChatNames(ctx, names)) === "invalid") return { error: invalid };
     refresh();
     return { error: null };
   } catch {

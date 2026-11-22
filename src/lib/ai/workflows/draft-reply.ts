@@ -42,7 +42,7 @@ const LENGTH = { short: "2–4 sentences", medium: "one or two short paragraphs"
 
 export const draftReplyPrompt = definePrompt<DraftInput, z.infer<typeof draftOutput>>({
   id: "draft-reply",
-  version: 1,
+  version: 2,
   maxOutputTokens: 6_000,
   output: draftOutput,
   system: () =>

@@ -6,7 +6,7 @@ import type { RequestContext } from "@/lib/auth/context";
 import { DEFAULT_BUDGETS } from "@/lib/ai/budget";
 import { analyzeThread, storedAnalysisSchema, type StoredAnalysis } from "@/lib/ai/workflows/analyze-thread";
 import { draftReply, type DraftOptions, type WritingStyle } from "@/lib/ai/workflows/draft-reply";
-import type { ThreadMessage } from "@/lib/ai/workflows/thread-input";
+import { resolveDirections, type ThreadMessage, type ThreadOwner } from "@/lib/ai/workflows/thread-input";
 import { parseFile, parsePastedText, type ParseError, type ParsedThread } from "@/lib/conversations/parse";
 import { wallTimeToUtc } from "@/lib/conversations/whatsapp";
 import { getAiEnv } from "@/lib/env/ai";
@@ -77,6 +77,8 @@ export interface ConversationDetail {
   messages: ThreadMessage[];
   analysis: { id: string; data: StoredAnalysis; model: string; promptVersion: string; createdAt: string } | null;
   drafts: DraftView[];
+  /** The user's names in chat exports (Settings), used to tell their own messages apart. */
+  chatNames: string[];
 }
 
 /** A stored analysis that no longer matches its schema is treated as absent (never cast blindly). */
@@ -88,18 +90,20 @@ function storedAnalysis(row: z.infer<typeof analysisRow> | null): ConversationDe
 
 export async function getConversation(ctx: RequestContext, id: string, context: SupabaseServerContext = "server-component"): Promise<ConversationDetail> {
   const supabase = await db(context);
-  const [c, m, a, d] = await Promise.all([
+  const [c, m, a, d, s] = await Promise.all([
     supabase.from("conversations").select("id, subject, source_type, message_count, last_message_at, created_at").eq("id", id).eq("workspace_id", ctx.workspaceId).maybeSingle(),
     supabase.from("messages").select("id, workspace_id, position, direction, sender_name, sender_email, sent_at, body_text").eq("conversation_id", id).eq("workspace_id", ctx.workspaceId).order("position"),
     supabase.from("thread_analyses").select("id, analysis, ai_model, prompt_version, created_at").eq("conversation_id", id).eq("workspace_id", ctx.workspaceId).order("created_at", { ascending: false }).limit(1),
     supabase.from("drafts").select("id, content, tone, length, edited_by_user, ai_model, created_at, updated_at").eq("conversation_id", id).eq("workspace_id", ctx.workspaceId).order("created_at", { ascending: false }).limit(20),
+    supabase.from("workspace_settings").select("chat_names").eq("workspace_id", ctx.workspaceId).single(),
   ]);
-  if (c.error || m.error || a.error || d.error) throw new StudioError("failed");
+  if (c.error || m.error || a.error || d.error || s.error) throw new StudioError("failed");
+  const chatNames = z.object({ chat_names: z.array(z.string()) }).parse(s.data).chat_names;
   if (!c.data) throw new StudioError("not_found");
   const analysis = a.data?.[0] ? analysisRow.parse(a.data[0]) : null;
   return {
     conversation: conversationRow.parse(c.data),
-    messages: z.array(messageRow).parse(m.data).map((r) => ({
+    messages: resolveDirections(z.array(messageRow).parse(m.data).map((r) => ({
       id: r.id,
       workspaceId: r.workspace_id,
       position: r.position,
@@ -108,9 +112,10 @@ export async function getConversation(ctx: RequestContext, id: string, context: 
       senderEmail: r.sender_email,
       sentAt: r.sent_at,
       body: r.body_text,
-    })),
+    })), chatNames),
     analysis: storedAnalysis(analysis),
     drafts: z.array(draftRow).parse(d.data),
+    chatNames,
   };
 }
 
@@ -203,12 +208,12 @@ export async function deleteConversation(id: string): Promise<boolean> {
 }
 
 // ---------------------------------------------------------------- AI runs
-const owner = (ctx: RequestContext) => ({ name: null, email: ctx.email });
+export const ownerOf = (ctx: RequestContext, detail: Pick<ConversationDetail, "chatNames">): ThreadOwner => ({ name: null, email: ctx.email, chatNames: detail.chatNames });
 
 export async function analyzeConversation(ctx: RequestContext, conversationId: string): Promise<void> {
   const detail = await getConversation(ctx, conversationId, "server-action");
   const result = await withAi(ctx, DEFAULT_BUDGETS.analyzeThread, (provider, budget) =>
-    analyzeThread(provider, { subject: detail.conversation.subject, messages: detail.messages, owner: owner(ctx) }, budget),
+    analyzeThread(provider, { subject: detail.conversation.subject, messages: detail.messages, owner: ownerOf(ctx, detail) }, budget),
   );
   const supabase = await db("server-action");
   const { data, error } = await supabase
@@ -240,7 +245,7 @@ export async function analyzeConversation(ctx: RequestContext, conversationId: s
 export async function createDraft(ctx: RequestContext, conversationId: string, options: DraftOptions): Promise<string> {
   const [detail, settings] = await Promise.all([getConversation(ctx, conversationId, "server-action"), getAiSettings(ctx, "server-action")]);
   const result = await withAi(ctx, DEFAULT_BUDGETS.draftReply, (provider, budget) =>
-    draftReply(provider, { subject: detail.conversation.subject, messages: detail.messages, owner: owner(ctx), style: settings.style, options }, budget),
+    draftReply(provider, { subject: detail.conversation.subject, messages: detail.messages, owner: ownerOf(ctx, detail), style: settings.style, options }, budget),
   );
   const supabase = await db("server-action");
   const { data, error } = await supabase

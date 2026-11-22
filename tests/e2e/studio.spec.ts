@@ -130,5 +130,17 @@ test.describe("Communication Studio", () => {
     expect(sql(`select count(*) from public.messages where workspace_id = ${ws}`)).toBe("50");
     // 10:01 in India (UTC+5:30) is 04:31 UTC.
     expect(sql(`select to_char(max(sent_at) at time zone 'UTC', 'YYYY-MM-DD HH24:MI') from public.messages where workspace_id = ${ws}`)).toBe("2026-03-12 04:31");
+
+    // After the user tells Settings their WhatsApp name, their messages are marked as theirs.
+    const chatUrl = page.url().replace(/&older=\d+/, "");
+    await expect(page.locator("#message-49").getByText("you", { exact: true })).toHaveCount(0);
+    await page.goto("/app/settings");
+    await page.getByLabel("Names (separate with commas)").fill("ada example,  Ada");
+    await page.getByRole("button", { name: "Save names" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible();
+    await page.goto(chatUrl);
+    await expect(page.locator("#message-49").getByText("you", { exact: true })).toBeVisible();
+    await expect(page.locator("#message-50").getByText("you", { exact: true })).toHaveCount(0);
+    expect(sql(`select array_to_string(chat_names, '|') from public.workspace_settings where workspace_id = ${ws}`)).toBe("ada example|Ada");
   });
 });

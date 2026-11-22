@@ -25,7 +25,7 @@ const EXPORT_TABLES = [
   ["commitments", "id, conversation_id, contact_id, description, owner, due_date, due_text_raw, status, origin, evidence_state, confidence, decided_at, ai_model, prompt_version, created_at"],
   ["tasks", "id, title, status, priority, due_date, due_text_raw, origin, conversation_id, commitment_id, contact_id, completed_at, decided_at, created_at"],
   ["citations", "id, thread_analysis_id, draft_id, commitment_id, message_id, quote, created_at"],
-  ["workspace_settings", "writing_style_profile, ai_hosted_processing_opt_in"],
+  ["workspace_settings", "writing_style_profile, ai_hosted_processing_opt_in, time_zone, chat_names"],
   ["ai_usage_daily", "day, requests, input_tokens, output_tokens, cost_micro_usd"],
 ] as const;
 
@@ -87,6 +87,38 @@ export async function restoreItem(kind: "conversation" | "contact", id: string):
   if (error) throw new StudioError("failed");
   const r = z.object({ status: z.enum(["restored", "not_found", "duplicate"]), emails_skipped: z.number().optional() }).parse(data);
   return { status: r.status, emailsSkipped: r.emails_skipped ?? 0 };
+}
+
+// ---------------------------------------------------------------- names in chat exports
+/** Trims, drops empties and duplicates (ignoring case); null when a name is unusable or there are more than 5. */
+export function normaliseChatNames(input: string[]): string[] | null {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of input) {
+    const name = raw.replace(/\s+/g, " ").trim();
+    if (!name) continue;
+    if (name.length > 100 || /[\u0000-\u001f\u007f]/.test(name)) return null;
+    if (seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    out.push(name);
+  }
+  return out.length <= 5 ? out : null;
+}
+
+export async function getChatNames(ctx: RequestContext): Promise<string[]> {
+  const supabase = await createSupabaseServerClient("server-component");
+  const { data, error } = await supabase.from("workspace_settings").select("chat_names").eq("workspace_id", ctx.workspaceId).single();
+  if (error) throw new StudioError("failed");
+  return z.object({ chat_names: z.array(z.string()) }).parse(data).chat_names;
+}
+
+export async function setChatNames(ctx: RequestContext, input: string[]): Promise<"saved" | "invalid"> {
+  const names = normaliseChatNames(input);
+  if (!names) return "invalid";
+  const supabase = await createSupabaseServerClient("server-action");
+  const { error } = await supabase.from("workspace_settings").update({ chat_names: names }).eq("workspace_id", ctx.workspaceId);
+  if (error) throw new StudioError("failed");
+  return "saved";
 }
 
 // ---------------------------------------------------------------- time zone

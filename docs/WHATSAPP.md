@@ -20,8 +20,11 @@ mean handling a user's whole message history. ConvoPilot will never use them.
   times converted with the workspace time zone, the newest 50 messages kept and the rest counted.
 - Everything else is unchanged: the same limits, RLS, plain-text rendering, AI consent and
   cited analysis as email imports.
-- Known gap: senders have names but no email, so ConvoPilot cannot tell which messages are the
-  user's own (stored as direction "unknown"). Follow-up: a "your WhatsApp name" setting.
+- Your own messages: exports have names but no emails, so Settings → **Your names in chats**
+  lets the user list up to 5 names WhatsApp shows for them (`workspace_settings.chat_names`).
+  Messages from those names (case-insensitive) are treated as sent by the user when a
+  conversation is shown or given to the AI, including chats imported earlier, and the AI is told
+  the names. Messages with an email address are never changed.
 
 ## 2. Part 2 — ConvoPilot assistant on WhatsApp (planned)
 

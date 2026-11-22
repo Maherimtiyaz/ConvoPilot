@@ -4,7 +4,7 @@ import { useState, useSyncExternalStore, useTransition } from "react";
 
 import type { DeletedItem } from "@/lib/services/account";
 
-import { restoreItemAction, setTimeZoneAction } from "./account-actions";
+import { restoreItemAction, setChatNamesAction, setTimeZoneAction } from "./account-actions";
 
 const secondary = "rounded-xl border border-ink-300 bg-white px-3 py-1.5 text-sm font-medium text-ink hover:bg-white/60 disabled:opacity-50";
 const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
@@ -57,6 +57,50 @@ export function TimeZoneSection({ current, zones }: { current: string; zones: st
             Use {detected.replaceAll("_", " ")} (this device)
           </button>
         )}
+        {message && (
+          <span role={message.ok ? "status" : "alert"} className={`text-sm ${message.ok ? "text-success" : "text-error"}`}>
+            {message.text}
+          </span>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/** The names WhatsApp shows for the user, so their own messages in a chat export count as sent by them. */
+export function ChatNamesSection({ current }: { current: string[] }) {
+  const initial = current.join(", ");
+  const [value, setValue] = useState(initial);
+  const [pending, start] = useTransition();
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const save = () =>
+    start(async () => {
+      const r = await setChatNamesAction(value.split(","));
+      setMessage(r.error ? { ok: false, text: r.error } : { ok: true, text: "Saved" });
+    });
+
+  return (
+    <section aria-labelledby="chat-names-heading" className="cp-glass rounded-3xl p-6">
+      <h2 id="chat-names-heading" className="text-base font-semibold text-ink">
+        Your names in chats
+      </h2>
+      <p className="mt-1 text-sm text-ink-700">
+        WhatsApp chat exports show names, not email addresses. Add the name(s) WhatsApp shows for you so ConvoPilot knows which messages are yours.
+      </p>
+      <div className="mt-4 flex flex-wrap items-end gap-3">
+        <label className="min-w-0 flex-1 space-y-1 text-sm font-medium sm:max-w-md">
+          <span className="block">Names (separate with commas)</span>
+          <input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            maxLength={600}
+            placeholder="e.g. Ada Example, Ada"
+            className="block h-10 w-full rounded-xl border border-ink-300 bg-white px-3"
+          />
+        </label>
+        <button type="button" disabled={pending} onClick={save} className={secondary}>
+          Save names
+        </button>
         {message && (
           <span role={message.ok ? "status" : "alert"} className={`text-sm ${message.ok ? "text-success" : "text-error"}`}>
             {message.text}
