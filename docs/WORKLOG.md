@@ -4,6 +4,21 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 23 — WhatsApp chat import; WhatsApp assistant planned (2026-11-21)
+
+- Owner asked for WhatsApp; agreed plan: (1) import WhatsApp "Export chat" text now, (2) a
+  WhatsApp assistant on ConvoPilot's own number after early access (design: docs/WHATSAPP.md).
+- Built (1): `src/lib/conversations/whatsapp.ts` recognises iPhone and Android exports (pasted or
+  `.txt`), joins multi-line messages, drops system notices, media placeholders and deletions,
+  infers day/month order, reads times in the workspace time zone, keeps the newest 50 messages and
+  tells the user how many were left out. Studio explains how to export a chat. No migration, no
+  new dependency. Sender names have no email, so messages are stored with direction "unknown".
+- Tracked: let the user say which WhatsApp name is theirs (so their own messages count as
+  outbound) — follow-up, not started.
+- Tests: unit +13 (129), new e2e for a WhatsApp upload (time zone, truncation, media dropped).
+
+---
+
 ## Session 22 — Light "Orbit" / dark "Signal" themes and Showcase sections (2026-11-21)
 
 - Owner reviewed round-2 ideas (design canvas) and chose Orbit for light mode, Signal for dark

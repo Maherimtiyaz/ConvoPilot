@@ -27,7 +27,7 @@ const PARSE_MESSAGES: Record<string, string> = {
   empty: "There's no text to import. Paste a conversation or choose a file.",
   too_long: `That's too long to import (limit: ${LIMITS.maxChars.toLocaleString("en-US")} characters).`,
   too_many_messages: `That thread has more than ${LIMITS.maxMessages} messages. Import a shorter part of it.`,
-  unsupported_file: "Choose a .txt, .md or .eml file.",
+  unsupported_file: "Choose a .txt, .md or .eml file (WhatsApp chat exports are .txt).",
   file_too_large: "That file is too large (limit: 750 KB).",
   invalid_text: "That file contains unreadable (binary) content. Export the email as text or .eml and try again.",
 };
@@ -73,7 +73,8 @@ export async function importAction(_prev: ActionState, form: FormData): Promise<
   }
   if (result.status === "parse_error") return { error: PARSE_MESSAGES[result.error] };
   if (result.status === "invalid") return { error: "That conversation couldn't be imported." };
-  redirect(`/app/studio?c=${result.conversationId}${result.status === "duplicate" ? "&dup=1" : ""}`);
+  const older = result.omittedOlder > 0 ? `&older=${result.omittedOlder}` : "";
+  redirect(`/app/studio?c=${result.conversationId}${result.status === "duplicate" ? "&dup=1" : ""}${older}`);
 }
 
 export async function analyzeAction(conversationId: string): Promise<ActionState> {

@@ -340,6 +340,7 @@ See `EVALUATION.md`. Summary: unit (Vitest) for schemas, policy and citation val
 | — | **v0.1 acceptance** (`PRD.md` §5) | — |
 | M6 | Daily briefing | Post-v0.1 |
 | M7 | Gmail/Calendar, read-only first | Post-v0.1 |
+| M7W | WhatsApp assistant: talk to ConvoPilot on its own WhatsApp number (`WHATSAPP.md`) | Roadmap (owner yes 2026-11-21); design only, needs approval before building |
 | M8 | Evaluation run, hardening, export/deletion, deployment | Not started |
 
 Splitting the original Phase 1 into M1.x and M2 is **Recommended (pending approval)**. Each milestone ends with lint, typegen, typecheck, tests and build green and docs updated.
