@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireRequestContext } from "@/lib/auth/context";
 import { getAppEnv } from "@/lib/env/server";
 import { inviteEntries, OperatorError, revokeInvitation, setEntryStatus } from "@/lib/services/operator";
+import { reportActionError } from "@/lib/observability/log";
 
 export type InviteResult =
   | { ok: true; created: { email: string; link: string; expiresAt: string }[]; skipped: { email: string; reason: string }[] }
@@ -44,6 +45,7 @@ export async function inviteSelectedAction(entryIds: string[]): Promise<InviteRe
     refresh();
     return { ok: true, created, skipped };
   } catch (error) {
+    reportActionError("operator", error);
     return { ok: false, error: errorMessage(error) };
   }
 }
@@ -59,6 +61,7 @@ export async function setEntryStatusAction(entryId: string, status: "pending" | 
     refresh();
     return { ok: true };
   } catch (error) {
+    reportActionError("operator", error);
     return { ok: false, error: errorMessage(error) };
   }
 }
@@ -72,6 +75,7 @@ export async function revokeInvitationAction(invitationId: string): Promise<{ ok
     refresh();
     return outcome === "revoked" ? { ok: true } : { ok: false, error: "That invitation was already used, revoked or expired." };
   } catch (error) {
+    reportActionError("operator", error);
     return { ok: false, error: errorMessage(error) };
   }
 }

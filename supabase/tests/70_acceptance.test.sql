@@ -2,7 +2,7 @@
 -- reservation (security review M1). Synthetic data only.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(35);
+select plan(40);
 
 create function pg_temp.as_user(p_id uuid) returns void
 language sql as $$
@@ -99,6 +99,23 @@ select public.record_ai_usage(pg_temp.wsa(), 1000, 500, 800000, (select id from 
 select throws_ok($$ select count(*) from app_private.ai_reservations $$, '42501', null, 'reservation rows are not readable by users');
 select is(public.reserve_ai_usage(pg_temp.wsa(), 1000, 1000000) ->> 'status', 'over_cap', 'M1: nothing starts once the cap is reached');
 select is(public.reserve_ai_usage(pg_temp.wsa(), 0, 1000000) ->> 'status', 'invalid', 'M1: amounts are validated');
+
+-- ---------------------------------------------------------------- review 2026-11-25
+-- A reservation abandoned by a killed request is released after 10 minutes.
+reset role;
+update public.ai_usage_daily set cost_micro_usd = 0, reserved_micro_usd = 700000 where workspace_id = pg_temp.wsa();
+insert into app_private.ai_reservations (workspace_id, day, amount_micro_usd, created_at)
+values (pg_temp.wsa(), (now() at time zone 'utc')::date, 700000, now() - interval '11 minutes');
+set local role authenticated;
+select is(public.reserve_ai_usage(pg_temp.wsa(), 600000, 1000000) ->> 'status', 'ok', 'an abandoned reservation older than 10 minutes no longer blocks AI');
+select is((select reserved_micro_usd from public.ai_usage_daily where workspace_id = pg_temp.wsa()), 600000::bigint, 'only the new reservation is held');
+-- Analysis and its citations are saved together, or not at all.
+select isnt(public.save_thread_analysis(pg_temp.wsa(), pg_temp.id('conv'), '{"intent": null}', 'test', 'test-model', 'analyze-email@2', 1, 1,
+  jsonb_build_array(jsonb_build_object('message_id', pg_temp.id('m1'), 'quote', 'send the revised deck'))), null, 'an analysis is saved with its citations');
+select throws_ok(format($$ select public.save_thread_analysis(%L, %L, '{"intent": null}', 'test', 'test-model', 'analyze-email@2', 1, 1,
+  jsonb_build_array(jsonb_build_object('message_id', gen_random_uuid(), 'quote', null))) $$, pg_temp.wsa(), pg_temp.id('conv')), '23503', null,
+  'a citation to a message that does not exist fails the whole save');
+select is((select count(*)::int from public.thread_analyses where workspace_id = pg_temp.wsa() and ai_model = 'test-model'), 1, '...and leaves no analysis without evidence');
 
 -- ---------------------------------------------------------------- another user
 select pg_temp.as_user('bbbbbbbb-0000-0000-0000-00000000000b');

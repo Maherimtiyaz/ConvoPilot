@@ -87,6 +87,34 @@ test.describe("sign-in and protected app", () => {
     expect(sql(`select count(*) from auth.users where email = ${quote(unknown)}`)).toBe("0");
   });
 
+  test("a link opened in a browser that did not ask for it shows a warning (login CSRF)", async ({ page, browser }) => {
+    const email = testEmail("csrf");
+
+    // Opened in the browser that asked for it: no warning; the marker is cleared after sign-in.
+    await page.goto(await acceptInvitation(page, email));
+    await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
+    await expect(page.getByText("Did you ask for this link?")).toHaveCount(0);
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page).toHaveURL(/\/app$/);
+    expect((await page.context().cookies()).some((c) => c.name === "cp_link_requested")).toBe(false);
+
+    // The account owner asks for a new link; someone else opens it (another browser or device):
+    // they are warned, and cross-device sign-in still works.
+    await page.context().clearCookies();
+    await page.goto("/login");
+    await page.getByLabel("Email address").fill(email);
+    await page.getByRole("button", { name: "Email me a sign-in link" }).click();
+    await expect(page).toHaveURL(/\/auth\/check-email$/);
+    const link = await latestEmailLink(email);
+    const other = await browser.newContext();
+    const victim = await other.newPage();
+    await victim.goto(link);
+    await expect(victim.getByRole("note").filter({ hasText: "Did you ask for this link?" })).toBeVisible();
+    await victim.getByRole("button", { name: "Continue" }).click();
+    await expect(victim).toHaveURL(/\/app$/);
+    await other.close();
+  });
+
   test("an invitation cannot be used with a different email", async ({ page }) => {
     const token = createInvitation(testEmail("bound"));
     const intruder = testEmail("intruder");

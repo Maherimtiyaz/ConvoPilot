@@ -6,13 +6,15 @@ import { redirect } from "next/navigation";
 import { requireRequestContext } from "@/lib/auth/context";
 import { deleteAccount, exportWorkspaceData, restoreItem, setChatNames, setTimeZone } from "@/lib/services/account";
 import { uuidSchema } from "@/lib/validation/studio";
+import { reportActionError } from "@/lib/observability/log";
 
 export async function exportDataAction(): Promise<{ error: string | null; json?: string; fileName?: string }> {
   const ctx = await requireRequestContext();
   try {
     const data = await exportWorkspaceData(ctx);
     return { error: null, json: JSON.stringify(data, null, 2), fileName: `convopilot-export-${new Date().toISOString().slice(0, 10)}.json` };
-  } catch {
+  } catch (error) {
+    reportActionError("settings", error);
     return { error: "The export failed. Please try again." };
   }
 }
@@ -26,7 +28,8 @@ export async function deleteAccountAction(confirmation: string): Promise<{ error
   }
   try {
     await deleteAccount();
-  } catch {
+  } catch (error) {
+    reportActionError("settings", error);
     return { error: "Something went wrong. Your account was not deleted. Please try again." };
   }
   redirect("/account-deleted");
@@ -42,7 +45,8 @@ export async function restoreItemAction(kind: "conversation" | "contact", id: st
     if (r.status === "not_found") return { error: "That item can no longer be restored." };
     refresh();
     return { error: null, note: r.emailsSkipped > 0 ? "Restored. Its email now belongs to another contact, so it was left there." : undefined };
-  } catch {
+  } catch (error) {
+    reportActionError("settings", error);
     return { error: "Something went wrong. Please try again." };
   }
 }
@@ -54,7 +58,8 @@ export async function setTimeZoneAction(timeZone: string): Promise<{ error: stri
     if ((await setTimeZone(ctx, timeZone)) === "invalid") return { error: "Choose a time zone from the list." };
     refresh();
     return { error: null };
-  } catch {
+  } catch (error) {
+    reportActionError("settings", error);
     return { error: "Something went wrong. Please try again." };
   }
 }
@@ -67,7 +72,8 @@ export async function setChatNamesAction(names: unknown): Promise<{ error: strin
     if ((await setChatNames(ctx, names)) === "invalid") return { error: invalid };
     refresh();
     return { error: null };
-  } catch {
+  } catch (error) {
+    reportActionError("settings", error);
     return { error: "Something went wrong. Please try again." };
   }
 }

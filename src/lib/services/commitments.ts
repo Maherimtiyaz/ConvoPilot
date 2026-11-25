@@ -3,8 +3,8 @@ import "server-only";
 import { z } from "zod";
 
 import type { RequestContext } from "@/lib/auth/context";
-import { DEFAULT_BUDGETS } from "@/lib/ai/budget";
 import { extractCommitments } from "@/lib/ai/workflows/extract-commitments";
+import { latestForAi } from "@/lib/ai/limits";
 import { createSupabaseServerClient, type SupabaseServerContext } from "@/lib/supabase/server";
 
 import { withAi } from "./ai-runtime";
@@ -158,8 +158,8 @@ const storeResult = z.object({
 /** Finds commitments with the AI and stores them as proposals. Nothing is confirmed here. */
 export async function extractConversationCommitments(ctx: RequestContext, conversationId: string): Promise<ExtractSummary> {
   const detail = await getConversation(ctx, conversationId, "server-action");
-  const result = await withAi(ctx, DEFAULT_BUDGETS.extractCommitments, (provider, budget) =>
-    extractCommitments(provider, { subject: detail.conversation.subject, messages: detail.messages, owner: ownerOf(ctx, detail) }, budget),
+  const result = await withAi(ctx, "extractCommitments", (provider, budget) =>
+    extractCommitments(provider, { subject: detail.conversation.subject, messages: latestForAi(detail.messages), owner: ownerOf(ctx, detail) }, budget),
   );
   if (result.proposals.length === 0) return { created: 0, tasks: 0, duplicates: 0, unsupported: result.droppedUnsupported };
   const supabase = await db("server-action");

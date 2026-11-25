@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 
 import { Thinking } from "@/components/ui";
+import { AI_INPUT_CHAR_LIMIT, latestForAi } from "@/lib/ai/limits";
 import type { StoredPoint } from "@/lib/ai/workflows/analyze-thread";
 import type { CommitmentView } from "@/lib/services/commitments";
 import type { ConversationDetail } from "@/lib/services/studio";
@@ -75,6 +76,8 @@ export function ConversationView({ detail, ai, createdLabel, contacts, commitmen
   };
 
   const aiReady = ai.configured && ai.optIn;
+  const aiMessageCount = latestForAi(detail.messages).length;
+  const longForAi = aiMessageCount < detail.messages.length;
   const a = analysis?.data;
 
   return (
@@ -108,6 +111,12 @@ export function ConversationView({ detail, ai, createdLabel, contacts, commitmen
       {!ai.configured && (
         <p role="status" className="rounded-[10px] border border-warning/30 bg-warning-50 px-4 py-3 text-sm text-warning">
           AI isn&apos;t connected yet, so analysis and drafting are unavailable. Your conversation is saved.
+        </p>
+      )}
+      {longForAi && (
+        <p className="mb-4 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700">
+          This conversation is long, so the AI reads the latest {aiMessageCount} of {detail.messages.length} messages (about the last{" "}
+          {AI_INPUT_CHAR_LIMIT.toLocaleString("en-US")} characters).
         </p>
       )}
       {ai.configured && !ai.optIn && (
