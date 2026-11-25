@@ -161,7 +161,7 @@ interface EmbeddingProvider {
 4. Citation validation (§6) before any factual answer is shown or any proposal is stored.
 5. Token and cost limits: per request (max input + output tokens per workflow) and per workspace per day; limit hit → typed error, no silent truncation of evidence.
 6. Model metadata stored on every derived record: provider id, model id, prompt version, token counts, created_at.
-7. Timeouts and one retry for transient provider errors; provider error text is not logged verbatim (it may echo prompt content).
+7. Timeouts (2 minutes per call, 4 minutes per action, pages allow 5) and one retry for transient provider errors other than timeouts; provider error text is never logged (it may echo prompt content). Conversations are trimmed to the newest ~50,000 characters for the AI (`src/lib/ai/limits.ts`).
 
 ### 5.4 Tool permissions and allow-lists
 
@@ -190,7 +190,7 @@ Any tool call outside the active workflow's list is denied by policy and audit-l
 
 ## 7. Error handling & observability
 
-- Entry points return typed error envelopes `{ error: { code, message } }`. Unexpected errors are logged server-side with a request id and return a generic 500.
+- Entry points return typed error envelopes `{ error: { code, message } }`. Unexpected errors are logged server-side as content-free JSON lines (`src/lib/observability/log.ts`, `src/instrumentation.ts` with the error digest) and the user sees a generic message.
 - Logs never contain message bodies, draft content, memory content, prompts, model outputs, tokens or secrets. Log ids and counts instead.
 - Errors are never swallowed silently: they are either handled with a typed result or rethrown.
 - Audit events (append-only, trusted writers only) record security-relevant actions; see `SECURITY.md` §8 and `DATABASE.md` §10.

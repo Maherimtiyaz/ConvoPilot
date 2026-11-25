@@ -55,7 +55,7 @@ senders crafting the content users paste. Each finding was re-checked before fix
 | R4 | Low | The test-only `ANTHROPIC_BASE_URL` was accepted in production (could send conversations to another host) | **Fixed**: production allows only `https://api.anthropic.com` or the local test mock. Unit tests |
 | R5 | Low | A forgotten `NEXT_PUBLIC_APP_URL` in production would give invitation links to `localhost` | **Fixed**: production requires an https address (or 127.0.0.1 for local tests). Unit tests |
 | R6 | Low | User-writable JSON (`writing_style_profile`, `thread_analyses.analysis`) had no size limit | **Fixed**: size checks (20 KB / 200 KB). Row-count quotas per workspace: tracked for before ~1,000 users |
-| R7 | Low | Login CSRF: someone with an account could send a victim *their own* sign-in link, so the victim works inside the attacker's workspace | **Accepted for now, tracked**: the Dashboard shows the signed-in email. Planned fix: bind the link to the browser that requested it |
+| R7 | Low | Login CSRF: someone with an account could send a victim *their own* sign-in link, so the victim works inside the attacker's workspace | **Fixed 2026-11-25** (see §2b): a warning on the confirm page when the link was not requested in this browser |
 | R8 | Low | The public waitlist's global flood limit can be jammed by a script | **Known**: bot check (Turnstile) and per-IP limits needed before sharing the link widely (owner account) |
 | R9 | Info | Search terms are in the URL (`?q=`), so they reach hosting logs and history; AI timeouts retried may be under-counted; conversations erased after 30 days take their confirmed commitments with them (documented decision) | **Tracked** |
 | — | — | Production basics missing | **Added**: branded 404 page, last-resort error page, `robots.txt` (app and auth pages not indexed), link-preview image and share metadata; the in-app error page now re-fetches from the server |
@@ -65,6 +65,27 @@ RLS on all 17 tables with narrow column grants, fail-closed function privileges,
 sign-up, audit log, soft delete and restore, operator console, no XSS sinks, no secrets or content
 in logs, AI tool loop limits and citation checks. Production dependencies: 0 known vulnerabilities
 (`npm audit`); 7 moderate ones in development-only lint tooling were updated away.
+
+## 2b. Production-readiness review (independent, 2026-11-25)
+
+A reviewer looked at how the app behaves once hosted: time limits, failures, logging, backups,
+deployment and cost. Findings and outcomes:
+
+| ID | Severity | Finding | Outcome |
+| --- | --- | --- | --- |
+| P1 | High | A request killed by the hosting time limit left its AI cost reservation open until midnight, blocking the user's AI | **Fixed**: open reservations older than 10 minutes are released (migration `20261125000100`); every AI action has a 4-minute deadline inside a 5-minute page limit (`maxDuration` on the three AI pages). pgTAP + unit tests |
+| P2 | High | 30-second model timeout too short for long answers; timeouts were retried (double wait and cost) | **Fixed**: 2-minute per-call timeout, no retry after a timeout. Real latency to be measured in the real-model evaluation |
+| P3 | Medium | Imports up to 200k characters, but the AI budget only fitted ~60k, and repair rounds rarely fitted | **Fixed**: the AI reads the newest ~50,000 characters of a conversation (the screen says so); budgets now fit a full call plus a repair round, each under the $1/day cap. Unit tests check both |
+| P4 | Medium | Analysis/draft and their citations were saved in two steps | **Fixed**: one transaction each (`save_thread_analysis`, `save_ai_draft`, caller's rights). pgTAP |
+| P5 | Medium | No logs or error reporting at all | **Fixed**: one schema-checked logger (codes, paths without query strings, durations, token counts; never content), `onRequestError`, every generic action error reported, `/api/health` for uptime checks. Unit tests prove content is dropped |
+| P6 | Medium | Data export returns one large response | **Tracked**: fine for early access; stream it before heavy users |
+| P7 | Low | Two open tabs can start the same paid AI run twice; database calls have no timeout | **Tracked** |
+| — | Config | Preview deployments could use production secrets; no Anthropic org spend limit; branch protection; region; plan backups and pausing; email rate limit; deploy order and rollback | **Documented** in `GO_LIVE.md` |
+| — | Scale | Global full-text index, per-row RLS checks, `getUser()` per request, AI in request handlers, list paging | **Tracked for growth beyond ~1,000 users** (plan in CLAUDE.md §8) |
+
+Also fixed in this round: login CSRF (R7 in §2a). A sign-in link opened in a browser that did not
+ask for it shows "Did you ask for this link?" before Continue; cross-device sign-in still works.
+Test: `auth.spec.ts`.
 
 ## 3. Security checklist (`SECURITY.md` §15)
 

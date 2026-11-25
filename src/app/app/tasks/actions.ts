@@ -9,6 +9,7 @@ import { createTask, extractConversationCommitments, setTaskStatus, type Extract
 import { approveTask, decideProposal, type DecisionStatus } from "@/lib/services/proposals/decide";
 import { StudioError } from "@/lib/services/studio";
 import { uuidSchema } from "@/lib/validation/studio";
+import { reportActionError } from "@/lib/observability/log";
 
 export interface Result {
   error: string | null;
@@ -53,6 +54,7 @@ export async function extractCommitmentsAction(conversationId: string): Promise<
     refresh();
     return { error: null, summary };
   } catch (error) {
+    reportActionError("tasks", error);
     return failure(error);
   }
 }
@@ -64,6 +66,7 @@ export async function decideCommitmentAction(commitmentId: string, decision: "co
   try {
     return decided(await decideProposal(ctx, "commitment", commitmentId, decision));
   } catch (error) {
+    reportActionError("tasks", error);
     return failure(error);
   }
 }
@@ -75,6 +78,7 @@ export async function approveTaskAction(taskId: string, confirmCommitment: boole
   try {
     return decided(await approveTask(ctx, taskId, confirmCommitment === true));
   } catch (error) {
+    reportActionError("tasks", error);
     return failure(error);
   }
 }
@@ -85,6 +89,7 @@ export async function rejectTaskAction(taskId: string): Promise<Result> {
   try {
     return decided(await decideProposal(ctx, "task", taskId, "reject"));
   } catch (error) {
+    reportActionError("tasks", error);
     return failure(error);
   }
 }
@@ -97,6 +102,7 @@ export async function setTaskStatusAction(taskId: string, status: "open" | "done
     refresh();
     return { error: r === "ok" ? null : r === "not_found" ? "That task no longer exists." : "That task changed. Refresh to see its current state." };
   } catch (error) {
+    reportActionError("tasks", error);
     return failure(error);
   }
 }
@@ -118,6 +124,7 @@ export async function createTaskAction(_prev: Result & { saved?: number }, form:
     refresh();
     return { error: null, saved: Date.now() };
   } catch (error) {
+    reportActionError("tasks", error);
     return failure(error);
   }
 }

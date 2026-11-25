@@ -17,6 +17,7 @@ import {
   updateDraft,
 } from "@/lib/services/studio";
 import { draftOptionsSchema, subjectSchema, uuidSchema, writingStyleSchema } from "@/lib/validation/studio";
+import { reportActionError } from "@/lib/observability/log";
 
 export interface ActionState {
   error: string | null;
@@ -69,6 +70,7 @@ export async function importAction(_prev: ActionState, form: FormData): Promise<
       result = await importConversation(ctx, { kind: "paste", text: text(form, "text"), subject: subject.data });
     }
   } catch (error) {
+    reportActionError("studio", error);
     return { error: message(error) };
   }
   if (result.status === "parse_error") return { error: PARSE_MESSAGES[result.error] };
@@ -83,6 +85,7 @@ export async function analyzeAction(conversationId: string): Promise<ActionState
   try {
     await analyzeConversation(ctx, conversationId);
   } catch (error) {
+    reportActionError("studio", error);
     return { error: message(error) };
   }
   refresh();
@@ -96,6 +99,7 @@ export async function draftAction(conversationId: string, options: unknown): Pro
   try {
     await createDraft(ctx, conversationId, parsed.data);
   } catch (error) {
+    reportActionError("studio", error);
     return { error: message(error) };
   }
   refresh();
@@ -110,6 +114,7 @@ export async function saveDraftAction(draftId: string, content: string): Promise
   try {
     await updateDraft(ctx, draftId, content);
   } catch (error) {
+    reportActionError("studio", error);
     return { error: message(error) };
   }
   refresh();
@@ -122,6 +127,7 @@ export async function deleteDraftAction(draftId: string): Promise<ActionState> {
   try {
     await deleteDraft(draftId);
   } catch (error) {
+    reportActionError("studio", error);
     return { error: message(error) };
   }
   refresh();
@@ -134,6 +140,7 @@ export async function deleteConversationAction(conversationId: string): Promise<
   try {
     await deleteConversation(conversationId);
   } catch (error) {
+    reportActionError("studio", error);
     return { error: message(error) };
   }
   redirect("/app/studio");
@@ -144,6 +151,7 @@ export async function setAiConsentAction(optIn: boolean): Promise<ActionState> {
   try {
     await updateAiSettings(ctx, { optIn: optIn === true });
   } catch (error) {
+    reportActionError("studio", error);
     return { error: message(error) };
   }
   refresh();
@@ -165,6 +173,7 @@ export async function saveStyleAction(_prev: ActionState, form: FormData): Promi
   try {
     await updateAiSettings(ctx, { style });
   } catch (error) {
+    reportActionError("studio", error);
     return { error: message(error) };
   }
   refresh();

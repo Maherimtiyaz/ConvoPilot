@@ -4,6 +4,17 @@ Session-by-session report of what was worked on. Newest first.
 
 ---
 
+## Session 27 — Production-readiness review and fixes (2026-11-25)
+
+- Owner made the repository private and asked for a further production security and architecture
+  audit. Independent production-readiness reviewer plus fixes; results in `ACCEPTANCE.md` §2b.
+- Fixed: stale AI reservations, AI time limits and deadlines, long conversations trimmed for the
+  AI with a notice, atomic AI saves, content-free logging + `onRequestError` + `/api/health`, login
+  CSRF warning. `GO_LIVE.md`: hosting settings, plan, email, deploy order and rollback.
+- Tracked: streamed export, duplicate AI runs across tabs, database call timeouts, scale items.
+
+---
+
 ## Session 26 — Security and production-readiness review (2026-11-22)
 
 - Owner asked to check security and whether the code is production level. Two independent

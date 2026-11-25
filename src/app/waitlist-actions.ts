@@ -2,6 +2,7 @@
 
 import { joinWaitlist } from "@/lib/services/waitlist";
 import { readWaitlistFormData, waitlistFormSchema } from "@/lib/validation/waitlist";
+import { reportActionError } from "@/lib/observability/log";
 
 export type WaitlistFieldErrors = Partial<Record<"fullName" | "email" | "role" | "companySize" | "biggestChallenge" | "consent", string>>;
 
@@ -35,7 +36,8 @@ export async function joinWaitlistAction(_prev: WaitlistState, formData: FormDat
       return { status: "error", message: "Lots of people are signing up right now. Please try again in a minute.", fieldErrors: {} };
     }
     return { status: "error", message: "Please check your details and try again.", fieldErrors: {} };
-  } catch {
+  } catch (error) {
+    reportActionError("waitlist", error);
     return { status: "error", message: "Something went wrong on our side. Please try again in a moment.", fieldErrors: {} };
   }
 }

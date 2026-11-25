@@ -8,6 +8,7 @@ import { requireRequestContext } from "@/lib/auth/context";
 import { AiError } from "@/lib/ai/errors";
 import { askAboutHistory, deleteContact, saveContact, updateContact } from "@/lib/services/contacts";
 import { StudioError } from "@/lib/services/studio";
+import { reportActionError } from "@/lib/observability/log";
 
 export interface FormState {
   error: string | null;
@@ -33,7 +34,8 @@ export async function createContactAction(_prev: FormState, form: FormData): Pro
   let result;
   try {
     result = await saveContact(ctx, parsed.data);
-  } catch {
+  } catch (error) {
+    reportActionError("contacts", error);
     return { error: "Something went wrong. Please try again." };
   }
   if (result.status === "invalid") return { error: "Check the fields and try again." };
@@ -51,7 +53,8 @@ export async function saveSenderAction(name: string, email: string): Promise<{ e
     if (result.status === "invalid") return { error: "That sender couldn't be saved." };
     refresh();
     return { error: null, contactId: result.contactId };
-  } catch {
+  } catch (error) {
+    reportActionError("contacts", error);
     return { error: "Something went wrong. Please try again." };
   }
 }
@@ -65,6 +68,7 @@ export async function updateContactAction(contactId: string, _prev: FormState, f
   try {
     await updateContact(ctx, parsed.data.id, { name: parsed.data.name, roleTitle: parsed.data.roleTitle || null, notes: parsed.data.notes || null });
   } catch (error) {
+    reportActionError("contacts", error);
     return { error: error instanceof StudioError && error.code === "not_found" ? "That contact no longer exists." : "Something went wrong. Please try again." };
   }
   refresh();
@@ -76,7 +80,8 @@ export async function deleteContactAction(contactId: string): Promise<FormState>
   if (!z.uuid().safeParse(contactId).success) return { error: "That contact no longer exists." };
   try {
     await deleteContact(contactId);
-  } catch {
+  } catch (error) {
+    reportActionError("contacts", error);
     return { error: "Something went wrong. Please try again." };
   }
   redirect("/app/contacts");
@@ -109,6 +114,7 @@ export async function askAction(question: string): Promise<AskResult> {
     if (r.status !== "answered") return { status: r.status };
     return { status: "answered", answer: r.answer, citations: r.citations.map((c) => ({ conversationId: c.conversationId, subject: c.subject, position: c.position, senderName: c.senderName, sentAt: c.sentAt, quote: c.quote })) };
   } catch (error) {
+    reportActionError("contacts", error);
     return { status: "error", message: error instanceof AiError ? (AI_MESSAGES[error.code] ?? "Something went wrong with the AI.") : "Something went wrong. Please try again." };
   }
 }

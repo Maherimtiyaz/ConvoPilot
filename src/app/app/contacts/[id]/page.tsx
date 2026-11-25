@@ -11,6 +11,10 @@ import { AskHistory } from "../../ask-history";
 import { LoadingState, ProtectedPage } from "../../protected-page";
 import { EditContactForm } from "../contact-forms";
 
+// Server Actions on this page call the AI: allow up to 5 minutes (must be a literal;
+// matches AI_PAGE_MAX_DURATION_SECONDS in src/lib/ai/limits.ts).
+export const maxDuration = 300;
+
 export const metadata: Metadata = { title: "Contact" };
 
 const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeZone: "UTC" });

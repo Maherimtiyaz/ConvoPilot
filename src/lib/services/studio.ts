@@ -3,10 +3,10 @@ import "server-only";
 import { z } from "zod";
 
 import type { RequestContext } from "@/lib/auth/context";
-import { DEFAULT_BUDGETS } from "@/lib/ai/budget";
 import { analyzeThread, storedAnalysisSchema, type StoredAnalysis } from "@/lib/ai/workflows/analyze-thread";
 import { draftReply, type DraftOptions, type WritingStyle } from "@/lib/ai/workflows/draft-reply";
 import { resolveDirections, type ThreadMessage, type ThreadOwner } from "@/lib/ai/workflows/thread-input";
+import { latestForAi } from "@/lib/ai/limits";
 import { parseFile, parsePastedText, type ParseError, type ParsedThread } from "@/lib/conversations/parse";
 import { wallTimeToUtc } from "@/lib/conversations/whatsapp";
 import { getAiEnv } from "@/lib/env/ai";
@@ -212,66 +212,49 @@ export const ownerOf = (ctx: RequestContext, detail: Pick<ConversationDetail, "c
 
 export async function analyzeConversation(ctx: RequestContext, conversationId: string): Promise<void> {
   const detail = await getConversation(ctx, conversationId, "server-action");
-  const result = await withAi(ctx, DEFAULT_BUDGETS.analyzeThread, (provider, budget) =>
-    analyzeThread(provider, { subject: detail.conversation.subject, messages: detail.messages, owner: ownerOf(ctx, detail) }, budget),
+  const result = await withAi(ctx, "analyzeThread", (provider, budget) =>
+    analyzeThread(provider, { subject: detail.conversation.subject, messages: latestForAi(detail.messages), owner: ownerOf(ctx, detail) }, budget),
   );
-  const supabase = await db("server-action");
-  const { data, error } = await supabase
-    .from("thread_analyses")
-    .insert({
-      workspace_id: ctx.workspaceId,
-      conversation_id: conversationId,
-      analysis: result.analysis,
-      ai_provider: result.metadata.provider,
-      ai_model: result.metadata.model,
-      prompt_version: `${result.metadata.promptId}@${result.metadata.promptVersion}`,
-      input_tokens: result.metadata.usage.inputTokens,
-      output_tokens: result.metadata.usage.outputTokens,
-    })
-    .select("id")
-    .single();
-  if (error || !data) throw new StudioError("failed");
   const points = [result.analysis.intent, ...result.analysis.mainPoints, result.analysis.expectedResponse, ...result.analysis.risks].filter((p) => p !== null);
   const unique = new Map<string, { message_id: string; quote: string | null }>();
   for (const p of points) for (const c of p.citations) unique.set(`${c.messageId}|${c.quote ?? ""}`, { message_id: c.messageId, quote: c.quote ? c.quote.slice(0, 1000) : null });
-  if (unique.size > 0) {
-    const { error: citeError } = await supabase
-      .from("citations")
-      .insert([...unique.values()].map((c) => ({ workspace_id: ctx.workspaceId, thread_analysis_id: data.id, ...c })));
-    if (citeError) throw new StudioError("failed");
-  }
+  // One transaction: the analysis is never saved without its citations (review 2026-11-25).
+  const supabase = await db("server-action");
+  const { error } = await supabase.rpc("save_thread_analysis", {
+    p_workspace_id: ctx.workspaceId,
+    p_conversation_id: conversationId,
+    p_analysis: result.analysis,
+    p_ai_provider: result.metadata.provider,
+    p_ai_model: result.metadata.model,
+    p_prompt_version: `${result.metadata.promptId}@${result.metadata.promptVersion}`,
+    p_input_tokens: result.metadata.usage.inputTokens,
+    p_output_tokens: result.metadata.usage.outputTokens,
+    p_citations: [...unique.values()],
+  });
+  if (error) throw new StudioError("failed");
 }
 
 export async function createDraft(ctx: RequestContext, conversationId: string, options: DraftOptions): Promise<string> {
   const [detail, settings] = await Promise.all([getConversation(ctx, conversationId, "server-action"), getAiSettings(ctx, "server-action")]);
-  const result = await withAi(ctx, DEFAULT_BUDGETS.draftReply, (provider, budget) =>
-    draftReply(provider, { subject: detail.conversation.subject, messages: detail.messages, owner: ownerOf(ctx, detail), style: settings.style, options }, budget),
+  const result = await withAi(ctx, "draftReply", (provider, budget) =>
+    draftReply(provider, { subject: detail.conversation.subject, messages: latestForAi(detail.messages), owner: ownerOf(ctx, detail), style: settings.style, options }, budget),
   );
   const supabase = await db("server-action");
-  const { data, error } = await supabase
-    .from("drafts")
-    .insert({
-      workspace_id: ctx.workspaceId,
-      conversation_id: conversationId,
-      content: result.content.slice(0, 20000),
-      tone: options.tone,
-      length: options.length,
-      ai_provider: result.metadata.provider,
-      ai_model: result.metadata.model,
-      prompt_version: `${result.metadata.promptId}@${result.metadata.promptVersion}`,
-      input_tokens: result.metadata.usage.inputTokens,
-      output_tokens: result.metadata.usage.outputTokens,
-    })
-    .select("id")
-    .single();
-  if (error || !data) throw new StudioError("failed");
-  if (result.citedMessageIds.length > 0) {
-    const { error: citeError } = await supabase
-      .from("citations")
-      .insert(result.citedMessageIds.map((m) => ({ workspace_id: ctx.workspaceId, draft_id: data.id, message_id: m })));
-    if (citeError) throw new StudioError("failed");
-  }
-  return data.id;
+  const { data, error } = await supabase.rpc("save_ai_draft", {
+    p_workspace_id: ctx.workspaceId,
+    p_conversation_id: conversationId,
+    p_content: result.content.slice(0, 20000),
+    p_tone: options.tone,
+    p_length: options.length,
+    p_ai_provider: result.metadata.provider,
+    p_ai_model: result.metadata.model,
+    p_prompt_version: `${result.metadata.promptId}@${result.metadata.promptVersion}`,
+    p_input_tokens: result.metadata.usage.inputTokens,
+    p_output_tokens: result.metadata.usage.outputTokens,
+    p_cited_message_ids: result.citedMessageIds,
+  });
+  if (error) throw new StudioError("failed");
+  return z.uuid().parse(data);
 }
 
 export async function updateDraft(ctx: RequestContext, draftId: string, content: string): Promise<void> {

@@ -173,7 +173,7 @@ Append-only `audit_events` (DATABASE §10):
 - [x] Append-only audit events.
 - [x] Plain-text rendering; no remote content loading (CSP `default-src 'self'`, `img-src 'self' data: blob:`, `connect-src 'self'`).
 - [x] File size/type limits; HTML converted to text; NUL bytes rejected with a typed error.
-- [x] Log redaction verified by test (CI guard: no logging calls in `src/` at all; integration test: no invitation token in service logs).
+- [x] Log redaction verified by test (CI guard: no logging calls in `src/` except the schema-checked logger `src/lib/observability/log.ts`, whose fields are codes, query-free paths and numbers only, with unit tests proving content is dropped; integration test: no invitation token in service logs).
 - [x] No private-data caching (CI guard).
 - [x] Secret scanning in CI.
 - [x] Export and deletion implemented before real deployment (JSON export; deletion with 30-day restore window and permanent erasure).

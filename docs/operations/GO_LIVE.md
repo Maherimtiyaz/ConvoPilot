@@ -11,7 +11,13 @@ the Claude environment settings and is revoked afterwards.
 ## 1. Supabase project (owner, ~5 minutes)
 
 1. supabase.com → **New project** → name `convopilot-prod`, region closest to your first users,
-   plan Free (upgrade before inviting ~1,000 people).
+   plan Free for the waitlist only. **Upgrade to Pro before the first invited user stores real
+   conversations**: verify on the plan that it includes daily backups (point-in-time recovery is
+   an add-on) and that the project is never paused for inactivity (a paused project stops the
+   waitlist and the daily erasure job). Backups keep erased data until they expire; the privacy
+   notice must say how long.
+   A separate `convopilot-dev` project for manual testing (CLAUDE.md §3) can follow later; until
+   then, test locally only and never with real conversations.
 2. Generate the database password with the button and save it in your password manager.
    Do not share it.
 3. Copy the **project ref**: the 20-letter ID in the dashboard URL
@@ -54,6 +60,16 @@ Delete the `claude-setup-temporary` token in Supabase and the variable in the Cl
 
 ## 5. Vercel (owner, ~5 minutes; after step 3)
 
+Settings to make while creating the project (production-readiness review 2026-11-25):
+- **Function region:** the same region as the Supabase project (each AI action makes about ten
+  database round trips).
+- **Environment scope:** add every variable below to **Production only**. Preview deployments
+  (one per pushed branch) must not get the production database or the Anthropic key.
+- **Deployment Protection:** on for previews (Vercel Authentication).
+- **Function duration:** AI pages ask for up to 300 seconds (`maxDuration`). Verify on the plan
+  that this is allowed; if the plan allows less, tell Claude so the AI time limits are lowered.
+
+
 1. vercel.com → **Add New → Project → Import** the `ConvoPilot` GitHub repository.
 2. **Environment Variables** (both public by design; from Supabase → Project Settings → API):
    - `NEXT_PUBLIC_SUPABASE_URL` = the Project URL
@@ -71,11 +87,30 @@ Delete the `claude-setup-temporary` token in Supabase and the variable in the Cl
 
 ## 6. Before sharing the link publicly (owner)
 
+- **Anthropic:** in console.anthropic.com set an organisation-wide monthly spend limit and an
+  alert. The app caps each workspace at $1/day, which is still up to $1,000/day for 1,000 users.
+- **GitHub:** protect `main` (Settings → Branches): require the CI checks to pass before merging.
+- **Uptime monitor:** a free monitor (e.g. UptimeRobot or Better Stack) on the home page and on
+  `/api/health`, alerting by email.
+- **Logs:** Vercel → Logs shows one JSON line per AI action and per error (codes, paths and
+  durations only; never content). Search `"event":"request.error"` or `"event":"ai.failed"`.
+
 - Approve or edit the draft privacy notice (`/privacy`) and the FAQ answer about pricing.
 - Share links with a channel tag: `…/?ref=linkedin`, `?ref=x`, `?ref=community`, `?ref=network`.
 
 ## Stage B — inviting people (later)
 
-Domain (~$10–15/year) → Resend account with the domain verified → Supabase custom SMTP →
-the domain added in Vercel → site URL updated. Supabase's built-in email only reaches your own
-team, so invited users cannot sign in before this.
+Domain (~$10–15/year) → Resend account with the domain verified (SPF, DKIM and DMARC records)
+→ Supabase custom SMTP → the domain added in Vercel → site URL updated. Supabase's built-in
+email only reaches your own team, so invited users cannot sign in before this. Then raise the
+Auth email rate limit in Supabase (Authentication → Rate limits) above the size of an invitation
+batch (e.g. 100 per hour for batches of 50).
+
+## Deploying changes after go-live
+
+1. Database first: new migrations are written so the *current* app keeps working with them
+   (add columns and functions; remove old ones only in a later release).
+2. Claude applies the migrations to production (with a temporary token, as in step 2), checks
+   them, then you merge the pull request; Vercel deploys `main`.
+3. If a release misbehaves: Vercel → Deployments → **Promote** the previous deployment. Database
+   changes are not rolled back automatically; a follow-up migration fixes them.

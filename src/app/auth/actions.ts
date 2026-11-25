@@ -1,8 +1,10 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { AUTH_PROBLEM_MESSAGES } from "@/lib/auth/errors";
+import { LINK_REQUEST_COOKIE, LINK_REQUEST_MAX_AGE_SECONDS } from "@/lib/auth/link-request";
 import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/redirect";
 import { confirmEmailLink, requestInvitationSignup, requestLoginLink, signOut } from "@/lib/services/auth";
 import { confirmFormSchema, invitationFormSchema, loginFormSchema, signOutFormSchema } from "@/lib/validation/auth";
@@ -10,6 +12,17 @@ import { confirmFormSchema, invitationFormSchema, loginFormSchema, signOutFormSc
 /** Shown in forms. Only fixed messages: raw Auth errors are never returned to the browser. */
 export interface FormMessage {
   error: string | null;
+}
+
+/** Remembers that this browser asked for a sign-in link (see lib/auth/link-request.ts). */
+async function markLinkRequested() {
+  (await cookies()).set(LINK_REQUEST_COOKIE, "1", {
+    path: "/",
+    maxAge: LINK_REQUEST_MAX_AGE_SECONDS,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: false,
+  });
 }
 
 const field = (formData: FormData, name: string) => {
@@ -26,6 +39,7 @@ export async function requestLoginLinkAction(_prev: FormMessage, formData: FormD
   if (!outcome.ok) {
     return { error: AUTH_PROBLEM_MESSAGES[outcome.problem] };
   }
+  await markLinkRequested();
   redirect("/auth/check-email");
 }
 
@@ -39,6 +53,7 @@ export async function requestInvitationSignupAction(_prev: FormMessage, formData
   if (!outcome.ok) {
     return { error: AUTH_PROBLEM_MESSAGES[outcome.problem] };
   }
+  await markLinkRequested();
   redirect("/auth/check-email");
 }
 
@@ -51,6 +66,7 @@ export async function confirmEmailLinkAction(_prev: FormMessage, formData: FormD
   if (!outcome.ok) {
     return { error: AUTH_PROBLEM_MESSAGES[outcome.problem] };
   }
+  (await cookies()).delete(LINK_REQUEST_COOKIE);
   redirect(DEFAULT_SIGNED_IN_PATH);
 }
 

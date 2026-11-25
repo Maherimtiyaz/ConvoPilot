@@ -1,11 +1,13 @@
 import { estimateTokens, type TokenBudget } from "./budget";
 import { AiError, ProviderError } from "./errors";
+import { AI_CALL_TIMEOUT_MS } from "./limits";
 import type { AiProvider, GenerateRequest, GenerateResult } from "./provider";
 
-const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_TIMEOUT_MS = AI_CALL_TIMEOUT_MS;
 
 /**
- * One budgeted model call with a timeout and one retry for transient provider errors (§9).
+ * One budgeted model call with a timeout and one retry for transient provider errors other than
+ * timeouts (§9).
  * Provider error bodies are never logged or surfaced.
  */
 export async function callModel(
@@ -23,7 +25,8 @@ export async function callModel(
       budget.record(result.usage);
       return result;
     } catch (error) {
-      const retryable = error instanceof ProviderError ? error.retryable : false;
+      // A timeout is not retried: it would double the wait and the cost (review 2026-11-25).
+      const retryable = error instanceof ProviderError ? error.retryable && error.kind !== "timeout" : false;
       if (attempt === 1 && retryable) continue;
       if (error instanceof AiError) throw error;
       if (error instanceof ProviderError) {

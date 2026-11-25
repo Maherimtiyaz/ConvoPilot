@@ -3,7 +3,6 @@ import "server-only";
 import { z } from "zod";
 
 import type { RequestContext } from "@/lib/auth/context";
-import { DEFAULT_BUDGETS } from "@/lib/ai/budget";
 import { askHistory, type HistoryAnswer, type HistoryMessage, type HistorySource } from "@/lib/ai/workflows/ask-history";
 import { createSupabaseAuditSink } from "@/lib/ai/tools/supabase-audit";
 import { createSupabaseServerClient, type SupabaseServerContext } from "@/lib/supabase/server";
@@ -206,7 +205,7 @@ function historySource(ctx: RequestContext): HistorySource {
 }
 
 export async function askAboutHistory(ctx: RequestContext, question: string): Promise<HistoryAnswer> {
-  return withAi(ctx, DEFAULT_BUDGETS.askHistory, (provider, budget) =>
+  return withAi(ctx, "askHistory", (provider, budget) =>
     askHistory(provider, { ...ctx, workflow: "askHistory" }, question, historySource(ctx), createSupabaseAuditSink(), budget),
   );
 }
